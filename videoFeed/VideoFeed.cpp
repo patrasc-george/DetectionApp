@@ -40,7 +40,7 @@ int main()
             currFrame++;
             ostringstream ss;
 
-            cropOnResize(frame, windowWidth, windowHeight, INTER_AREA);
+            //cropOnResize(frame, windowWidth, windowHeight, INTER_AREA);
             flip(frame, frame, 1);
 
             ss << "Rezolution: " << frame.size().width << " x " << frame.size().height;
@@ -56,6 +56,8 @@ int main()
             ss.str("");
             ss << "FPS: " << fps;
             annotate(frame, ss.str(), Point(30, 60));
+            
+            detectFace(frame);
 
             imshow(windowName, frame);
         }
