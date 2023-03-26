@@ -1,81 +1,78 @@
 #include <iostream>
+#include <chrono>
 #include <opencv2/opencv.hpp>
 #include "utils.cpp"
 
-using namespace cv;
 using namespace std;
+using namespace cv;
 
 #define DELAY 1
+#define WINDOW_NAME "Camera"
 
-int main()
-{
-    // camera id = 0 because we have only one connected
+
+int main() {
+    // Load cascade classifier
+    CascadeClassifier cs("data\\haarcascade_frontalface_default.xml");
+
+    // Open default camera
     VideoCapture cameraFeed(0);
-    String windowName = "Camera";
-    namedWindow(windowName, WINDOW_NORMAL);
+    namedWindow(WINDOW_NAME, WINDOW_NORMAL);
 
-    // time variables to calculate the time it takes to generate a frame
-    time_t start, end;
-    int currFrame = 0, fps = 0;
-
-    int imgWidth = cameraFeed.get(CAP_PROP_FRAME_WIDTH);
-    int imgHeight = cameraFeed.get(CAP_PROP_FRAME_HEIGHT);
-    int windowWidth, windowHeight;
-
+    // Check if camera opened successfully
     if (!cameraFeed.isOpened()) {
-        cout << "Error reading video input!" << endl;
+        cerr << "Error opening camera" << endl;
+        return -1;
     }
 
-    time(&start);
+    // Start timer
+    chrono::time_point<chrono::system_clock> startTime = chrono::system_clock::now();
 
-    // run until the video is closed
+    Mat frame;
+    // Capture and process frames from camera
     while (cameraFeed.isOpened()) {
-        Mat frame;
-        windowWidth = getWindowImageRect(windowName).width;
-        windowHeight = getWindowImageRect(windowName).height;
-
-        // if a frame is generated, show it, else abort
+        // Capture frame
         bool succes = cameraFeed.read(frame);
-        if (succes) {
-            currFrame++;
-            ostringstream ss;
 
-            //cropOnResize(frame, windowWidth, windowHeight, INTER_AREA);
-            flip(frame, frame, 1);
+        // Variable used to check if resolution changed since last frame
 
-            ss << "Rezolution: " << frame.size().width << " x " << frame.size().height;
-            annotate(frame, ss.str(), Point(30,20));
-
-            ss.str("");
-            ss << "Native rezolution: " << imgWidth << " x " << imgHeight;
-            annotate(frame, ss.str(), Point(30, 40));
-
-            time(&end);
-            fps = (int)(currFrame / difftime(end, start));
-
-            ss.str("");
-            ss << "FPS: " << fps;
-            annotate(frame, ss.str(), Point(30, 60));
-            
-            detectFace(frame);
-
-            imshow(windowName, frame);
-        }
-        else {
-            cout << "Camera is disconnected!" << endl;
-            return 0;
+        // Check if frame is empty
+        if (frame.empty() || !succes) {
+            cerr << "Camera is disconnected" << endl;
+            return -1;
         }
 
-        // try to update the every 20 miliseconds
-        int keyPressed = waitKey(DELAY);
-        // stop the capture if Escape is pressed or the "X" button is clicked
-        if (keyPressed == 27 || getWindowProperty(windowName, WND_PROP_VISIBLE) < 1) {
+        // Detect objects in frame
+        vector<Rect> objects;
+        detectObjects(frame, cs, objects);
+
+        // Calculate FPS
+        float fps;
+        calculateFps(fps, startTime);
+
+        Size nativeRes(frame.cols, frame.rows);
+
+        // Crop the frame to fit window
+        //Size res(getWindowImageRect(WINDOW_NAME).width, getWindowImageRect(WINDOW_NAME).height);
+        int winWidth = getWindowImageRect(WINDOW_NAME).width;
+        int winHeight = getWindowImageRect(WINDOW_NAME).height;
+        //cropOnResize(frame, res, INTER_AREA);
+
+        //TODO: optimise crop function
+        cropOnResize(frame, winWidth, winHeight, INTER_LINEAR);
+        cout << fps << endl;
+
+        // Display frame and info
+        displayInfo(frame, nativeRes, fps);
+        imshow(WINDOW_NAME, frame);
+
+        // Check for user exit command
+        if (waitKey(DELAY) == 27 || getWindowProperty(WINDOW_NAME, WND_PROP_VISIBLE) < 1) {
             cout << "Capture aborted by user!" << endl;
             break;
         }
     }
 
-    // close the window
+    // Release camera and destroy windows
     cameraFeed.release();
     cv::destroyAllWindows();
 

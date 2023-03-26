@@ -13,11 +13,11 @@ using namespace cv;
 /// (given by the desired size) and keep the view on the center of the image.
 /// </summary>
 /// <param name="image">The Mat object to be modified</param>
-/// <param name="newWidth">The desired width</param>
-/// <param name="newHeight">The desired height</param>
+/// <param name="windowSize.width">The desired width</param>
+/// <param name="windowSize.height">The desired height</param>
 /// <param name="inter">The interpolation method used to resize the image</param>
-inline void cropOnResize(Mat& image, float newWidth, float newHeight, InterpolationFlags inter) {
-    
+inline void cropOnResize(Mat& image, int newWidth, int newHeight, InterpolationFlags inter) {
+
     float orgWidth = image.size().width;
     float orgHeight = image.size().height;
 
@@ -35,42 +35,42 @@ inline void cropOnResize(Mat& image, float newWidth, float newHeight, Interpolat
         newImg = newImg(Range(0, newImg.size().height),
             Range((newImg.size().width - newWidth) / 2, newWidth + (newImg.size().width - newWidth) / 2));
     }
-    
+
     image = newImg;
 }
 
-inline void annotate(Mat &frame, String text, Point pos) {
-    putText(frame, text, pos, 0, 0.5, Scalar(52, 235, 116), 1.75);
+
+
+inline void calculateFps(float& fps, chrono::time_point<chrono::system_clock>& start_time) {
+    chrono::time_point<chrono::system_clock> end_time = chrono::system_clock::now();
+    chrono::duration<double> elapsed_seconds = end_time - start_time;
+    fps = 1.0 / elapsed_seconds.count();
+    start_time = end_time;
 }
 
-inline void drawLabel(Mat& input_image, string label, int left, int top)
+inline void displayInfo(Mat& image, Size nativeRes, double fps) {
+    // Add text to image
+    putText(image, "Native Resolution: " + to_string(nativeRes.width) + "x" + to_string(nativeRes.height), Point(10, 30), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1);
+    putText(image, "Resolution: " + to_string(image.cols) + "x" + to_string(image.rows), Point(10, 60), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1);
+    putText(image, "FPS: " + to_string(fps), Point(10, 90), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1);
+}
+
+inline void drawLabel(Mat& image, string label, int left, int top)
 {
-    // Display the label at the top of the bounding box.
     int baseLine;
-    Size label_size = getTextSize(label, 0, 0.7, 1, &baseLine);
+    Size label_size = getTextSize(label, FONT_HERSHEY_SIMPLEX, 0.7, 1, &baseLine);
 
     top = max(top, label_size.height);
-    // Top left corner.
     Point tlc = Point(left, top);
-    // Bottom right corner.
     Point brc = Point(left + label_size.width, top + label_size.height + baseLine);
-    // Draw white rectangle.
-    rectangle(input_image, tlc, brc, Scalar(0,0,0), FILLED);
-    // Put the label on the black rectangle.
-    putText(input_image, label, Point(left, top + label_size.height), 0, 0.7, Scalar(0, 255, 255), 1);
+    rectangle(image, tlc, brc, Scalar(0, 0, 0), FILLED);
+    putText(image, label, Point(left, top + label_size.height), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(0, 255, 255), 1);
 }
 
-inline void detectFace(Mat& image) {
-    Mat grayscale_image;
-    cvtColor(image, grayscale_image, COLOR_BGR2GRAY);
-    equalizeHist(grayscale_image, grayscale_image);
+inline void detectObjects(Mat& image, CascadeClassifier& cs, vector<Rect>& objects) {
 
-    CascadeClassifier cs("data\\haarcascade_frontalface_alt.xml");
-    vector<Rect> objects;
-
-    cs.detectMultiScale(grayscale_image, objects, 1.1, 2,
+    cs.detectMultiScale(image, objects, 1.75, 2,
         0, Size(50, 50));
-
     if (objects.size() != 0) {
         for (auto&& obj : objects) {
             rectangle(image, obj, Scalar(52, 235, 116));
