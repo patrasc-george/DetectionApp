@@ -14,7 +14,7 @@ using namespace cv;
 
 int main() {
     // Load cascade classifier
-    CascadeClassifier cs("data\\haarcascade_frontalface_default.xml");
+    cs.load((string(getenv("OpenCV_DIR")) + "/etc/haarcascades/haarcascade_frontalface_alt.xml"));
 
     // Open default camera
     VideoCapture cameraFeed(0);
@@ -47,7 +47,7 @@ int main() {
             detectObjects(frame, cs, objects);
         }
         catch (const std::exception&) {
-            putText(frame, "Error loading classifier", Point(100, 100), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 0, 255), 1);
+            putText(frame, "Error loading classifier", Point(100, 200), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 0, 255), 1);
         }
 
         // Calculate FPS
