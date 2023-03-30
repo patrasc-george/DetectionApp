@@ -1,7 +1,9 @@
 #include <iostream>
 #include <chrono>
 #include <opencv2/opencv.hpp>
-#include "utils.cpp"
+
+#include "CameraInteraction.h"
+#include "ObjectDetection.h"
 
 using namespace std;
 using namespace cv;
@@ -16,7 +18,7 @@ int main() {
 
     // Open default camera
     VideoCapture cameraFeed(0);
-    namedWindow(WINDOW_NAME, WINDOW_NORMAL);
+    namedWindow(WINDOW_NAME, WINDOW_AUTOSIZE);
 
     // Check if camera opened successfully
     if (!cameraFeed.isOpened()) {
@@ -33,8 +35,6 @@ int main() {
         // Capture frame
         bool succes = cameraFeed.read(frame);
 
-        // Variable used to check if resolution changed since last frame
-
         // Check if frame is empty
         if (frame.empty() || !succes) {
             cerr << "Camera is disconnected" << endl;
@@ -43,7 +43,12 @@ int main() {
 
         // Detect objects in frame
         vector<Rect> objects;
-        detectObjects(frame, cs, objects);
+        try {
+            detectObjects(frame, cs, objects);
+        }
+        catch (const std::exception&) {
+            putText(frame, "Error loading classifier", Point(100, 100), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 0, 255), 1);
+        }
 
         // Calculate FPS
         float fps;
@@ -51,6 +56,7 @@ int main() {
 
         Size nativeRes(frame.cols, frame.rows);
 
+        /*
         // Crop the frame to fit window
         //Size res(getWindowImageRect(WINDOW_NAME).width, getWindowImageRect(WINDOW_NAME).height);
         int winWidth = getWindowImageRect(WINDOW_NAME).width;
@@ -59,7 +65,7 @@ int main() {
 
         //TODO: optimise crop function
         cropOnResize(frame, winWidth, winHeight, INTER_LINEAR);
-        cout << fps << endl;
+        */
 
         // Display frame and info
         displayInfo(frame, nativeRes, fps);
