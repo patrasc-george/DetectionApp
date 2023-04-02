@@ -45,7 +45,7 @@ int main() {
         // Detect objects in frame
         vector<Rect> objects;
         try {
-            detectObjects(frame, cs, objects);
+            //detectObjects(frame, cs, objects);
         }
         catch (const std::exception&) {
             putText(frame, "Error loading classifier", Point(100, 200), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 0, 255), 1);
