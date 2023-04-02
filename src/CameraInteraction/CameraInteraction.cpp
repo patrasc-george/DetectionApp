@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "CameraInteraction.h"
 
 #include <iostream>

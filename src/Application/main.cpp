@@ -14,6 +14,7 @@ using namespace cv;
 
 int main() {
     // Load cascade classifier
+    CascadeClassifier cs;
     cs.load((string(getenv("OpenCV_DIR")) + "/etc/haarcascades/haarcascade_frontalface_alt.xml"));
 
     // Open default camera

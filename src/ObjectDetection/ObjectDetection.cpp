@@ -1,11 +1,10 @@
-#include "pch.h"
 #include "ObjectDetection.h"
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
 using namespace cv;
 
-void drawLabel(Mat& image, std::string label, int left, int top) {
+void drawLabel(Mat & image, std::string label, int left, int top) {
     int baseLine;
     Size label_size = getTextSize(label, FONT_HERSHEY_SIMPLEX, 0.7, 1, &baseLine);
 
