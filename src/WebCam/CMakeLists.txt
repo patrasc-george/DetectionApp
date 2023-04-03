@@ -8,24 +8,27 @@ project(WebCam)
 add_executable(WebCam Source.cpp)
 
 # Set the path to the OpenCV installation directory
-set(OpenCV_DIR "../opencv/build")
+#set(OpenCV_DIR "../opencv/build")
 
 # Find the OpenCV package
-find_package(OpenCV REQUIRED)
+#find_package(OpenCV REQUIRED)
 
 # Include the OpenCV header directories
-include_directories(${OpenCV_INCLUDE_DIRS})
+#include_directories(${OpenCV_INCLUDE_DIRS})
 
 # Add the OpenCV header directories to the WebCam target
 target_include_directories(WebCam PRIVATE ${OpenCV_INCLUDE_DIRS})
 
 # Set the directory where the linker should look for the libraries needed
-target_link_directories(WebCam PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../x64/Debug)
+target_link_directories(WebCam PRIVATE 
+	${CMAKE_CURRENT_SOURCE_DIR}/../x64/Debug
+	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+)
 
 # Link the required libraries
 target_link_libraries(WebCam 
-    CameraInteraction
-    ObjectDetection
+    MyCameraInteraction
+    MyObjectDetection
     ${OpenCV_LIBS}
 )
 

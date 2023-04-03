@@ -7,8 +7,8 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/videoio.hpp"
-#include "../CameraInteraction/CameraInteraction.h"
-#include "../ObjectDetection/ObjectDetection.h"
+#include "../CameraInteraction_v2/CameraInteraction.h"
+#include "../ObjectDetection_v2/ObjectDetection.h"
 
 uint16_t Choice()
 {

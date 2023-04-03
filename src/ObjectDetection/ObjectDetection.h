@@ -1,5 +1,6 @@
 #pragma once
 #include <opencv2/opencv.hpp>
+#include <opencv2/core/types.hpp>
 
 #ifdef OBJECTDETECTION_EXPORTS
 #define OBJECTDETECTION_API __declspec(dllexport)
@@ -17,7 +18,7 @@ struct detectorProperties {
 	std::string configPath = "\0";
 	std::string framework = "\0";
 	bool shouldSwapRB = false;
-	cv::Scalar meanValues = Scalar(0, 0, 0);
+	cv::Scalar meanValues = cv::Scalar(0, 0, 0);
 };
 
 struct foundObject {
