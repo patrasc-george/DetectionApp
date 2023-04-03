@@ -17,6 +17,7 @@ struct detectorProperties {
 	std::string configPath = "\0";
 	std::string framework = "\0";
 	bool shouldSwapRB = false;
+	cv::Scalar meanValues = Scalar(0, 0, 0);
 };
 
 struct foundObject {
@@ -30,7 +31,6 @@ protected:
 	bool shouldSwapRB = false;
 	bool active = false;
 	bool shouldDrawRect = true;
-	std::vector<cv::Rect> objectsInFrame;
 
 public:
 	virtual void detect(cv::Mat& image) = 0;
@@ -39,6 +39,7 @@ public:
 extern OBJECTDETECTION_API class FaceDetector : public Detector {
 private:
 	cv::CascadeClassifier cs;
+	std::vector<cv::Rect> facesInFrame;
 public:
 	FaceDetector(detectorProperties props);
 	void detect(cv::Mat& image);
@@ -47,10 +48,12 @@ public:
 
 extern OBJECTDETECTION_API class ObjectDetector : public Detector {
 private:
+	std::vector<std::string> classNames;
 	std::string classNamesPath;
 	std::string configPath;
 	std::string framework;
-	std::vector<std::string> classNames;
+	cv::Scalar meanValues;
+	cv::dnn::Net model;
 public:
 	ObjectDetector(detectorProperties props);
 	void detect(cv::Mat& image);
