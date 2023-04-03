@@ -7,15 +7,6 @@ project(WebCam)
 # Add an executable for the WebCam project
 add_executable(WebCam Source.cpp)
 
-# Set the path to the OpenCV installation directory
-#set(OpenCV_DIR "../opencv/build")
-
-# Find the OpenCV package
-#find_package(OpenCV REQUIRED)
-
-# Include the OpenCV header directories
-#include_directories(${OpenCV_INCLUDE_DIRS})
-
 # Add the OpenCV header directories to the WebCam target
 target_include_directories(WebCam PRIVATE ${OpenCV_INCLUDE_DIRS})
 
