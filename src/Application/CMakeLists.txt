@@ -18,7 +18,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 						   ${OpenCV_INCLUDE_DIRS}
                           )
 					
-#Link this project with the runtime output dir
+#Link this project with te runtime output dir
 target_link_directories(${PROJECT_NAME} PUBLIC
 	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
 )
