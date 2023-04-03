@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "CameraInteraction.h"
 
 void Resolutions(const cv::VideoCapture& cap, const cv::Mat& frame, const std::string& windowName)
