@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "ObjectDetection.h"
 
 void FaceDetection(cv::Mat& frame, cv::CascadeClassifier face_cascade, cv::CascadeClassifier eyes_cascade)
