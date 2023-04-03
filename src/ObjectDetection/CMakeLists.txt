@@ -1,6 +1,3 @@
-# Specify the minimum CMake version required to build the project
-cmake_minimum_required(VERSION 3.10)
-
 # Set the project name
 project(ObjectDetection)
 
