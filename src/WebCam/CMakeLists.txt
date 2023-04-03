@@ -31,12 +31,3 @@ target_link_libraries(WebCam
     MyObjectDetection
     ${OpenCV_LIBS}
 )
-
-# A custom command to be executed after the project is built to copy the .dll files
-add_custom_command(TARGET WebCam POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_CURRENT_SOURCE_DIR}/../x64/Debug/CameraInteraction.dll
-        ${CMAKE_CURRENT_SOURCE_DIR}/../x64/Debug/ObjectDetection.dll
-        ${CMAKE_CURRENT_SOURCE_DIR}/../x64/Debug/opencv_world470d.dll
-        $<TARGET_FILE_DIR:WebCam>
-)

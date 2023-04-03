@@ -8,12 +8,6 @@ project(MyObjectDetection VERSION 1.0)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Set the path to the OpenCV installation directory
-set(OpenCV_DIR "../opencv/build")
-	
-# Find the OpenCV package
-find_package(OpenCV REQUIRED)
-
 # Include the OpenCV header directories
 include_directories(${OpenCV_INCLUDE_DIRS})
 

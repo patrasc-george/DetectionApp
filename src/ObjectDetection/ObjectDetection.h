@@ -10,7 +10,7 @@
 
 extern OBJECTDETECTION_API void drawLabel(cv::Mat & image, std::string label, int left, int top);
 
-extern OBJECTDETECTION_API void detectObjects(cv::Mat & image, cv::CascadeClassifier & cs, std::vector<cv::Rect>&objects);
+// extern OBJECTDETECTION_API void detectObjects(cv::Mat & image, cv::CascadeClassifier & cs, std::vector<cv::Rect>&objects);
 
 struct detectorProperties {
 	std::string modelPath = "\0";

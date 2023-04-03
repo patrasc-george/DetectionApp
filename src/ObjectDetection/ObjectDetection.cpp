@@ -3,17 +3,17 @@
 #include <iostream>
 #include <fstream>
 #include <opencv2/opencv.hpp>
-using namespace cv;
+using namespace std;
 
-void drawLabel(Mat & image, std::string label, int left, int top) {
+void drawLabel(cv::Mat & image, string label, int left, int top) {
     int baseLine;
-    Size label_size = getTextSize(label, FONT_HERSHEY_SIMPLEX, 0.7, 1, &baseLine);
+    cv::Size label_size = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.7, 1, &baseLine);
 
     top = max(top, label_size.height);
-    Point tlc = Point(left, top);
-    Point brc = Point(left + label_size.width, top + label_size.height + baseLine);
-    rectangle(image, tlc, brc, Scalar(0, 0, 0), FILLED);
-    putText(image, label, Point(left, top + label_size.height), FONT_HERSHEY_SIMPLEX, 0.7, Scalar(0, 255, 255), 1);
+    cv::Point tlc = cv::Point(left, top);
+    cv::Point brc = cv::Point(left + label_size.width, top + label_size.height + baseLine);
+    rectangle(image, tlc, brc, cv::Scalar(0, 0, 0), cv::FILLED);
+    putText(image, label, cv::Point(left, top + label_size.height), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 255), 1);
 }
 
 FaceDetector::FaceDetector(detectorProperties props) {
@@ -23,18 +23,18 @@ FaceDetector::FaceDetector(detectorProperties props) {
     try {
         cs.load(modelPath);
     }
-    catch (const std::exception&) {
-        std::cerr << "Couldn't load classifier!" << std::endl;
+    catch (const exception&) {
+        cerr << "Couldn't load classifier!" << endl;
     }
 }
 
-void FaceDetector::detect(Mat& image)
+void FaceDetector::detect(cv::Mat& image)
 {
     cs.detectMultiScale(image, facesInFrame, 1.75, 2,
-        0, Size(50, 50));
+        0, cv::Size(50, 50));
     if (shouldDrawRect && facesInFrame.size() != 0) {
         for (auto&& obj : facesInFrame) {
-            rectangle(image, obj, Scalar(52, 235, 116));
+            rectangle(image, obj, cv::Scalar(52, 235, 116));
             drawLabel(image, "Face", obj.x, obj.y);
         }
     }
@@ -49,26 +49,26 @@ ObjectDetector::ObjectDetector(detectorProperties props) {
     meanValues = props.meanValues;
 
     try {
-        std::ifstream ifs(classNamesPath);
-        std::string line;
+        ifstream ifs(classNamesPath);
+        string line;
         while (getline(ifs, line))
         {
             classNames.push_back(line);
         }
     }
-    catch (const std::exception&) {
-        std::cerr << "Couldn't load class names!" << std::endl;
+    catch (const exception&) {
+        cerr << "Couldn't load class names!" << endl;
     }
     try {
         model = cv::dnn::readNet(modelPath, framework);
     }
-    catch (const std::exception&) {
-        std::cerr << "Couldn't load detection model!" << std::endl;
+    catch (const exception&) {
+        cerr << "Couldn't load detection model!" << endl;
     }
 }
 
-void ObjectDetector::detect(Mat& image) {
-    cv::Mat blob = cv::dnn::blobFromImage(image, 1.0, Size(300, 300), meanValues,
+void ObjectDetector::detect(cv::Mat& image) {
+    cv::Mat blob = cv::dnn::blobFromImage(image, 1.0, cv::Size(300, 300), meanValues,
         shouldSwapRB, false);
 
     model.setInput(blob);
@@ -85,7 +85,7 @@ void ObjectDetector::detect(Mat& image) {
             int box_y = (int) (detectionMat.at<float>(i, 4) * image.rows);
             int box_width = (int) (detectionMat.at<float>(i, 5) * image.cols - box_x);
             int box_height = (int) (detectionMat.at<float>(i, 6) * image.rows - box_y);
-            cv::rectangle(image, Point(box_x, box_y), Point(box_x + box_width, box_y + box_height), Scalar(255, 255, 255), 2);
+            cv::rectangle(image, cv::Point(box_x, box_y), cv::Point(box_x + box_width, box_y + box_height), cv::Scalar(255, 255, 255), 2);
             drawLabel(image, classNames[classId - 1].c_str(), box_x, box_y);
         }
     }
