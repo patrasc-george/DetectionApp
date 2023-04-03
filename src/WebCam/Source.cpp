@@ -28,9 +28,10 @@ uint16_t Choice()
 void LoadModel(cv::CascadeClassifier& face_cascade, cv::CascadeClassifier& eyes_cascade, std::vector<std::string>& class_names, cv::dnn::Net& model)
 {
 	// Face detection load
-	face_cascade.load("../../WebCam/opencv/sources/data/haarcascades/haarcascade_frontalface_default.xml");
-	eyes_cascade.load("../../WebCam/opencv/sources/data/haarcascades/haarcascade_eye.xml");
+	face_cascade.load(std::string(getenv("OpenCV_DIR")) + "\\..\\sources\\data\\haarcascades\\haarcascade_frontalface_default.xml");
+	eyes_cascade.load(std::string(getenv("OpenCV_DIR")) + "\\..\\sources\\data\\haarcascades\\haarcascade_eye.xml");
 
+	/*
 	// Object detection load
 	std::ifstream ifs(std::string("input/object_detection_classes_coco.txt").c_str());
 	std::string line;
@@ -41,6 +42,7 @@ void LoadModel(cv::CascadeClassifier& face_cascade, cv::CascadeClassifier& eyes_
 	model = cv::dnn::readNet("../../WebCam/WebCam/input/frozen_inference_graph.pb",
 		"../../WebCam/WebCam/input/ssd_mobilenet_v2_coco_2018_03_29.pbtxt.txt",
 		"TensorFlow");
+	*/
 }
 
 int main()
