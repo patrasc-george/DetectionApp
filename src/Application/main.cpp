@@ -5,6 +5,9 @@
 #include "CameraInteraction.h"
 #include "ObjectDetection.h"
 
+#include <QApplication>
+#include "mainwindow.h"
+
 using namespace std;
 using namespace cv;
 
@@ -12,14 +15,16 @@ using namespace cv;
 #define WINDOW_NAME "Camera"
 
 
-int main() {
-    // Load cascade classifier
-    CascadeClassifier cs;
-    cs.load((string(getenv("OpenCV_DIR")) + "/etc/haarcascades/haarcascade_frontalface_alt.xml"));
+int main(int argc, char* argv[]) {
+    detectorProperties props;
+    props.modelPath = string(getenv("OpenCV_DIR")) + "/etc/haarcascades/haarcascade_frontalface_alt.xml";
+
+    //FaceDetector f = Detector::initFaceDetector(props);
+    /*
 
     // Open default camera
     VideoCapture cameraFeed(0);
-    namedWindow(WINDOW_NAME, WINDOW_AUTOSIZE);
+    cv::namedWindow(WINDOW_NAME, WINDOW_AUTOSIZE);
 
     // Check if camera opened successfully
     if (!cameraFeed.isOpened()) {
@@ -42,10 +47,8 @@ int main() {
             return -1;
         }
 
-        // Detect objects in frame
-        vector<Rect> objects;
         try {
-            //detectObjects(frame, cs, objects);
+            //det.detect(frame);
         }
         catch (const std::exception&) {
             putText(frame, "Error loading classifier", Point(100, 200), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 0, 255), 1);
@@ -57,20 +60,9 @@ int main() {
 
         Size nativeRes(frame.cols, frame.rows);
 
-        /*
-        // Crop the frame to fit window
-        //Size res(getWindowImageRect(WINDOW_NAME).width, getWindowImageRect(WINDOW_NAME).height);
-        int winWidth = getWindowImageRect(WINDOW_NAME).width;
-        int winHeight = getWindowImageRect(WINDOW_NAME).height;
-        //cropOnResize(frame, res, INTER_AREA);
-
-        //TODO: optimise crop function
-        cropOnResize(frame, winWidth, winHeight, INTER_LINEAR);
-        */
-
         // Display frame and info
         displayInfo(frame, nativeRes, fps);
-        imshow(WINDOW_NAME, frame);
+        cv::imshow(WINDOW_NAME, frame);
 
         // Check for user exit command
         if (waitKey(DELAY) == 27 || getWindowProperty(WINDOW_NAME, WND_PROP_VISIBLE) < 1) {
@@ -84,4 +76,10 @@ int main() {
     cv::destroyAllWindows();
 
     return 0;
+    */
+
+    QApplication app(argc, argv);
+    MainWindow* w = new MainWindow();
+    w->show();
+    return app.exec();
 }

@@ -3,7 +3,9 @@ project(Application)
 
 # Add the executable
 file(GLOB SOURCE_FILES "*.cpp")
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+file(GLOB UI_FILES "*.ui")
+file(GLOB HEADER_FILES "*.h")
+add_executable(${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES} ${UI_FILES})
 
 # Add the libraries
 add_dependencies(${PROJECT_NAME}
@@ -26,5 +28,12 @@ target_link_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME} 
 	CameraInteraction
 	ObjectDetection
+	Qt6::Core
+	Qt6::Widgets
 	${OpenCV_LIBS}
+)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    WIN32_EXECUTABLE ON
+    MACOSX_BUNDLE ON
 )
