@@ -19,8 +19,9 @@ int main(int argc, char* argv[]) {
     detectorProperties props;
     props.modelPath = string(getenv("OpenCV_DIR")) + "/etc/haarcascades/haarcascade_frontalface_alt.xml";
 
-    //FaceDetector f = Detector::initFaceDetector(props);
-    /*
+    /*FaceDetector f = Detector::initFaceDetector(props);*/
+    FaceDetector det = FaceDetector(props);
+    
 
     // Open default camera
     VideoCapture cameraFeed(0);
@@ -48,7 +49,7 @@ int main(int argc, char* argv[]) {
         }
 
         try {
-            //det.detect(frame);
+            det.detect(frame);
         }
         catch (const std::exception&) {
             putText(frame, "Error loading classifier", Point(100, 200), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 0, 255), 1);
@@ -76,10 +77,10 @@ int main(int argc, char* argv[]) {
     cv::destroyAllWindows();
 
     return 0;
-    */
+    
 
-    QApplication app(argc, argv);
+    /*QApplication app(argc, argv);
     MainWindow* w = new MainWindow();
     w->show();
-    return app.exec();
+    return app.exec();*/
 }
