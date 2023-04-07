@@ -3,34 +3,33 @@
 #include <iostream>
 #include <fstream>
 #include <opencv2/opencv.hpp>
-using namespace std;
 
-void drawLabel(cv::Mat & image, string label, int left, int top) {
+void drawLabel(cv::Mat & image, std::string label, int left, int top) {
     int baseLine;
     cv::Size label_size = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.7, 1, &baseLine);
 
-    top = max(top, label_size.height);
+    top = std::max(top, label_size.height);
     cv::Point tlc = cv::Point(left, top);
     cv::Point brc = cv::Point(left + label_size.width, top + label_size.height + baseLine);
     rectangle(image, tlc, brc, cv::Scalar(0, 0, 0), cv::FILLED);
     putText(image, label, cv::Point(left, top + label_size.height), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 255), 1);
 }
 
-FaceDetector::FaceDetector(detectorProperties props) {
+FaceDetector::FaceDetector(detectorProperties& props) {
     modelPath = props.modelPath;
     shouldSwapRB = props.shouldSwapRB;
 
     try {
         cs.load(modelPath);
-    }
-    catch (const exception&) {
-        cerr << "Couldn't load classifier!" << endl;
+}
+    catch (const std::exception&) {
+        std::cerr << "Couldn't load classifier!" << std::endl;
     }
 }
 
 void FaceDetector::detect(cv::Mat& image)
 {
-    cs.detectMultiScale(image, facesInFrame, 1.75, 2,
+    cs.detectMultiScale(image, facesInFrame, 2, 2,
         0, cv::Size(50, 50));
     if (shouldDrawRect && facesInFrame.size() != 0) {
         for (auto&& obj : facesInFrame) {
@@ -49,27 +48,27 @@ ObjectDetector::ObjectDetector(detectorProperties props) {
     meanValues = props.meanValues;
 
     try {
-        ifstream ifs(classNamesPath);
-        string line;
+        std::ifstream ifs(classNamesPath);
+        std::string line;
         while (getline(ifs, line))
         {
             classNames.push_back(line);
         }
     }
-    catch (const exception&) {
-        cerr << "Couldn't load class names!" << endl;
+    catch (const std::exception&) {
+        std::cerr << "Couldn't load class names!" << std::endl;
     }
     try {
         model = cv::dnn::readNet(modelPath, framework);
     }
-    catch (const exception&) {
-        cerr << "Couldn't load detection model!" << endl;
+    catch (const std::exception&) {
+        std::cerr << "Couldn't load detection model!" << std::endl;
     }
+    std::cout << "constructed\n";
 }
 
 void ObjectDetector::detect(cv::Mat& image) {
-    cv::Mat blob = cv::dnn::blobFromImage(image, 1.0, cv::Size(300, 300), meanValues,
-        shouldSwapRB, false);
+    cv::Mat blob = cv::dnn::blobFromImage(image, 1.0, cv::Size(300, 300), meanValues, shouldSwapRB, false);
 
     model.setInput(blob);
     cv::Mat output = model.forward();
@@ -89,4 +88,11 @@ void ObjectDetector::detect(cv::Mat& image) {
             drawLabel(image, classNames[classId - 1].c_str(), box_x, box_y);
         }
     }
+}
+
+Detector* Detector::initFaceDetector(detectorProperties& props) {
+    return new FaceDetector(props);
+}
+Detector* Detector::initObjectDetector(detectorProperties& props) {
+    return new ObjectDetector(props);
 }

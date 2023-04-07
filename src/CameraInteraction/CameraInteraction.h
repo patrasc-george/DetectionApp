@@ -7,8 +7,24 @@
 #define CAMERAINTERACTION_API __declspec(dllimport)
 #endif
 
-extern "C" CAMERAINTERACTION_API void cropOnResize(cv::Mat & image, int newWidth, int newHeight, cv::InterpolationFlags inter);
+// unused
+void cropOnResize(cv::Mat & image, int newWidth, int newHeight, cv::InterpolationFlags inter);
 
-extern "C" CAMERAINTERACTION_API void calculateFps(float& fps, std::chrono::time_point<std::chrono::system_clock>&start_time);
+void CAMERAINTERACTION_API displayInfo(cv::Mat & image, cv::Size nativeRes, double fps);
 
-extern "C" CAMERAINTERACTION_API void displayInfo(cv::Mat & image, cv::Size nativeRes, double fps);
+struct CAMERAINTERACTION_API Timer {
+private:
+	std::chrono::time_point<std::chrono::steady_clock> start, end;
+	std::chrono::duration<float> duration;
+	float* counter;
+public:
+	Timer(float& c) {
+		start = std::chrono::steady_clock::now();
+		counter = &c;
+	}
+	~Timer() {
+		end = std::chrono::steady_clock::now();
+		duration = end - start;
+		*counter = 1.0f / duration.count();
+	}
+};

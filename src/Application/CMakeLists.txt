@@ -9,14 +9,15 @@ add_executable(${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES} ${UI_FILES})
 
 # Add the libraries
 add_dependencies(${PROJECT_NAME}
-	CameraInteraction
 	ObjectDetection
+	UserInterface
 )
 
 # Allow the headers to be included in main.cpp
 target_include_directories(${PROJECT_NAME} PUBLIC
                           "${CMAKE_SOURCE_DIR}/src/CameraInteraction"
 						  "${CMAKE_SOURCE_DIR}/src/ObjectDetection"
+						  "${CMAKE_SOURCE_DIR}/src/GUI"
 						   ${OpenCV_INCLUDE_DIRS}
                           )
 					
@@ -25,9 +26,10 @@ target_link_directories(${PROJECT_NAME} PUBLIC
 	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
 )
 
-target_link_libraries(${PROJECT_NAME} 
+target_link_libraries(${PROJECT_NAME}
 	CameraInteraction
 	ObjectDetection
+	UserInterface
 	Qt6::Core
 	Qt6::Widgets
 	${OpenCV_LIBS}

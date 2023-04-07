@@ -1,6 +1,5 @@
 #pragma once
 #include <opencv2/opencv.hpp>
-#include <opencv2/core/types.hpp>
 
 #ifdef OBJECTDETECTION_EXPORTS
 #define OBJECTDETECTION_API __declspec(dllexport)
@@ -8,17 +7,18 @@
 #define OBJECTDETECTION_API __declspec(dllimport)
 #endif
 
-extern OBJECTDETECTION_API void drawLabel(cv::Mat & image, std::string label, int left, int top);
 
-// extern OBJECTDETECTION_API void detectObjects(cv::Mat & image, cv::CascadeClassifier & cs, std::vector<cv::Rect>&objects);
+void drawLabel(cv::Mat & image, std::string label, int left, int top);
 
 struct detectorProperties {
-	std::string modelPath = "\0";
-	std::string classNamesPath = "\0";
-	std::string configPath = "\0";
-	std::string framework = "\0";
-	bool shouldSwapRB = false;
-	cv::Scalar meanValues = cv::Scalar(0, 0, 0);
+	std::string modelPath;
+	std::string classNamesPath;
+	std::string configPath;
+	std::string framework;
+	bool shouldSwapRB;
+	cv::Scalar meanValues;
+	detectorProperties()
+		: modelPath("\0"), classNamesPath("\0"), configPath("\0"), framework("\0"), shouldSwapRB(true), meanValues(cv::Scalar(0,0,0)) {}
 };
 
 struct foundObject {
@@ -26,7 +26,7 @@ struct foundObject {
 	cv::Rect boundingBox;
 };
 
-extern OBJECTDETECTION_API class Detector {
+class Detector {
 protected:
 	std::string modelPath;
 	bool shouldSwapRB = false;
@@ -34,20 +34,22 @@ protected:
 	bool shouldDrawRect = true;
 
 public:
+	static Detector* initFaceDetector(detectorProperties&);
+	static Detector* initObjectDetector(detectorProperties&);
 	virtual void detect(cv::Mat& image) = 0;
 };
 
-extern OBJECTDETECTION_API class FaceDetector : public Detector {
+class OBJECTDETECTION_API FaceDetector : public Detector {
 private:
 	cv::CascadeClassifier cs;
 	std::vector<cv::Rect> facesInFrame;
 public:
-	FaceDetector(detectorProperties props);
+	FaceDetector(detectorProperties& props);
 	void detect(cv::Mat& image);
 
 };
 
-extern OBJECTDETECTION_API class ObjectDetector : public Detector {
+class OBJECTDETECTION_API ObjectDetector : public Detector {
 private:
 	std::vector<std::string> classNames;
 	std::string classNamesPath;

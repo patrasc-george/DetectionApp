@@ -1,6 +1,7 @@
 # Set the project name
 project(ObjectDetection)
 
+add_definitions(-DOBJECTDETECTION_EXPORTS)
 # Take every header and source in the directory
 file(GLOB HEADER_FILES "*.h")
 file(GLOB SOURCE_FILES "*.cpp")
