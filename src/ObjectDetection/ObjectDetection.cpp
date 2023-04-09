@@ -15,27 +15,73 @@ void drawLabel(cv::Mat & image, std::string label, int left, int top) {
     putText(image, label, cv::Point(left, top + label_size.height), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 255), 1);
 }
 
-FaceDetector::FaceDetector(detectorProperties& props) {
+FaceDetector::FaceDetector(detectorProperties& props, std::string eyeClassifierPath) {
     modelPath = props.modelPath;
     shouldSwapRB = props.shouldSwapRB;
-
     try {
-        cs.load(modelPath);
+        faceClassifier.load(modelPath);
 }
     catch (const std::exception&) {
-        std::cerr << "Couldn't load classifier!" << std::endl;
+        std::cerr << "Couldn't load face classifier!" << std::endl;
+    }
+
+    if (eyeClassifierPath != "\0") {
+        try {
+            eyeClassifier.load(eyeClassifierPath);
+        }
+        catch (const std::exception&) {
+            std::cerr << "Couldn't load eye classifier!" << std::endl;
+        }
     }
 }
 
-void FaceDetector::detect(cv::Mat& image)
+void FaceDetector::detect(cv::Mat& image, bool v2)
 {
-    cs.detectMultiScale(image, facesInFrame, 2, 2,
-        0, cv::Size(50, 50));
-    if (shouldDrawRect && facesInFrame.size() != 0) {
-        for (auto&& obj : facesInFrame) {
-            rectangle(image, obj, cv::Scalar(52, 235, 116));
-            drawLabel(image, "Face", obj.x, obj.y);
+    // If v2 is true we use George's version, which includes the eyes
+
+    if (v2 == false) {
+        faceClassifier.detectMultiScale(image, facesInFrame, 2, 2,
+            0, cv::Size(50, 50));
+        if (shouldDrawRect && facesInFrame.size() != 0) {
+            for (auto&& obj : facesInFrame) {
+                rectangle(image, obj, cv::Scalar(52, 235, 116));
+                drawLabel(image, "Face", obj.x, obj.y);
+            }
         }
+    }
+
+    else {
+
+        // GEORGE
+
+        // The color image is converted to grayscale
+        cv::Mat frame_gray;
+        cv::cvtColor(image, frame_gray, cv::COLOR_BGR2GRAY);
+        cv::equalizeHist(frame_gray, frame_gray);
+
+        // Detect faces
+        faceClassifier.detectMultiScale(frame_gray, facesInFrame);
+
+        for (int i = 0; i < facesInFrame.size(); i++)
+        {
+            cv::Point center(facesInFrame[i].x + facesInFrame[i].width / 2, facesInFrame[i].y + facesInFrame[i].height / 2);
+            ellipse(image, center, cv::Size(facesInFrame[i].width / 2, facesInFrame[i].height / 2), 0, 0, 360, cv::Scalar(255, 0, 255), 4);
+
+            // The area of interest in the image is obtained
+            cv::Mat faceROI = frame_gray(facesInFrame[i]);
+
+            // In each face, detect eyes
+            std::vector<cv::Rect> eyes;
+            eyeClassifier.detectMultiScale(faceROI, eyes);
+
+            for (int j = 0; j < eyes.size(); j++)
+            {
+                cv::Point eye_center(facesInFrame[i].x + eyes[j].x + eyes[j].width / 2, facesInFrame[i].y + eyes[j].y + eyes[j].height / 2);
+                int radius = cvRound((eyes[j].width + eyes[j].height) * 0.25);
+                circle(image, eye_center, radius, cv::Scalar(255, 0, 0), 4);
+            }
+        }
+
     }
 }
 
@@ -67,7 +113,7 @@ ObjectDetector::ObjectDetector(detectorProperties props) {
     std::cout << "constructed\n";
 }
 
-void ObjectDetector::detect(cv::Mat& image) {
+void ObjectDetector::detect(cv::Mat& image, bool detectEyes) { // 'detectEyes' is by default false, setting it to true does nothing when detecting *objects*
     cv::Mat blob = cv::dnn::blobFromImage(image, 1.0, cv::Size(300, 300), meanValues, shouldSwapRB, false);
 
     model.setInput(blob);

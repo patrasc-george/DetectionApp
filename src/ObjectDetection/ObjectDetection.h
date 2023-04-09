@@ -36,17 +36,18 @@ protected:
 public:
 	static Detector* initFaceDetector(detectorProperties&);
 	static Detector* initObjectDetector(detectorProperties&);
-	virtual void detect(cv::Mat& image) = 0;
+	virtual void detect(cv::Mat& image, bool detectEyes = false) = 0;
 };
 
 class OBJECTDETECTION_API FaceDetector : public Detector {
 private:
-	cv::CascadeClassifier cs;
+	std::string eyeClassifierPath;
+	cv::CascadeClassifier faceClassifier;
+	cv::CascadeClassifier eyeClassifier;
 	std::vector<cv::Rect> facesInFrame;
 public:
-	FaceDetector(detectorProperties& props);
-	void detect(cv::Mat& image);
-
+	FaceDetector(detectorProperties& props, std::string eyeClassifierPath = "\0");
+	void detect(cv::Mat& image, bool v2 = false);
 };
 
 class OBJECTDETECTION_API ObjectDetector : public Detector {
@@ -59,5 +60,5 @@ private:
 	cv::dnn::Net model;
 public:
 	ObjectDetector(detectorProperties props);
-	void detect(cv::Mat& image);
+	void detect(cv::Mat& image , bool detectEyes = false);
 };

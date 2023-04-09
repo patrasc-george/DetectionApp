@@ -28,10 +28,12 @@ private slots:
     void on_OnOff_clicked();
     void on_Exit_clicked();
     void on_detectorsList_currentTextChanged(const QString& arg1);
+    void on_eyesCheckBox_clicked();
 
 private:
     Ui::MainWindow* ui;
     bool onOffButtonPressed = false;
+    bool detectEyes = false;
     std::vector<Detector*> detList;
     short detIndex;
 };

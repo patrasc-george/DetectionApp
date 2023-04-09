@@ -10,7 +10,7 @@
 // unused
 void cropOnResize(cv::Mat & image, int newWidth, int newHeight, cv::InterpolationFlags inter);
 
-void CAMERAINTERACTION_API displayInfo(cv::Mat & image, cv::Size nativeRes, double fps);
+void CAMERAINTERACTION_API displayInfo(cv::Mat & image, cv::Size nativeRes, float fps);
 
 struct CAMERAINTERACTION_API Timer {
 private:
@@ -28,3 +28,6 @@ public:
 		*counter = 1.0f / duration.count();
 	}
 };
+
+// GEORGE
+void CAMERAINTERACTION_API FPS(const cv::Mat & frame, uint16_t & num_frames, float& start_time, float& end_time, float& elapsed_time, float& fps);

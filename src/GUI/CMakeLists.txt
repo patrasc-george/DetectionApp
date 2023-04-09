@@ -11,7 +11,7 @@ file(GLOB HEADER_FILES "*.h")
 file(GLOB SOURCE_FILES "*.cpp")
 file(GLOB UI_FILES "*.ui")
 # Add the library
-add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${UI_FILES})
+add_library(${PROJECT_NAME} STATIC ${HEADER_FILES} ${SOURCE_FILES} ${UI_FILES})
 
 target_link_libraries(${PROJECT_NAME} 
 	CameraInteraction

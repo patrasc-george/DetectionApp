@@ -26,7 +26,16 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::startVideoCapture() {
-    cv::VideoCapture cap(0);  // opens video camera
+    float fps = 0;
+
+    // GEORGE
+    float start_time, end_time, elapsed_time, framerate;
+    uint16_t num_frames = 0;
+    // ------
+
+    cv::Mat frame;
+    cv::VideoCapture cap(0);
+
     if (!cap.isOpened())
     {
         qDebug() << "Could not open video camera.";
@@ -39,22 +48,24 @@ void MainWindow::startVideoCapture() {
 
     while (onOffButtonPressed && ui->graphicsView->isVisible())
     {
-        float fps;
         Timer timer(fps);
-        cv::Mat frame;
         if (!cap.read(frame))
         {
             break;
         }
         try {
-            detList[detIndex]->detect(frame);
+            detList[detIndex]->detect(frame, detectEyes);
         }
-        catch (const std::exception&) {
-            QMessageBox::critical(this, "Error", "There was an error while loading the detection model");
-            onOffButtonPressed = false;
-            ui->OnOff->setText("Turn On");
+        catch (const std::exception& ex) {
+            QString err = tr("There was an error while loading the detection model: \n%1").arg(*ex.what());
+            QMessageBox::critical(this, "Error", err);
+            ui->detectorsList->setCurrentIndex(0);
         }
         displayInfo(frame, cv::Size(frame.cols, frame.rows), fps);
+
+        // GEORGE
+        FPS(frame, num_frames, start_time, end_time, elapsed_time, framerate);
+        // ------
 
 
         // convert the image from OpenCV Mat format to QImage for display in QGraphicsView
@@ -66,10 +77,11 @@ void MainWindow::startVideoCapture() {
         scene->setSceneRect(pixmapItem->boundingRect()); // adjust the scene size to the image size
         // wait for a short interval to reduce resource consumption
         QCoreApplication::processEvents();
-        QThread::usleep(1000);
+
+
     }
-    cap.release();  // release the video camera resources
-    delete scene;   // release the scene resources
+    cap.release();
+    delete scene;
 }
 
 void MainWindow::on_OnOff_clicked()
@@ -98,5 +110,8 @@ void MainWindow::on_detectorsList_currentTextChanged(const QString& arg1) {
     else {
         this->detIndex = 1;
     }
+}
+void MainWindow::on_eyesCheckBox_clicked() {
+    detectEyes = !detectEyes;
 }
 

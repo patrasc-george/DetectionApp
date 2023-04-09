@@ -9,10 +9,12 @@ int main(int argc, char* argv[]) {
     std::vector<Detector*> detList;
 
     detectorProperties props;
-    props.modelPath = std::string(getenv("OpenCV_DIR")) + "/etc/haarcascades/haarcascade_frontalface_alt.xml";
-    FaceDetector det = FaceDetector(props);
+    props.modelPath = std::string(getenv("OpenCV_DIR")) + "/etc/lbpcascades/lbpcascade_frontalface_improved.xml";
+    FaceDetector det = FaceDetector(props, std::string(getenv("OpenCV_DIR")) + "/etc/haarcascades/haarcascade_eye.xml");
     detList.emplace_back(&det);
 
+
+    // will crash
     detectorProperties props2;
     props2.modelPath = "data/yolov5s.onnx";
     ObjectDetector det2 = ObjectDetector(props2);

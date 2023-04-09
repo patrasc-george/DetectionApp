@@ -18,8 +18,4 @@ add_subdirectory(src/Application)
 add_subdirectory(src/CameraInteraction)
 add_subdirectory(src/ObjectDetection)
 
-add_subdirectory(src/CameraInteraction_v2)
-add_subdirectory(src/ObjectDetection_v2)
-add_subdirectory(src/WebCam)
-
 add_subdirectory(src/GUI)

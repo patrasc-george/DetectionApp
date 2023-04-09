@@ -79,6 +79,19 @@
      </property>
     </item>
    </widget>
+   <widget class="QCheckBox" name="eyesCheckBox">
+    <property name="geometry">
+     <rect>
+      <x>225</x>
+      <y>510</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Detect eyes</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
