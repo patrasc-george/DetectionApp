@@ -10,13 +10,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
-set(CMALE_PREFIX_PATH $ENV{Qt6_DIR})
-
-set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_AUTOUIC_SEARCH_PATHS} src/Application)
-
 find_package(OpenCV REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Gui Core Widgets)
 
@@ -28,3 +21,5 @@ add_subdirectory(src/ObjectDetection)
 add_subdirectory(src/CameraInteraction_v2)
 add_subdirectory(src/ObjectDetection_v2)
 add_subdirectory(src/WebCam)
+
+add_subdirectory(src/GUI)
