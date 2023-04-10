@@ -33,7 +33,6 @@ void MainWindow::startVideoCapture() {
     uint16_t num_frames = 0;
     // ------
 
-    cv::Mat frame;
     cv::VideoCapture cap(0);
 
     if (!cap.isOpened())
@@ -48,6 +47,7 @@ void MainWindow::startVideoCapture() {
 
     while (onOffButtonPressed && ui->graphicsView->isVisible())
     {
+        cv::Mat frame;
         Timer timer(fps);
         if (!cap.read(frame))
         {
@@ -69,9 +69,9 @@ void MainWindow::startVideoCapture() {
 
 
         // convert the image from OpenCV Mat format to QImage for display in QGraphicsView
-        QImage qimg(frame.data, frame.cols, frame.rows, frame.step, QImage::Format_BGR888);
+        QImage* qimg = new QImage(frame.data, frame.cols, frame.rows, frame.step, QImage::Format_BGR888);
         // create a QGraphicsPixmapItem to display the image in the scene
-        QGraphicsPixmapItem* pixmapItem = new QGraphicsPixmapItem(QPixmap::fromImage(qimg));
+        QGraphicsPixmapItem* pixmapItem = new QGraphicsPixmapItem(QPixmap::fromImage(*qimg));
         // add the item to the scene and adjust the scene size to fit the item size
         scene->addItem(pixmapItem);
         scene->setSceneRect(pixmapItem->boundingRect()); // adjust the scene size to the image size
@@ -79,6 +79,8 @@ void MainWindow::startVideoCapture() {
         QCoreApplication::processEvents();
 
 
+        delete qimg;
+        delete pixmapItem;
     }
     cap.release();
     delete scene;
