@@ -20,7 +20,6 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
     this->detIndex = 0;
 
     menu = new Menu;
-    menu->toggleEyes->setVisible(false);
 
     imageContainer = new QGraphicsView;
     imageContainer->setFixedSize(642, 482);
@@ -46,7 +45,7 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 }
 
 void MainWindow::startVideoCapture() {
-    float fps = 0;
+    int fps = 0;
 
     // GEORGE
     float start_time, end_time, elapsed_time, framerate;
@@ -74,7 +73,7 @@ void MainWindow::startVideoCapture() {
             break;
         }
         try {
-            if (detIndex > 0)
+            if (detIndex > 0 && menu->detectorsList->currentIndex() > 0)
                 detList[detIndex - 1]->detect(frame, menu->toggleEyes->isChecked());
         }
         catch (const std::exception& ex) {
@@ -82,10 +81,10 @@ void MainWindow::startVideoCapture() {
             QMessageBox::critical(this, "Error", err);
             menu->detectorsList->setCurrentIndex(0);
         }
-        displayInfo(frame, cv::Size(frame.cols, frame.rows), fps);
+        displayInfo(frame, menu->showRes->isChecked(), menu->showFps->isChecked(), fps);
 
         // GEORGE
-        FPS(frame, num_frames, start_time, end_time, elapsed_time, framerate);
+        //FPS(frame, num_frames, start_time, end_time, elapsed_time, framerate);
         // ------
 
 
@@ -113,6 +112,9 @@ void MainWindow::toggleCameraEvent() {
         menu->toggleCamera->setText("Turn Off");
     else
         menu->toggleCamera->setText("Turn On");
+    menu->toggleEyes->setEnabled(cameraIsOn && detIndex == 1);
+    menu->showRes->setEnabled(cameraIsOn);
+    menu->showFps->setEnabled(cameraIsOn);
     startVideoCapture();
 }
 
@@ -122,7 +124,7 @@ void MainWindow::selectDetectorEvent() {
         detIndex = menu->detectorsList->currentIndex();
 
     if (menu->detectorsList->currentIndex() != 1)
-        menu->toggleEyes->setVisible(false);
+        menu->toggleEyes->setEnabled(false);
     else
-        menu->toggleEyes->setVisible(true);
+        menu->toggleEyes->setEnabled(cameraIsOn);
 }

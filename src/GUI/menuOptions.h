@@ -8,6 +8,8 @@ public:
     QPushButton* exit;
     QPushButton* toggleCamera;
     QCheckBox* toggleEyes;
+    QCheckBox* showRes;
+    QCheckBox* showFps;
     QComboBox* detectorsList;
 
 public:

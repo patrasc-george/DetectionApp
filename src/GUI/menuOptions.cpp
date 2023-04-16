@@ -15,17 +15,23 @@ Menu::Menu(QWidget* parent)
     toggleCamera = new QPushButton("Turn On");
     toggleEyes = new QCheckBox("Detect eyes");
     detectorsList = new QComboBox;
+    showRes = new QCheckBox("Show resolution");
+    showFps = new QCheckBox("Show Framerate");
+
+    toggleEyes->setEnabled(false);
+    showRes->setEnabled(false);
+    showFps->setEnabled(false);
 
     detectorsList->addItem("No detection");
     detectorsList->addItem("Faces");
     detectorsList->addItem("Objects");
     detectorsList->setCurrentIndex(0);
 
-    vbox->setSpacing(3);
-
     vbox->addWidget(toggleCamera);
     vbox->addWidget(detectorsList);
     vbox->addWidget(toggleEyes);
+    vbox->addWidget(showRes);
+    vbox->addWidget(showFps);
 
     vbox->addStretch(1);
     vbox->addWidget(exit);

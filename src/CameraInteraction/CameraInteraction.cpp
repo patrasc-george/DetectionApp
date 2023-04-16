@@ -23,9 +23,16 @@ void cropOnResize(cv::Mat& image, int newWidth, int newHeight, cv::Interpolation
     }
 }
 
-void displayInfo(cv::Mat& image, cv::Size resolution, float fps) {
-    putText(image, "Native Resolution: " + std::to_string(resolution.width) + "x" + std::to_string(resolution.height), cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
-    putText(image, "FPS: " + std::to_string(fps),cv::Point(10, 60), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
+void displayInfo(cv::Mat& image, bool showRes = true, bool showFps = false, int fps = 0) {
+    short lines = 0;
+    if (showRes) {
+        lines++;
+        putText(image, "Resolution: " + std::to_string(image.size().width) + "x" + std::to_string(image.size().height), cv::Point(10, 30*lines), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
+    }
+    if (showFps) {
+        lines++;
+        putText(image, "FPS: " + std::to_string(fps),cv::Point(10, 30*lines), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
+    }
 }
 
 // GEORGE
