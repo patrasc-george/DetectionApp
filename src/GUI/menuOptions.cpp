@@ -17,10 +17,12 @@ Menu::Menu(QWidget* parent)
     detectorsList = new QComboBox;
     showRes = new QCheckBox("Show resolution");
     showFps = new QCheckBox("Show Framerate");
+    screenshot = new QPushButton("Save screenshot");
 
     toggleEyes->setEnabled(false);
     showRes->setEnabled(false);
     showFps->setEnabled(false);
+    screenshot->setEnabled(false);
 
     detectorsList->addItem("No detection");
     detectorsList->addItem("Faces");
@@ -34,6 +36,7 @@ Menu::Menu(QWidget* parent)
     vbox->addWidget(showFps);
 
     vbox->addStretch(1);
+    vbox->addWidget(screenshot);
     vbox->addWidget(exit);
 
     vbox->setContentsMargins(10, 0, 10, 0);

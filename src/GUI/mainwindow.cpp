@@ -10,6 +10,7 @@
 #include <QMessageBox>
 #include <QCoreApplication>
 #include <QVBoxLayout>
+#include <QFileDialog>
 
 #include "ObjectDetection.h"
 #include "CameraInteraction.h"
@@ -42,6 +43,7 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
     connect(menu->exit, &QPushButton::clicked, qApp, &QApplication::quit);
     connect(menu->toggleCamera, &QPushButton::clicked, this, &MainWindow::toggleCameraEvent);
     connect(menu->detectorsList, &QComboBox::currentIndexChanged, this, &MainWindow::selectDetectorEvent);
+    connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::takeScreenshot);
 }
 
 void MainWindow::startVideoCapture() {
@@ -115,9 +117,10 @@ void MainWindow::toggleCameraEvent() {
     menu->toggleEyes->setEnabled(cameraIsOn && detIndex == 1);
     menu->showRes->setEnabled(cameraIsOn);
     menu->showFps->setEnabled(cameraIsOn);
+    menu->screenshot->setEnabled(cameraIsOn);
+
     startVideoCapture();
 }
-
 
 void MainWindow::selectDetectorEvent() {
     if (menu->detectorsList->currentIndex() != 0)
@@ -127,4 +130,15 @@ void MainWindow::selectDetectorEvent() {
         menu->toggleEyes->setEnabled(false);
     else
         menu->toggleEyes->setEnabled(cameraIsOn);
+}
+
+void MainWindow::takeScreenshot() {
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save Image File"),
+        QString(),
+        tr("Images (*.png)"));
+    if (!fileName.isEmpty())
+    {
+        QPixmap pixMap = imageContainer->grab(imageContainer->sceneRect().toRect());
+        pixMap.save(fileName);
+    }
 }

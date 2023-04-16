@@ -11,6 +11,7 @@ public:
     QCheckBox* showRes;
     QCheckBox* showFps;
     QComboBox* detectorsList;
+    QPushButton* screenshot;
 
 public:
     Menu(QWidget* parent = nullptr);
