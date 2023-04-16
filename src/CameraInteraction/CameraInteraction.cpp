@@ -43,5 +43,5 @@ void FPS(const cv::Mat& frame, uint16_t& num_frames, float& start_time, float& e
         num_frames = 0;
         start_time = end_time;
     }
-    cv::putText(frame, "FPS: " + std::to_string(fps), cv::Point(10, 90), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 255), 1);
+    cv::putText(frame, "FPS: " + std::to_string(fps), cv::Point(10, 90), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 255), 1);
 }

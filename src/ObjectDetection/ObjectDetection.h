@@ -13,12 +13,12 @@ void drawLabel(cv::Mat & image, std::string label, int left, int top);
 struct detectorProperties {
 	std::string modelPath;
 	std::string classNamesPath;
-	std::string configPath;
+	std::string infGraphPath;
 	std::string framework;
 	bool shouldSwapRB;
 	cv::Scalar meanValues;
 	detectorProperties()
-		: modelPath("\0"), classNamesPath("\0"), configPath("\0"), framework("\0"), shouldSwapRB(true), meanValues(cv::Scalar(0,0,0)) {}
+		: modelPath("\0"), classNamesPath("\0"), infGraphPath("\0"), framework("\0"), shouldSwapRB(true), meanValues(cv::Scalar(0,0,0)) {}
 };
 
 struct foundObject {
@@ -54,7 +54,7 @@ class OBJECTDETECTION_API ObjectDetector : public Detector {
 private:
 	std::vector<std::string> classNames;
 	std::string classNamesPath;
-	std::string configPath;
+	std::string infGraphPath;
 	std::string framework;
 	cv::Scalar meanValues;
 	cv::dnn::Net model;

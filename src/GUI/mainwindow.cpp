@@ -1,28 +1,48 @@
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
+#include "menuOptions.h"
 
 #include <opencv2/opencv.hpp>
+
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
 #include <QThread>
+#include <QListWidget>
+#include <QMessageBox>
+#include <QCoreApplication>
+#include <QVBoxLayout>
 
 #include "ObjectDetection.h"
-#include <CameraInteraction.h>
-#include <QMessageBox>
+#include "CameraInteraction.h"
 
 
-MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
-{
-    ui->setupUi(this);
+MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget(parent) {
     this->detList = dList;
     this->detIndex = 0;
-}
 
-MainWindow::~MainWindow()
-{
-    delete ui;
+    menu = new Menu;
+    menu->toggleEyes->setVisible(false);
+
+    imageContainer = new QGraphicsView;
+    imageContainer->setFixedSize(642, 482);
+
+    statusBar = new QListWidget;
+    statusBar->setMaximumHeight(50);
+
+    statusBar->addItem("Status Bar (WIP - currently it's just a list item as placeholder)");
+
+    QGridLayout* grid = new QGridLayout;
+
+    grid->addWidget(imageContainer, 0, 0, 1, 1);
+    grid->addWidget(menu, 0, 1, 1, 1);
+    grid->addWidget(statusBar, 1, 0, 1, 2);
+
+    grid->setContentsMargins(10, 10, 10, 10);
+    setLayout(grid);
+    setFixedSize(sizeHint());
+    
+    connect(menu->exit, &QPushButton::clicked, qApp, &QApplication::quit);
+    connect(menu->toggleCamera, &QPushButton::clicked, this, &MainWindow::toggleCameraEvent);
+    connect(menu->detectorsList, &QComboBox::currentIndexChanged, this, &MainWindow::selectDetectorEvent);
 }
 
 void MainWindow::startVideoCapture() {
@@ -43,9 +63,9 @@ void MainWindow::startVideoCapture() {
 
     // create a scene to display the captured image from the webcam
     QGraphicsScene* scene = new QGraphicsScene();
-    ui->graphicsView->setScene(scene);
+    imageContainer->setScene(scene);
 
-    while (onOffButtonPressed && ui->graphicsView->isVisible())
+    while (cameraIsOn && imageContainer->isVisible())
     {
         cv::Mat frame;
         Timer timer(fps);
@@ -54,12 +74,13 @@ void MainWindow::startVideoCapture() {
             break;
         }
         try {
-            detList[detIndex]->detect(frame, detectEyes);
+            if (detIndex > 0)
+                detList[detIndex - 1]->detect(frame, menu->toggleEyes->isChecked());
         }
         catch (const std::exception& ex) {
             QString err = tr("There was an error while loading the detection model: \n%1").arg(*ex.what());
             QMessageBox::critical(this, "Error", err);
-            ui->detectorsList->setCurrentIndex(0);
+            menu->detectorsList->setCurrentIndex(0);
         }
         displayInfo(frame, cv::Size(frame.cols, frame.rows), fps);
 
@@ -68,7 +89,7 @@ void MainWindow::startVideoCapture() {
         // ------
 
 
-        // convert the image from OpenCV Mat format to QImage for display in QGraphicsView
+        // convert the image from OpenCV Mat format to QImage for display in QimageContainer
         QImage* qimg = new QImage(frame.data, frame.cols, frame.rows, frame.step, QImage::Format_BGR888);
         // create a QGraphicsPixmapItem to display the image in the scene
         QGraphicsPixmapItem* pixmapItem = new QGraphicsPixmapItem(QPixmap::fromImage(*qimg));
@@ -84,36 +105,24 @@ void MainWindow::startVideoCapture() {
     }
     cap.release();
     delete scene;
-}
+};
 
-void MainWindow::on_OnOff_clicked()
-{
-    onOffButtonPressed = !onOffButtonPressed;
-    if (onOffButtonPressed)
-    {
-        ui->OnOff->setText("Turn Off");
-    }
+void MainWindow::toggleCameraEvent() {
+    cameraIsOn = !cameraIsOn;
+    if (cameraIsOn)
+        menu->toggleCamera->setText("Turn Off");
     else
-    {
-        ui->OnOff->setText("Turn On");
-    }
+        menu->toggleCamera->setText("Turn On");
     startVideoCapture();
 }
 
-void MainWindow::on_Exit_clicked()
-{
-    this->close();
-}
 
-void MainWindow::on_detectorsList_currentTextChanged(const QString& arg1) {
-    if (arg1 == "Faces") {
-        this->detIndex = 0;
-    }
-    else {
-        this->detIndex = 1;
-    }
-}
-void MainWindow::on_eyesCheckBox_clicked() {
-    detectEyes = !detectEyes;
-}
+void MainWindow::selectDetectorEvent() {
+    if (menu->detectorsList->currentIndex() != 0)
+        detIndex = menu->detectorsList->currentIndex();
 
+    if (menu->detectorsList->currentIndex() != 1)
+        menu->toggleEyes->setVisible(false);
+    else
+        menu->toggleEyes->setVisible(true);
+}

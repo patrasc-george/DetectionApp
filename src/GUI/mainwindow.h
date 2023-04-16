@@ -1,7 +1,21 @@
-#include <QMainWindow>
+#pragma once
+
 #include <opencv2/opencv.hpp>
 #include "ObjectDetection.h"
 
+//#include <QtCore/QVariant>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QCheckBox>
+#include <QtWidgets/QComboBox>
+#include <QtWidgets/QGraphicsView>
+#include <QtWidgets/QListWidget>
+#include <QtWidgets/QMainWindow>
+//#include <QtWidgets/QMenuBar>
+#include <QtWidgets/QPushButton>
+//#include <QtWidgets/QStatusBar>
+#include <QtWidgets/QWidget>
+
+#include "menuOptions.h"
 
 #ifdef UI_EXPORTS
 #define UI_API __declspec(dllexport)
@@ -10,30 +24,25 @@
 #endif
 
 
-QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
-QT_END_NAMESPACE
-
-class UI_API MainWindow : public QMainWindow
-
-{
+class UI_API MainWindow : public QWidget {
     Q_OBJECT
 
 public:
-    MainWindow(std::vector<Detector*>& dList, QWidget* parent = nullptr);
-    ~MainWindow();
+    Menu* menu;
+    QGraphicsView* imageContainer;
+    QListWidget* statusBar;
+
+public:
+    MainWindow(std::vector<Detector*>& detList, QWidget* parent = nullptr);
+    ~MainWindow() {};
     void startVideoCapture();
 
 private slots:
-    void on_OnOff_clicked();
-    void on_Exit_clicked();
-    void on_detectorsList_currentTextChanged(const QString& arg1);
-    void on_eyesCheckBox_clicked();
+    void toggleCameraEvent();
+    void selectDetectorEvent();
 
 private:
-    Ui::MainWindow* ui;
-    bool onOffButtonPressed = false;
-    bool detectEyes = false;
+    bool cameraIsOn = false;
     std::vector<Detector*> detList;
     short detIndex;
 };

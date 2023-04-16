@@ -21,7 +21,7 @@ FaceDetector::FaceDetector(detectorProperties& props, std::string eyeClassifierP
     try {
         faceClassifier.load(modelPath);
 }
-    catch (const std::exception&) {
+    catch (const std::exception& ex) {
         std::cerr << "Couldn't load face classifier!" << std::endl;
     }
 
@@ -40,7 +40,7 @@ void FaceDetector::detect(cv::Mat& image, bool v2)
     // If v2 is true we use George's version, which includes the eyes
 
     if (v2 == false) {
-        faceClassifier.detectMultiScale(image, facesInFrame, 2, 2,
+        faceClassifier.detectMultiScale(image, facesInFrame, 4, 3,
             0, cv::Size(50, 50));
         if (shouldDrawRect && facesInFrame.size() != 0) {
             for (auto&& obj : facesInFrame) {
@@ -88,7 +88,7 @@ void FaceDetector::detect(cv::Mat& image, bool v2)
 ObjectDetector::ObjectDetector(detectorProperties props) {
     modelPath = props.modelPath;
     classNamesPath = props.classNamesPath;
-    configPath = props.configPath;
+    infGraphPath = props.infGraphPath;
     framework = props.framework;
     shouldSwapRB = props.shouldSwapRB;
     meanValues = props.meanValues;
@@ -101,20 +101,19 @@ ObjectDetector::ObjectDetector(detectorProperties props) {
             classNames.push_back(line);
         }
     }
-    catch (const std::exception&) {
-        std::cerr << "Couldn't load class names!" << std::endl;
+    catch (const std::exception& ex) {
+        throw ex;
     }
     try {
-        model = cv::dnn::readNet(modelPath, framework);
+        model = cv::dnn::readNet(infGraphPath, modelPath, framework);
     }
-    catch (const std::exception&) {
-        std::cerr << "Couldn't load detection model!" << std::endl;
+    catch (const std::exception& ex) {
+        throw ex;
     }
-    std::cout << "constructed\n";
-}
+} 
 
 void ObjectDetector::detect(cv::Mat& image, bool detectEyes) { // 'detectEyes' is by default false, setting it to true does nothing when detecting *objects*
-    cv::Mat blob = cv::dnn::blobFromImage(image, 1.0, cv::Size(300, 300), meanValues, shouldSwapRB, false);
+    cv::Mat blob = cv::dnn::blobFromImage(image, 1.0, cv::Size(224,224), meanValues, shouldSwapRB, false);
 
     model.setInput(blob);
     cv::Mat output = model.forward();
@@ -125,7 +124,7 @@ void ObjectDetector::detect(cv::Mat& image, bool detectEyes) { // 'detectEyes' i
         int classId = detectionMat.at<float>(i, 1);
         float confidence = detectionMat.at<float>(i, 2);
 
-        if (confidence > 0.4 && shouldDrawRect) {
+        if (confidence > 0.6 && shouldDrawRect) {
             int box_x = (int) (detectionMat.at<float>(i, 3) * image.cols);
             int box_y = (int) (detectionMat.at<float>(i, 4) * image.rows);
             int box_width = (int) (detectionMat.at<float>(i, 5) * image.cols - box_x);
