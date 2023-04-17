@@ -10,6 +10,7 @@ public:
     QCheckBox* toggleEyes;
     QCheckBox* showRes;
     QCheckBox* showFps;
+    QCheckBox* flip;
     QComboBox* detectorsList;
     QPushButton* screenshot;
 

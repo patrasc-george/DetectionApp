@@ -18,11 +18,15 @@ Menu::Menu(QWidget* parent)
     showRes = new QCheckBox("Show resolution");
     showFps = new QCheckBox("Show Framerate");
     screenshot = new QPushButton("Save screenshot");
+    flip = new QCheckBox("Flip");
 
     toggleEyes->setEnabled(false);
     showRes->setEnabled(true);
     showFps->setEnabled(true);
+    flip->setEnabled(true);
     screenshot->setEnabled(true);
+
+    flip->setChecked(true);
 
     detectorsList->addItem("No detection");
     detectorsList->addItem("Faces");
@@ -34,6 +38,7 @@ Menu::Menu(QWidget* parent)
     vbox->addWidget(toggleEyes);
     vbox->addWidget(showRes);
     vbox->addWidget(showFps);
+    vbox->addWidget(flip);
 
     vbox->addStretch(1);
     vbox->addWidget(screenshot);

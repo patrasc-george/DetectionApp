@@ -64,11 +64,14 @@ void MainWindow::startVideoCapture() {
 	while (cameraIsOn && imageContainer->isVisible())
 	{
 		cv::Mat frame;
+
 		Timer timer(fps);
 		if (!cap.read(frame))
-		{
 			break;
-		}
+
+		if (menu->flip->isChecked())
+			cv::flip(frame, frame, 1);
+
 		try {
 			if (detIndex > 0 && menu->detectorsList->currentIndex() > 0)
 				detList[detIndex - 1]->detect(frame, menu->toggleEyes->isChecked());
@@ -107,6 +110,7 @@ void MainWindow::toggleCameraEvent() {
 	menu->toggleEyes->setEnabled(cameraIsOn && detIndex == 1);
 	menu->showRes->setEnabled(cameraIsOn);
 	menu->showFps->setEnabled(cameraIsOn);
+	menu->flip->setEnabled(cameraIsOn);
 	menu->screenshot->setEnabled(cameraIsOn);
 
 	startVideoCapture();
