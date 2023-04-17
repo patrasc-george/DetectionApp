@@ -2,6 +2,7 @@
 
 #include <QWidget>
 #include <QComboBox>
+#include <QLabel>
 
 class Menu: public QWidget {
 public:
@@ -14,6 +15,8 @@ public:
     QCheckBox* showConfidence;
     QComboBox* detectorsList;
     QPushButton* screenshot;
+    QSlider* confSlider;
+    QLabel* confLabel;
 
 public:
     Menu(QWidget* parent = nullptr);

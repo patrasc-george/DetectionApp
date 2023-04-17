@@ -117,7 +117,7 @@ void ObjectDetector::detect(cv::Mat& image, bool showConf) {
     }
 }
 
-void ObjectDetector::setMinConf(float c) {
-    if (c > 0)
+void ObjectDetector::setMinConfidence(float c) {
+    if (c > 0 && c < 1)
         minConfidence = c;
 }

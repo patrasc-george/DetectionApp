@@ -21,17 +21,13 @@ struct detectorProperties {
 		: modelPath("\0"), classNamesPath("\0"), infGraphPath("\0"), framework("\0"), shouldSwapRB(true), meanValues(cv::Scalar(0,0,0)) {}
 };
 
-struct foundObject {
-	std::string label;
-	cv::Rect boundingBox;
-};
-
 class Detector {
 protected:
 	std::string modelPath;
 	bool shouldSwapRB = false;
 public:
-	virtual void detect(cv::Mat& image, bool detectEyes = false) = 0;
+	virtual void detect(cv::Mat& image, bool = false) = 0;
+	virtual void setMinConfidence(float c) {};
 };
 
 class OBJECTDETECTION_API FaceDetector : public Detector {
@@ -43,7 +39,7 @@ private:
 	std::vector<cv::Rect> eyes;
 public:
 	FaceDetector(detectorProperties& props, std::string eyeClassifierPath = "\0");
-	void detect(cv::Mat& image, bool v2 = false);
+	void detect(cv::Mat& image, bool showEyes = false);
 };
 
 class OBJECTDETECTION_API ObjectDetector : public Detector {
@@ -54,10 +50,10 @@ private:
 	std::string framework;
 	cv::Scalar meanValues;
 	cv::dnn::Net model;
-	float minConfidence = 0.6;
 	bool showConfidence;
+	float minConfidence = 0.6;
 public:
 	ObjectDetector(detectorProperties props);
 	void detect(cv::Mat& image , bool showConf = false);
-	void setMinConf(float);
+	void setMinConfidence(float c);
 };

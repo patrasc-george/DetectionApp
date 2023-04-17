@@ -43,8 +43,10 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 	connect(menu->exit, &QPushButton::clicked, qApp, &QApplication::quit);
 	connect(menu->toggleCamera, &QPushButton::clicked, this, &MainWindow::toggleCameraEvent);
 	connect(menu->detectorsList, &QComboBox::currentIndexChanged, this, &MainWindow::selectDetectorEvent);
-	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::takeScreenshot);
+	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
+	connect(menu->confSlider, &QSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
 
+	menu->confSlider->setValue(60);
 }
 
 void MainWindow::startVideoCapture() {
@@ -111,6 +113,7 @@ void MainWindow::toggleCameraEvent() {
 		menu->toggleCamera->setText("Turn On");
 	menu->toggleEyes->setEnabled(cameraIsOn && detIndex == 1);
 	menu->showConfidence->setEnabled(cameraIsOn && detIndex > 1);
+	menu->confSlider->setEnabled(cameraIsOn && detIndex > 1);
 	menu->showRes->setEnabled(cameraIsOn);
 	menu->showFps->setEnabled(cameraIsOn);
 	menu->flip->setEnabled(cameraIsOn);
@@ -120,18 +123,19 @@ void MainWindow::toggleCameraEvent() {
 }
 
 void MainWindow::selectDetectorEvent() {
-	if (menu->detectorsList->currentIndex() != 0)
-		detIndex = menu->detectorsList->currentIndex();
+	detIndex = menu->detectorsList->currentIndex();
 
-	if (menu->detectorsList->currentIndex() != 1) {
-		menu->toggleEyes->setEnabled(false);
-		menu->showConfidence->setEnabled(true);
-	}
-	else
-		menu->toggleEyes->setEnabled(cameraIsOn);
+	menu->toggleEyes->setEnabled(cameraIsOn && detIndex == 1);
+	menu->showConfidence->setEnabled(cameraIsOn && detIndex > 1);
+	menu->confSlider->setEnabled(cameraIsOn && detIndex > 1);
 }
 
-void MainWindow::takeScreenshot() {
+void MainWindow::changeMinConfEvent() {
+	detList[1]->setMinConfidence(menu->confSlider->value() / static_cast<float>(100));
+	menu->confLabel->setText(QString::number(menu->confSlider->value()) + QString("%"));
+}
+
+void MainWindow::screenshotEvent() {
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Image File"),
 		QString(),
 		tr("Images (*.png)"));

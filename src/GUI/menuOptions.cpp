@@ -2,6 +2,8 @@
 #include <QPushButton>
 #include <QCheckbox>
 #include <QComboBox>
+#include <QSlider>
+#include <QLabel>
 #include "menuOptions.h"
 
 Menu::Menu(QWidget* parent)
@@ -20,7 +22,22 @@ Menu::Menu(QWidget* parent)
     screenshot = new QPushButton("Save screenshot");
     flip = new QCheckBox("Flip");
     showConfidence = new QCheckBox("Show confidences");
+    confSlider = new QSlider(Qt::Horizontal);
+    confLabel = new QLabel("");
 
+    auto* confHbox = new QHBoxLayout();
+    confHbox->addWidget(new QLabel("Min confidence"));
+    confHbox->addStretch(1);
+    confHbox->addWidget(confLabel);
+    confHbox->setEnabled(false);
+    confLabel->setAlignment(Qt::AlignRight);
+
+    confSlider->setRange(10, 95);
+    confSlider->setPageStep(5);
+    confSlider->setTickPosition(QSlider::TicksBelow);
+    confSlider->setTickInterval(5);
+
+    confSlider->setEnabled(false);
     showConfidence->setEnabled(false);
     toggleEyes->setEnabled(false);
     showRes->setEnabled(true);
@@ -42,6 +59,8 @@ Menu::Menu(QWidget* parent)
     vbox->addWidget(showFps);
     vbox->addWidget(flip);
     vbox->addWidget(showConfidence);
+    vbox->addLayout(confHbox);
+    vbox->addWidget(confSlider);
 
     vbox->addStretch(1);
     vbox->addWidget(screenshot);

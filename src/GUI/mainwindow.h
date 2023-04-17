@@ -34,7 +34,8 @@ public:
 private slots:
     void toggleCameraEvent();
     void selectDetectorEvent();
-    void takeScreenshot();
+    void screenshotEvent();
+    void changeMinConfEvent();
 
 private:
     bool cameraIsOn = true;

@@ -28,6 +28,3 @@ public:
 		*counter = 1 / duration.count();
 	}
 };
-
-// GEORGE
-void CAMERAINTERACTION_API FPS(const cv::Mat & frame, uint16_t & num_frames, float& start_time, float& end_time, float& elapsed_time, float& fps);
