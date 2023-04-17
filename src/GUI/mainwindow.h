@@ -17,14 +17,8 @@
 
 #include "menuOptions.h"
 
-#ifdef UI_EXPORTS
-#define UI_API __declspec(dllexport)
-#else
-#define UI_API __declspec(dllimport)
-#endif
 
-
-class UI_API MainWindow : public QWidget {
+class MainWindow : public QWidget {
     Q_OBJECT
 
 public:
@@ -43,7 +37,7 @@ private slots:
     void takeScreenshot();
 
 private:
-    bool cameraIsOn = false;
+    bool cameraIsOn = true;
     std::vector<Detector*> detList;
     short detIndex;
 };

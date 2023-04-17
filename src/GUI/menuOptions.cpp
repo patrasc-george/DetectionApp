@@ -12,7 +12,7 @@ Menu::Menu(QWidget* parent)
     auto* vbox = new QVBoxLayout();
 
     exit = new QPushButton("Exit");
-    toggleCamera = new QPushButton("Turn On");
+    toggleCamera = new QPushButton("Turn Off");
     toggleEyes = new QCheckBox("Detect eyes");
     detectorsList = new QComboBox;
     showRes = new QCheckBox("Show resolution");
@@ -20,9 +20,9 @@ Menu::Menu(QWidget* parent)
     screenshot = new QPushButton("Save screenshot");
 
     toggleEyes->setEnabled(false);
-    showRes->setEnabled(false);
-    showFps->setEnabled(false);
-    screenshot->setEnabled(false);
+    showRes->setEnabled(true);
+    showFps->setEnabled(true);
+    screenshot->setEnabled(true);
 
     detectorsList->addItem("No detection");
     detectorsList->addItem("Faces");

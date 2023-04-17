@@ -30,6 +30,6 @@ int main(int argc, char* argv[]) {
 
     window.setWindowTitle("Detection App");
     window.show();
-
+    window.startVideoCapture();
     return app.exec();
 }
