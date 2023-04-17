@@ -49,12 +49,6 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 
 void MainWindow::startVideoCapture() {
 	int fps = 0;
-
-	// GEORGE
-	float start_time, end_time, elapsed_time, framerate;
-	uint16_t num_frames = 0;
-	// ------
-
 	cv::VideoCapture cap(0);
 
 	if (!cap.isOpened())
@@ -85,11 +79,6 @@ void MainWindow::startVideoCapture() {
 			menu->detectorsList->setCurrentIndex(0);
 		}
 		displayInfo(frame, menu->showRes->isChecked(), menu->showFps->isChecked(), fps);
-
-		// GEORGE
-		//FPS(frame, num_frames, start_time, end_time, elapsed_time, framerate);
-		// ------
-
 
 		// convert the image from OpenCV Mat format to QImage for display in QimageContainer
 		QImage* qimg = new QImage(frame.data, frame.cols, frame.rows, frame.step, QImage::Format_BGR888);

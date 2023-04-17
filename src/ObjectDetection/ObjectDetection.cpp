@@ -36,12 +36,11 @@ FaceDetector::FaceDetector(detectorProperties& props, std::string eyeClassifierP
 }
 
 void FaceDetector::detect(cv::Mat& image, bool showEyes) {
-    faceClassifier.detectMultiScale(image, facesInFrame);
+    faceClassifier.detectMultiScale(image, facesInFrame, 1.5);
     if (facesInFrame.size() == 0)
         return;
     for (auto&& face : facesInFrame) {
         rectangle(image, face, cv::Scalar(147, 167, 255), 2);
-        drawLabel(image, "Face", face.x, face.y);
         if (showEyes == false)
             break;
 
@@ -49,15 +48,17 @@ void FaceDetector::detect(cv::Mat& image, bool showEyes) {
         cv::Mat faceROI = image(face);
 
         // In each face, detect eyes
-        std::vector<cv::Rect> eyes;
         eyeClassifier.detectMultiScale(faceROI, eyes);
-
-        for (int j = 0; j < eyes.size(); j++) {
-            cv::Point eye_center(face.x + eyes[j].x + eyes[j].width / 2, face.y + eyes[j].y + eyes[j].height / 2);
-            int radius = cvRound((eyes[j].width + eyes[j].height) * 0.25);
+        if (eyes.size() == 0)
+            break;
+        for (auto&& eye : eyes) {
+            cv::Point eye_center(face.x + eye.x + eye.width / 2, face.y + eye.y + eye.height / 2);
+            short radius = cvRound((eye.width + eye.height) * 0.25);
             circle(image, eye_center, radius, cv::Scalar(239, 190, 98), 3);
         }
     }
+    for (auto&& face : facesInFrame)
+        drawLabel(image, "Face", face.x, face.y);
 }
 
 ObjectDetector::ObjectDetector(detectorProperties props) {
@@ -88,12 +89,12 @@ ObjectDetector::ObjectDetector(detectorProperties props) {
 } 
 
 void ObjectDetector::detect(cv::Mat& image, bool detectEyes) { // 'detectEyes' is by default false, setting it to true does nothing when detecting *objects*
-    cv::Mat blob = cv::dnn::blobFromImage(image, 1.0, cv::Size(224,224), meanValues, shouldSwapRB, false);
+    cv::Mat blob = cv::dnn::blobFromImage(image, 1.0, cv::Size(320,320), meanValues, shouldSwapRB, false);
 
     model.setInput(blob);
-    cv::Mat output = model.forward();
+    blob = model.forward();
 
-    cv::Mat detectionMat(output.size[2], output.size[3], CV_32F, output.ptr<float>());
+    cv::Mat detectionMat(blob.size[2], blob.size[3], CV_32F, blob.ptr<float>());
 
     for (int i = 0; i < detectionMat.rows; i++) {
         int classId = detectionMat.at<float>(i, 1);

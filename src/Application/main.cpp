@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
 
     detectorProperties props;
     props.modelPath = "../data/lbpcascades/lbpcascade_frontalface_improved.xml";
-    FaceDetector det = FaceDetector(props, "../data/haarcascades/haarcascade_eye.xml");
+    FaceDetector det = FaceDetector(props, "../data/haarcascades/haarcascade_eye_tree_eyeglasses.xml");
     detList.emplace_back(&det);
 
 

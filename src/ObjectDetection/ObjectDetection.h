@@ -40,6 +40,7 @@ private:
 	cv::CascadeClassifier faceClassifier;
 	cv::CascadeClassifier eyeClassifier;
 	std::vector<cv::Rect> facesInFrame;
+	std::vector<cv::Rect> eyes;
 public:
 	FaceDetector(detectorProperties& props, std::string eyeClassifierPath = "\0");
 	void detect(cv::Mat& image, bool v2 = false);

@@ -27,28 +27,10 @@ void displayInfo(cv::Mat& image, bool showRes = true, bool showFps = false, int 
     short lines = 0;
     if (showRes) {
         lines++;
-        putText(image, "Resolution: " + std::to_string(image.size().width) + "x" + std::to_string(image.size().height), cv::Point(10, 30*lines), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
+        putText(image, "Resolution: " + std::to_string(image.size().width) + "x" + std::to_string(image.size().height), cv::Point(10, 30*lines), cv::FONT_HERSHEY_SIMPLEX, 0.55, cv::Scalar(63, 252, 101), 1);
     }
     if (showFps) {
         lines++;
-        putText(image, "FPS: " + std::to_string(fps),cv::Point(10, 30*lines), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
+        putText(image, "FPS: " + std::to_string(fps),cv::Point(10, 30*lines), cv::FONT_HERSHEY_SIMPLEX, 0.55, cv::Scalar(63, 252, 101), 1);
     }
-}
-
-// GEORGE
-void FPS(const cv::Mat& frame, uint16_t& num_frames, float& start_time, float& end_time, float& elapsed_time, float& fps)
-{
-    num_frames++;
-    end_time = cv::getTickCount();
-
-    // Calculate the elapsed time since the last print
-    elapsed_time = (end_time - start_time) / cv::getTickFrequency();
-
-    // Check if more than 1 second has elapsed
-    if (elapsed_time > 1) {
-        fps = num_frames / elapsed_time;
-        num_frames = 0;
-        start_time = end_time;
-    }
-    cv::putText(frame, "FPS: " + std::to_string(fps), cv::Point(10, 90), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 255), 1);
 }
