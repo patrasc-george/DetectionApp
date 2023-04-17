@@ -30,12 +30,7 @@ class Detector {
 protected:
 	std::string modelPath;
 	bool shouldSwapRB = false;
-	bool active = false;
-	bool shouldDrawRect = true;
-
 public:
-	static Detector* initFaceDetector(detectorProperties&);
-	static Detector* initObjectDetector(detectorProperties&);
 	virtual void detect(cv::Mat& image, bool detectEyes = false) = 0;
 };
 
