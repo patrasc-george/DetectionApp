@@ -8,11 +8,11 @@ void drawLabel(cv::Mat & image, std::string label, int left, int top) {
     int baseLine;
     cv::Size label_size = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.7, 1.5, &baseLine);
 
-    top = std::max(top, label_size.height);
-    cv::Point tlc = cv::Point(left, top);
-    cv::Point brc = cv::Point(left + label_size.width, top + label_size.height + baseLine);
-    rectangle(image, tlc, brc, cv::Scalar(147, 167, 255), cv::FILLED);
-    putText(image, label, cv::Point(left, top + label_size.height), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(255, 255, 255), 1.5);
+    //top = std::max(top, label_size.height);
+    //cv::Point tlc = cv::Point(left, top);
+    //cv::Point brc = cv::Point(left + label_size.width, top + label_size.height + baseLine);
+    //rectangle(image, tlc, brc, cv::Scalar(147, 167, 255), cv::FILLED);
+    putText(image, label, cv::Point(left, top - label_size.height + 1.5), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(147, 167, 255), 2);
 }
 
 FaceDetector::FaceDetector(detectorProperties& props, std::string eyeClassifierPath) {
@@ -54,11 +54,12 @@ void FaceDetector::detect(cv::Mat& image, bool showEyes) {
         for (auto&& eye : eyes) {
             cv::Point eye_center(face.x + eye.x + eye.width / 2, face.y + eye.y + eye.height / 2);
             short radius = cvRound((eye.width + eye.height) * 0.25);
-            circle(image, eye_center, radius, cv::Scalar(239, 190, 98), 3);
+            circle(image, eye_center, radius, cv::Scalar(239, 190, 98), 2);
         }
     }
     for (auto&& face : facesInFrame)
-        drawLabel(image, "Face", face.x, face.y);
+        if (face.size().width > 1 && face.size().height > 1)
+            drawLabel(image, "Face", face.x, face.y);
 }
 
 ObjectDetector::ObjectDetector(detectorProperties props) {
@@ -106,7 +107,7 @@ void ObjectDetector::detect(cv::Mat& image, bool detectEyes) { // 'detectEyes' i
             int box_width = (int) (detectionMat.at<float>(i, 5) * image.cols - box_x);
             int box_height = (int) (detectionMat.at<float>(i, 6) * image.rows - box_y);
             cv::rectangle(image, cv::Point(box_x, box_y), cv::Point(box_x + box_width, box_y + box_height), cv::Scalar(147, 167, 255), 2);
-            drawLabel(image, classNames[classId - 1].c_str() + std::string(": confidence = ") + std::to_string(confidence), box_x, box_y);
+            drawLabel(image, classNames[classId - 1].c_str() + std::string(": confidence = ") + std::to_string((int)(confidence * 100)) + std::string("%"), box_x, box_y);
         }
     }
 }
