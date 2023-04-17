@@ -27,10 +27,10 @@ void displayInfo(cv::Mat& image, bool showRes = true, bool showFps = false, int 
     short lines = 0;
     if (showRes) {
         lines++;
-        putText(image, "Resolution: " + std::to_string(image.size().width) + "x" + std::to_string(image.size().height), cv::Point(10, 30*lines), cv::FONT_HERSHEY_SIMPLEX, 0.55, cv::Scalar(63, 252, 101), 1);
+        putText(image, "Resolution: " + std::to_string(image.size().width) + "x" + std::to_string(image.size().height), cv::Point(10, 30*lines), cv::FONT_HERSHEY_SIMPLEX, 0.55, cv::Scalar(160, 189, 61));
     }
     if (showFps) {
         lines++;
-        putText(image, "FPS: " + std::to_string(fps),cv::Point(10, 30*lines), cv::FONT_HERSHEY_SIMPLEX, 0.55, cv::Scalar(63, 252, 101), 1);
+        putText(image, "FPS: " + std::to_string(fps),cv::Point(10, 30*lines), cv::FONT_HERSHEY_SIMPLEX, 0.55, cv::Scalar(160, 189, 61));
     }
 }
