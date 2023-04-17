@@ -73,8 +73,10 @@ void MainWindow::startVideoCapture() {
 			cv::flip(frame, frame, 1);
 
 		try {
-			if (detIndex > 0 && menu->detectorsList->currentIndex() > 0)
+			if (detIndex == 1)
 				detList[detIndex - 1]->detect(frame, menu->toggleEyes->isChecked());
+			else if (detIndex > 1)
+				detList[detIndex - 1]->detect(frame, menu->showConfidence->isChecked());
 		}
 		catch (const std::exception& ex) {
 			QString err = tr("There was an error while loading the detection model: \n%1").arg(*ex.what());
@@ -108,6 +110,7 @@ void MainWindow::toggleCameraEvent() {
 	else
 		menu->toggleCamera->setText("Turn On");
 	menu->toggleEyes->setEnabled(cameraIsOn && detIndex == 1);
+	menu->showConfidence->setEnabled(cameraIsOn && detIndex > 1);
 	menu->showRes->setEnabled(cameraIsOn);
 	menu->showFps->setEnabled(cameraIsOn);
 	menu->flip->setEnabled(cameraIsOn);
@@ -120,8 +123,10 @@ void MainWindow::selectDetectorEvent() {
 	if (menu->detectorsList->currentIndex() != 0)
 		detIndex = menu->detectorsList->currentIndex();
 
-	if (menu->detectorsList->currentIndex() != 1)
+	if (menu->detectorsList->currentIndex() != 1) {
 		menu->toggleEyes->setEnabled(false);
+		menu->showConfidence->setEnabled(true);
+	}
 	else
 		menu->toggleEyes->setEnabled(cameraIsOn);
 }

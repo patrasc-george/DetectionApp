@@ -54,7 +54,10 @@ private:
 	std::string framework;
 	cv::Scalar meanValues;
 	cv::dnn::Net model;
+	float minConfidence = 0.6;
+	bool showConfidence;
 public:
 	ObjectDetector(detectorProperties props);
-	void detect(cv::Mat& image , bool detectEyes = false);
+	void detect(cv::Mat& image , bool showConf = false);
+	void setMinConf(float);
 };

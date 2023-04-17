@@ -11,6 +11,7 @@ public:
     QCheckBox* showRes;
     QCheckBox* showFps;
     QCheckBox* flip;
+    QCheckBox* showConfidence;
     QComboBox* detectorsList;
     QPushButton* screenshot;
 

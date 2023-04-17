@@ -89,7 +89,7 @@ ObjectDetector::ObjectDetector(detectorProperties props) {
     }
 } 
 
-void ObjectDetector::detect(cv::Mat& image, bool detectEyes) { // 'detectEyes' is by default false, setting it to true does nothing when detecting *objects*
+void ObjectDetector::detect(cv::Mat& image, bool showConf) {
     cv::Mat blob = cv::dnn::blobFromImage(image, 1.0, cv::Size(320,320), meanValues, shouldSwapRB, false);
 
     model.setInput(blob);
@@ -101,13 +101,23 @@ void ObjectDetector::detect(cv::Mat& image, bool detectEyes) { // 'detectEyes' i
         int classId = detectionMat.at<float>(i, 1);
         float confidence = detectionMat.at<float>(i, 2);
 
-        if (confidence > 0.7) {
+        if (confidence > minConfidence) {
             int box_x = (int) (detectionMat.at<float>(i, 3) * image.cols);
             int box_y = (int) (detectionMat.at<float>(i, 4) * image.rows);
             int box_width = (int) (detectionMat.at<float>(i, 5) * image.cols - box_x);
             int box_height = (int) (detectionMat.at<float>(i, 6) * image.rows - box_y);
             cv::rectangle(image, cv::Point(box_x, box_y), cv::Point(box_x + box_width, box_y + box_height), cv::Scalar(147, 167, 255), 2);
-            drawLabel(image, classNames[classId - 1].c_str() + std::string(": confidence = ") + std::to_string((int)(confidence * 100)) + std::string("%"), box_x, box_y);
+
+            std::stringstream ss;
+            ss << classNames[classId - 1].c_str();
+            if (showConf)
+                ss << ": confidence = " + std::to_string((int)(confidence * 100)) + "%";
+            drawLabel(image, ss.str(), box_x, box_y);
         }
     }
+}
+
+void ObjectDetector::setMinConf(float c) {
+    if (c > 0)
+        minConfidence = c;
 }

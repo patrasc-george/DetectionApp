@@ -19,7 +19,9 @@ Menu::Menu(QWidget* parent)
     showFps = new QCheckBox("Show Framerate");
     screenshot = new QPushButton("Save screenshot");
     flip = new QCheckBox("Flip");
+    showConfidence = new QCheckBox("Show confidences");
 
+    showConfidence->setEnabled(false);
     toggleEyes->setEnabled(false);
     showRes->setEnabled(true);
     showFps->setEnabled(true);
@@ -39,6 +41,7 @@ Menu::Menu(QWidget* parent)
     vbox->addWidget(showRes);
     vbox->addWidget(showFps);
     vbox->addWidget(flip);
+    vbox->addWidget(showConfidence);
 
     vbox->addStretch(1);
     vbox->addWidget(screenshot);
