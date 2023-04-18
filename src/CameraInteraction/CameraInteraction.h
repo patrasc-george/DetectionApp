@@ -7,10 +7,8 @@
 #define CAMERAINTERACTION_API __declspec(dllimport)
 #endif
 
-// unused
-void cropOnResize(cv::Mat & image, int newWidth, int newHeight, cv::InterpolationFlags inter);
 
-void CAMERAINTERACTION_API displayInfo(cv::Mat &image, bool showRes, bool showFps, int fps, int avgFps);
+void CAMERAINTERACTION_API displayInfo(cv::Mat &image, std::string key, std::string value, cv::Point pos);
 
 struct CAMERAINTERACTION_API Timer {
 private:
