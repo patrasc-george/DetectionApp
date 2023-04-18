@@ -33,7 +33,7 @@ Menu::Menu(QWidget* parent)
     confLabel->setAlignment(Qt::AlignRight);
 
     confSlider->setRange(10, 95);
-    confSlider->setPageStep(5);
+    confSlider->setSingleStep(5);
     confSlider->setTickPosition(QSlider::TicksBelow);
     confSlider->setTickInterval(5);
 

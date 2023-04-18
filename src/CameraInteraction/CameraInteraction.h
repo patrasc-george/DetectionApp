@@ -10,7 +10,7 @@
 // unused
 void cropOnResize(cv::Mat & image, int newWidth, int newHeight, cv::InterpolationFlags inter);
 
-void CAMERAINTERACTION_API displayInfo(cv::Mat &image, bool showRes, bool showFps, int fps);
+void CAMERAINTERACTION_API displayInfo(cv::Mat &image, bool showRes, bool showFps, int fps, int avgFps);
 
 struct CAMERAINTERACTION_API Timer {
 private:
@@ -20,6 +20,7 @@ private:
 public:
 	Timer(int& c) {
 		start = std::chrono::steady_clock::now();
+		duration = start - start;
 		counter = &c;
 	}
 	~Timer() {

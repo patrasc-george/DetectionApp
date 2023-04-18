@@ -51,6 +51,8 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 
 void MainWindow::startVideoCapture() {
 	int fps = 0;
+	std::deque<int> fpsArray;
+	int avgFps{}; 
 	cv::VideoCapture cap(0);
 
 	if (!cap.isOpened())
@@ -68,6 +70,14 @@ void MainWindow::startVideoCapture() {
 		cv::Mat frame;
 
 		Timer timer(fps);
+		fpsArray.emplace_back(fps);
+		if (fpsArray.size() > 60)
+			fpsArray.pop_front();
+		for (auto&& f : fpsArray) {
+			avgFps += f;
+		}
+		avgFps /= fpsArray.size();
+
 		if (!cap.read(frame))
 			break;
 
@@ -85,21 +95,16 @@ void MainWindow::startVideoCapture() {
 			QMessageBox::critical(this, "Error", err);
 			menu->detectorsList->setCurrentIndex(0);
 		}
-		displayInfo(frame, menu->showRes->isChecked(), menu->showFps->isChecked(), fps);
+		displayInfo(frame, menu->showRes->isChecked(), menu->showFps->isChecked(), fps, avgFps);
 
 		// convert the image from OpenCV Mat format to QImage for display in QimageContainer
-		QImage* qimg = new QImage(frame.data, frame.cols, frame.rows, frame.step, QImage::Format_BGR888);
-		// create a QGraphicsPixmapItem to display the image in the scene
-		QGraphicsPixmapItem* pixmapItem = new QGraphicsPixmapItem(QPixmap::fromImage(*qimg));
-		// add the item to the scene and adjust the scene size to fit the item size
-		scene->addItem(pixmapItem);
-		scene->setSceneRect(pixmapItem->boundingRect()); // adjust the scene size to the image size
-		// wait for a short interval to reduce resource consumption
+		QImage qimg = QImage(frame.data, frame.cols, frame.rows, frame.step, QImage::Format_BGR888);
+		QGraphicsPixmapItem pixmapItem = QGraphicsPixmapItem(QPixmap::fromImage(qimg));
+
+		scene->addItem(&pixmapItem);
+		//scene->setSceneRect(pixmapItem->boundingRect()); // adjust the scene size to the image size
 		QCoreApplication::processEvents();
 
-
-		delete qimg;
-		delete pixmapItem;
 	}
 	cap.release();
 	delete scene;
