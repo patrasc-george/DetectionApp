@@ -40,7 +40,7 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 	setLayout(grid);
 	setFixedSize(sizeHint());
 
-	connect(menu->exit, &QPushButton::clicked, qApp, &QApplication::quit);
+	connect(menu->exit, &QPushButton::clicked, this, &MainWindow::close);
 	connect(menu->toggleCamera, &QPushButton::clicked, this, &MainWindow::toggleCameraEvent);
 	connect(menu->detectorsList, &QComboBox::currentIndexChanged, this, &MainWindow::selectDetectorEvent);
 	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
