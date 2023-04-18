@@ -17,46 +17,50 @@
 
 
 MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget(parent) {
+	// instantiate the list of detectors
 	this->detList = dList;
 	this->detIndex = 0;
 
+	// instantiate the menu (see constructor), image container and status bar
 	menu = new Menu;
-
 	imageContainer = new QGraphicsView;
-	imageContainer->setFixedSize(642, 482);
-
 	statusBar = new QListWidget;
-	statusBar->setMaximumHeight(50);
 
-	statusBar->addItem("Status Bar (WIP - currently it's just a list item as placeholder)");
-
-	QGridLayout* grid = new QGridLayout;
-
-	grid->addWidget(imageContainer, 0, 0, 1, 1);
-	grid->addWidget(menu, 0, 1, 1, 1);
-	grid->addWidget(statusBar, 1, 0, 1, 2);
-
-	grid->setContentsMargins(10, 10, 10, 10);
-	setLayout(grid);
-	setFixedSize(sizeHint());
-
+	// link the controls defined in our menu to the events of our window
+	// syntax: connect(widget that emits a signal, the type of the signal, the object that acts on the signal, the method (slot) that will be called)
 	connect(menu->exit, &QPushButton::clicked, this, &MainWindow::close);
-	connect(menu->toggleCamera, &QPushButton::clicked, this, &MainWindow::toggleCameraEvent);
+	connect(menu->toggleCamera, &QAbstractButton::toggled, this, &MainWindow::toggleCameraEvent);
 	connect(menu->detectorsList, &QComboBox::currentIndexChanged, this, &MainWindow::selectDetectorEvent);
 	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
 	connect(menu->confSlider, &QSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
 
+	imageContainer->setFixedSize(642, 482);
+	statusBar->setMaximumHeight(50);
+	statusBar->addItem("Status Bar (WIP - currently it's just a list item as placeholder)");
+
+	// create a grid that will contain the 3 main components
+	QGridLayout* grid = new QGridLayout;
+	grid->addWidget(imageContainer, 0, 0, 1, 1);
+	grid->addWidget(menu, 0, 1, 1, 1);
+	grid->addWidget(statusBar, 1, 0, 1, 2);
+	// give the grid some whitespace around
+	grid->setContentsMargins(10, 10, 10, 10);
+	// the main window will show the grid
+	setLayout(grid);
+	setFixedSize(sizeHint());
+
+	// set the initial values of the menu controls
+	menu->flip->setChecked(true); // the image is flipped
+	menu->detectorsList->setCurrentIndex(0); // 0 = no detection, 1 = face detection, 2 = object detection
 	menu->confSlider->setValue(60);
 }
 
 void MainWindow::startVideoCapture() {
-	int fps = 0;
+	int fps = 0, avgFps = 0;
 	std::deque<int> fpsArray;
-	int avgFps{}; 
 	cv::VideoCapture cap(0);
 
-	if (!cap.isOpened())
-	{
+	if (!cap.isOpened()) {
 		qDebug() << "Could not open video camera.";
 		return;
 	}
@@ -65,17 +69,16 @@ void MainWindow::startVideoCapture() {
 	QGraphicsScene* scene = new QGraphicsScene();
 	imageContainer->setScene(scene);
 
-	while (cameraIsOn && imageContainer->isVisible())
-	{
+	while (cameraIsOn && imageContainer->isVisible()) {
 		cv::Mat frame;
 
+		// measure live fps, create a queue of 60 measurements and find the average value
 		Timer timer(fps);
 		fpsArray.emplace_back(fps);
 		if (fpsArray.size() > 60)
 			fpsArray.pop_front();
-		for (auto&& f : fpsArray) {
+		for (auto&& f : fpsArray)
 			avgFps += f;
-		}
 		avgFps /= fpsArray.size();
 
 		if (!cap.read(frame))
@@ -84,6 +87,7 @@ void MainWindow::startVideoCapture() {
 		if (menu->flip->isChecked())
 			cv::flip(frame, frame, 1);
 
+		// detect if a detector is selected
 		try {
 			if (detIndex == 1)
 				detList[detIndex - 1]->detect(frame, menu->toggleEyes->isChecked());
@@ -95,9 +99,21 @@ void MainWindow::startVideoCapture() {
 			QMessageBox::critical(this, "Error", err);
 			menu->detectorsList->setCurrentIndex(0);
 		}
-		displayInfo(frame, menu->showRes->isChecked(), menu->showFps->isChecked(), fps, avgFps);
 
-		// convert the image from OpenCV Mat format to QImage for display in QimageContainer
+		short displayedInfoCount = 0;
+		
+		if (menu->showRes->isChecked()) {
+			displayInfo(frame, "Resolution", std::to_string(frame.size().width) + "x" + std::to_string(frame.size().height), cv::Point (10, 30 + displayedInfoCount * 30));
+			displayedInfoCount++;
+		}
+		if (menu->showFps->isChecked()) {
+			displayInfo(frame, "FPS", std::to_string(fps), cv::Point (10, 30 + displayedInfoCount * 30));
+			displayedInfoCount++;
+			displayInfo(frame, "Average FPS", std::to_string(avgFps), cv::Point (10, 30 + displayedInfoCount * 30));
+			displayedInfoCount++;
+		}
+		
+		// convert the image from OpenCV Mat format to QImage for display in imageContainer
 		QImage qimg = QImage(frame.data, frame.cols, frame.rows, frame.step, QImage::Format_BGR888);
 		QGraphicsPixmapItem pixmapItem = QGraphicsPixmapItem(QPixmap::fromImage(qimg));
 
@@ -107,15 +123,11 @@ void MainWindow::startVideoCapture() {
 
 	}
 	cap.release();
-	delete scene;
 };
 
 void MainWindow::toggleCameraEvent() {
-	cameraIsOn = !cameraIsOn;
-	if (cameraIsOn)
-		menu->toggleCamera->setText("Turn Off");
-	else
-		menu->toggleCamera->setText("Turn On");
+	cameraIsOn = menu->toggleCamera->isChecked();
+	menu->toggleCamera->setText("Turn " + QString(cameraIsOn ? "Off" : "On"));
 	menu->toggleEyes->setEnabled(cameraIsOn && detIndex == 1);
 	menu->showConfidence->setEnabled(cameraIsOn && detIndex > 1);
 	menu->confSlider->setEnabled(cameraIsOn && detIndex > 1);
@@ -124,7 +136,7 @@ void MainWindow::toggleCameraEvent() {
 	menu->flip->setEnabled(cameraIsOn);
 	menu->screenshot->setEnabled(cameraIsOn);
 
-	startVideoCapture();
+	if (cameraIsOn) startVideoCapture();
 }
 
 void MainWindow::selectDetectorEvent() {

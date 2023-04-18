@@ -3,17 +3,14 @@
 #include <opencv2/opencv.hpp>
 #include "ObjectDetection.h"
 
-//#include <QtCore/QVariant>
-#include <QtWidgets/QApplication>
-#include <QtWidgets/QCheckBox>
-#include <QtWidgets/QComboBox>
-#include <QtWidgets/QGraphicsView>
-#include <QtWidgets/QListWidget>
-#include <QtWidgets/QMainWindow>
-//#include <QtWidgets/QMenuBar>
-#include <QtWidgets/QPushButton>
-//#include <QtWidgets/QStatusBar>
-#include <QtWidgets/QWidget>
+#include <QWidget>
+#include <QApplication>
+#include <QCheckBox>
+#include <QComboBox>
+#include <QGraphicsView>
+#include <QListWidget>
+#include <QMainWindow>
+#include <QPushButton>
 
 #include "menuOptions.h"
 
@@ -22,7 +19,8 @@ class MainWindow : public QWidget {
     Q_OBJECT
 
 public:
-    Menu* menu;
+    // three main sections
+    Menu* menu; // controls
     QGraphicsView* imageContainer;
     QListWidget* statusBar;
 
@@ -38,7 +36,7 @@ private slots:
     void changeMinConfEvent();
 
 private:
-    bool cameraIsOn = true;
+    bool cameraIsOn = false;
     std::vector<Detector*> detList;
     short detIndex;
 };

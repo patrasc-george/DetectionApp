@@ -30,6 +30,7 @@ int main(int argc, char* argv[]) {
 
     window.setWindowTitle("Detection App");
     window.show();
-    window.startVideoCapture();
+    window.menu->toggleCamera->setChecked(true); // camera is on
+
     return app.exec();
 }
