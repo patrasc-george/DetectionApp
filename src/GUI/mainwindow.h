@@ -16,27 +16,39 @@
 
 
 class MainWindow : public QWidget {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    // three main sections
-    Menu* menu; // controls
-    QGraphicsView* imageContainer;
-    QListWidget* statusBar;
+	// three main sections
+	Menu* menu; // controls
+	QGraphicsView* imageContainer;
+	QListWidget* statusBar;
+	QString fileName;
 
 public:
-    MainWindow(std::vector<Detector*>& detList, QWidget* parent = nullptr);
-    ~MainWindow() {};
-    void startVideoCapture();
+	MainWindow(std::vector<Detector*>& detList, QWidget* parent = nullptr);
+	~MainWindow() {};
+	void startVideoCapture();
 
 private slots:
-    void toggleCameraEvent();
-    void selectDetectorEvent();
-    void screenshotEvent();
-    void changeMinConfEvent();
+	void setEnabled();
+	void toggleCameraEvent();
+	void toggleImageEvent();
+	void showResEvent();
+	void flipEvent();
+	void displayImage(const cv::Mat& frame);
+	void setFlip(cv::Mat& frame);
+	void setDetector(cv::Mat& frame);
+	void selectDetectorEvent();
+	void screenshotEvent();
+	void changeMinConfEvent();
+	QString getImageFileName();
+	void processImage();
 
 private:
-    bool cameraIsOn = false;
-    std::vector<Detector*> detList;
-    short detIndex;
+	bool cameraIsOn = false;
+	bool imageIsUpload = false;
+	std::vector<Detector*> detList;
+	short detIndex;
+
 };

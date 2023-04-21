@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "menuOptions.h"
 
 #include <opencv2/opencv.hpp>
@@ -33,6 +33,9 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 	connect(menu->detectorsList, &QComboBox::currentIndexChanged, this, &MainWindow::selectDetectorEvent);
 	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
 	connect(menu->confSlider, &QSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
+	connect(menu->uploadButton, &QPushButton::clicked, this, &MainWindow::toggleImageEvent);
+	connect(menu->flip, &QCheckBox::stateChanged, this, &MainWindow::flipEvent);
+	connect(menu->showRes, &QCheckBox::stateChanged, this, &MainWindow::showResEvent);
 
 	imageContainer->setFixedSize(642, 482);
 	statusBar->setMaximumHeight(50);
@@ -55,6 +58,94 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 	menu->confSlider->setValue(60);
 }
 
+void MainWindow::setEnabled()
+{
+	menu->toggleCamera->setText("Turn " + QString(cameraIsOn ? "Off" : "On"));
+	menu->toggleEyes->setEnabled((cameraIsOn || imageIsUpload) && detIndex == 1);
+	menu->showConfidence->setEnabled((cameraIsOn || imageIsUpload) && detIndex > 1);
+	menu->confSlider->setEnabled((cameraIsOn || imageIsUpload) && detIndex > 1);
+	menu->showRes->setEnabled(cameraIsOn || imageIsUpload);
+	menu->showFps->setEnabled(cameraIsOn);
+	menu->flip->setEnabled(cameraIsOn || imageIsUpload);
+	menu->screenshot->setEnabled(cameraIsOn || imageIsUpload);
+}
+
+void MainWindow::toggleCameraEvent() {
+	cameraIsOn = menu->toggleCamera->isChecked();
+	menu->uploadButton->setChecked(false);
+	imageIsUpload = menu->uploadButton->isChecked();
+	menu->flip->setChecked(true);
+	setEnabled();
+	if (cameraIsOn) startVideoCapture();
+	else delete imageContainer->scene();
+}
+
+void MainWindow::toggleImageEvent()
+{
+	fileName = getImageFileName();
+
+	if (fileName.isEmpty()) {
+		return;
+	}
+
+	menu->toggleCamera->setChecked(false);
+	cameraIsOn = menu->toggleCamera->isChecked();
+	menu->flip->setChecked(false);
+	imageIsUpload = true;
+	setEnabled();
+	processImage();
+}
+
+void MainWindow::flipEvent()
+{
+	if (imageIsUpload) processImage();
+}
+
+void MainWindow::showResEvent()
+{
+	if (imageIsUpload) processImage();
+}
+
+void MainWindow::setFlip(cv::Mat& frame)
+{
+	if (menu->flip->isChecked()) {
+		cv::flip(frame, frame, 1);
+	}
+}
+
+void MainWindow::setDetector(cv::Mat& frame)
+{
+	// detect if a detector is selected
+	try {
+		if (detIndex == 1) {
+			detList[detIndex - 1]->detect(frame, menu->toggleEyes->isChecked());
+		}
+		else if (detIndex > 1) {
+			detList[detIndex - 1]->detect(frame, menu->showConfidence->isChecked());
+		}
+	}
+	catch (const std::exception& ex)
+	{
+		QString err = tr("There was an error while loading the detection model: \n%1").arg(ex.what());
+		QMessageBox::critical(this, "Error", err);
+		menu->detectorsList->setCurrentIndex(0);
+	}
+}
+
+void MainWindow::displayImage(const cv::Mat& frame)
+{
+	// create a scene to display the captured image from the webcam
+	QGraphicsScene* scene = new QGraphicsScene();
+	imageContainer->setScene(scene);
+
+	QImage qimg(frame.data, frame.cols, frame.rows, static_cast<int>(frame.step), QImage::Format_BGR888);
+	QGraphicsPixmapItem* pixmapItem = new QGraphicsPixmapItem(QPixmap::fromImage(qimg));
+	scene->addItem(pixmapItem);
+	imageContainer->fitInView(pixmapItem, Qt::KeepAspectRatio);
+
+	QCoreApplication::processEvents();
+}
+
 void MainWindow::startVideoCapture() {
 	int fps = 0, avgFps = 0;
 	std::deque<int> fpsArray;
@@ -64,10 +155,6 @@ void MainWindow::startVideoCapture() {
 		qDebug() << "Could not open video camera.";
 		return;
 	}
-
-	// create a scene to display the captured image from the webcam
-	QGraphicsScene* scene = new QGraphicsScene();
-	imageContainer->setScene(scene);
 
 	while (cameraIsOn && imageContainer->isVisible()) {
 		cv::Mat frame;
@@ -84,72 +171,42 @@ void MainWindow::startVideoCapture() {
 		if (!cap.read(frame))
 			break;
 
-		if (menu->flip->isChecked())
-			cv::flip(frame, frame, 1);
-
-		// detect if a detector is selected
-		try {
-			if (detIndex == 1)
-				detList[detIndex - 1]->detect(frame, menu->toggleEyes->isChecked());
-			else if (detIndex > 1)
-				detList[detIndex - 1]->detect(frame, menu->showConfidence->isChecked());
-		}
-		catch (const std::exception& ex) {
-			QString err = tr("There was an error while loading the detection model: \n%1").arg(*ex.what());
-			QMessageBox::critical(this, "Error", err);
-			menu->detectorsList->setCurrentIndex(0);
-		}
+		setFlip(frame);
+		setDetector(frame);
 
 		short displayedInfoCount = 0;
-		
+
 		if (menu->showRes->isChecked()) {
-			displayInfo(frame, "Resolution", std::to_string(frame.size().width) + "x" + std::to_string(frame.size().height), cv::Point (10, 30 + displayedInfoCount * 30));
+			displayInfo(frame, "Resolution", std::to_string(frame.size().width) + "x" + std::to_string(frame.size().height), cv::Point(10, 30 + displayedInfoCount * 30));
 			displayedInfoCount++;
 		}
 		if (menu->showFps->isChecked()) {
-			displayInfo(frame, "FPS", std::to_string(fps), cv::Point (10, 30 + displayedInfoCount * 30));
+			displayInfo(frame, "FPS", std::to_string(fps), cv::Point(10, 30 + displayedInfoCount * 30));
 			displayedInfoCount++;
-			displayInfo(frame, "Average FPS", std::to_string(avgFps), cv::Point (10, 30 + displayedInfoCount * 30));
+			displayInfo(frame, "Average FPS", std::to_string(avgFps), cv::Point(10, 30 + displayedInfoCount * 30));
 			displayedInfoCount++;
 		}
-		
-		// convert the image from OpenCV Mat format to QImage for display in imageContainer
-		QImage qimg = QImage(frame.data, frame.cols, frame.rows, frame.step, QImage::Format_BGR888);
-		QGraphicsPixmapItem pixmapItem = QGraphicsPixmapItem(QPixmap::fromImage(qimg));
 
-		scene->addItem(&pixmapItem);
-		//scene->setSceneRect(pixmapItem->boundingRect()); // adjust the scene size to the image size
-		QCoreApplication::processEvents();
-
+		displayImage(frame);
 	}
 	cap.release();
-};
-
-void MainWindow::toggleCameraEvent() {
-	cameraIsOn = menu->toggleCamera->isChecked();
-	menu->toggleCamera->setText("Turn " + QString(cameraIsOn ? "Off" : "On"));
-	menu->toggleEyes->setEnabled(cameraIsOn && detIndex == 1);
-	menu->showConfidence->setEnabled(cameraIsOn && detIndex > 1);
-	menu->confSlider->setEnabled(cameraIsOn && detIndex > 1);
-	menu->showRes->setEnabled(cameraIsOn);
-	menu->showFps->setEnabled(cameraIsOn);
-	menu->flip->setEnabled(cameraIsOn);
-	menu->screenshot->setEnabled(cameraIsOn);
-
-	if (cameraIsOn) startVideoCapture();
 }
 
 void MainWindow::selectDetectorEvent() {
 	detIndex = menu->detectorsList->currentIndex();
 
-	menu->toggleEyes->setEnabled(cameraIsOn && detIndex == 1);
-	menu->showConfidence->setEnabled(cameraIsOn && detIndex > 1);
-	menu->confSlider->setEnabled(cameraIsOn && detIndex > 1);
+	menu->toggleEyes->setEnabled((cameraIsOn || imageIsUpload) && detIndex == 1);
+	menu->showConfidence->setEnabled((cameraIsOn || imageIsUpload) && detIndex > 1);
+	menu->confSlider->setEnabled((cameraIsOn || imageIsUpload) && detIndex > 1);
+	if(imageIsUpload)
+		processImage();
 }
 
 void MainWindow::changeMinConfEvent() {
 	detList[1]->setMinConfidence(menu->confSlider->value() / static_cast<float>(100));
 	menu->confLabel->setText(QString::number(menu->confSlider->value()) + QString("%"));
+	if (imageIsUpload)
+		processImage();
 }
 
 void MainWindow::screenshotEvent() {
@@ -161,4 +218,21 @@ void MainWindow::screenshotEvent() {
 		QPixmap pixMap = imageContainer->grab(imageContainer->sceneRect().toRect());
 		pixMap.save(fileName);
 	}
+}
+
+QString MainWindow::getImageFileName()
+{
+	return QFileDialog::getOpenFileName(this, tr("Open Image"), "", tr("Image Files (*.png *.jpg *.bmp)"));
+}
+
+void MainWindow::processImage()
+{
+	cv::Mat frame = cv::imread(fileName.toStdString());
+	setFlip(frame);
+	setDetector(frame);
+	if (menu->showRes->isChecked())
+		displayInfo(frame, "Resolution", std::to_string(frame.size().width) + "x" + std::to_string(frame.size().height), cv::Point(10, 30));
+	if (frame.empty())
+		return;
+	displayImage(frame);
 }
