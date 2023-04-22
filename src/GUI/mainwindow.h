@@ -23,7 +23,6 @@ public:
 	Menu* menu; // controls
 	QGraphicsView* imageContainer;
 	QListWidget* statusBar;
-	QString fileName;
 
 public:
 	MainWindow(std::vector<Detector*>& detList, QWidget* parent = nullptr);
@@ -31,24 +30,27 @@ public:
 	void startVideoCapture();
 
 private slots:
-	void setEnabled();
+	void setOptions();
 	void toggleCameraEvent();
-	void toggleImageEvent();
-	void showResEvent();
-	void flipEvent();
-	void displayImage(const cv::Mat& frame);
-	void setFlip(cv::Mat& frame);
-	void setDetector(cv::Mat& frame);
-	void selectDetectorEvent();
-	void screenshotEvent();
-	void changeMinConfEvent();
 	QString getImageFileName();
+	void toggleImageEvent();
+	void verifyImageIsUpload();
+	void selectDetectorEvent();
+	void changeMinConfEvent();
+	void screenshotEvent();
+	void setDetector();
+	void showRes();
+	void showFPS(int& fps, int& avgFps, std::deque<int>& fpsArray);
+	void flipImage();
+	void displayImage();
 	void processImage();
 
 private:
-	bool cameraIsOn = false;
-	bool imageIsUpload = false;
+	cv::Mat frame;
+	QString fileName;
 	std::vector<Detector*> detList;
 	short detIndex;
-
+	short displayedInfoCount;
+	bool cameraIsOn = false;
+	bool imageIsUpload = false;
 };

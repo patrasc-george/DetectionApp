@@ -20,6 +20,7 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 	// instantiate the list of detectors
 	this->detList = dList;
 	this->detIndex = 0;
+	displayedInfoCount = 0;
 
 	// instantiate the menu (see constructor), image container and status bar
 	menu = new Menu;
@@ -30,12 +31,14 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 	// syntax: connect(widget that emits a signal, the type of the signal, the object that acts on the signal, the method (slot) that will be called)
 	connect(menu->exit, &QPushButton::clicked, this, &MainWindow::close);
 	connect(menu->toggleCamera, &QAbstractButton::toggled, this, &MainWindow::toggleCameraEvent);
-	connect(menu->detectorsList, &QComboBox::currentIndexChanged, this, &MainWindow::selectDetectorEvent);
-	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
-	connect(menu->confSlider, &QSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
 	connect(menu->uploadButton, &QPushButton::clicked, this, &MainWindow::toggleImageEvent);
-	connect(menu->flip, &QCheckBox::stateChanged, this, &MainWindow::flipEvent);
-	connect(menu->showRes, &QCheckBox::stateChanged, this, &MainWindow::showResEvent);
+	connect(menu->detectorsList, &QComboBox::currentIndexChanged, this, &MainWindow::selectDetectorEvent);
+	connect(menu->confSlider, &QSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
+	connect(menu->toggleEyes, &QCheckBox::stateChanged, this, &MainWindow::verifyImageIsUpload);
+	connect(menu->showRes, &QCheckBox::stateChanged, this, &MainWindow::verifyImageIsUpload);
+	connect(menu->flip, &QCheckBox::stateChanged, this, &MainWindow::verifyImageIsUpload);
+	connect(menu->showConfidence, &QCheckBox::stateChanged, this, &MainWindow::verifyImageIsUpload);
+	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
 
 	imageContainer->setFixedSize(642, 482);
 	statusBar->setMaximumHeight(50);
@@ -58,7 +61,7 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 	menu->confSlider->setValue(60);
 }
 
-void MainWindow::setEnabled()
+void MainWindow::setOptions()
 {
 	menu->toggleCamera->setText("Turn " + QString(cameraIsOn ? "Off" : "On"));
 	menu->toggleEyes->setEnabled((cameraIsOn || imageIsUpload) && detIndex == 1);
@@ -75,9 +78,15 @@ void MainWindow::toggleCameraEvent() {
 	menu->uploadButton->setChecked(false);
 	imageIsUpload = menu->uploadButton->isChecked();
 	menu->flip->setChecked(true);
-	setEnabled();
+	setOptions();
+
 	if (cameraIsOn) startVideoCapture();
 	else delete imageContainer->scene();
+}
+
+QString MainWindow::getImageFileName()
+{
+	return QFileDialog::getOpenFileName(this, tr("Open Image"), "", tr("Image Files (*.png *.jpg *.bmp)"));
 }
 
 void MainWindow::toggleImageEvent()
@@ -92,28 +101,42 @@ void MainWindow::toggleImageEvent()
 	cameraIsOn = menu->toggleCamera->isChecked();
 	menu->flip->setChecked(false);
 	imageIsUpload = true;
-	setEnabled();
+	setOptions();
 	processImage();
 }
 
-void MainWindow::flipEvent()
+void MainWindow::verifyImageIsUpload()
 {
 	if (imageIsUpload) processImage();
 }
 
-void MainWindow::showResEvent()
-{
-	if (imageIsUpload) processImage();
+void MainWindow::selectDetectorEvent() {
+	detIndex = menu->detectorsList->currentIndex();
+
+	menu->toggleEyes->setEnabled((cameraIsOn || imageIsUpload) && detIndex == 1);
+	menu->showConfidence->setEnabled((cameraIsOn || imageIsUpload) && detIndex > 1);
+	menu->confSlider->setEnabled((cameraIsOn || imageIsUpload) && detIndex > 1);
+	verifyImageIsUpload();
 }
 
-void MainWindow::setFlip(cv::Mat& frame)
-{
-	if (menu->flip->isChecked()) {
-		cv::flip(frame, frame, 1);
+void MainWindow::changeMinConfEvent() {
+	detList[1]->setMinConfidence(menu->confSlider->value() / static_cast<float>(100));
+	menu->confLabel->setText(QString::number(menu->confSlider->value()) + QString("%"));
+	verifyImageIsUpload();
+}
+
+void MainWindow::screenshotEvent() {
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Image File"),
+		QString(),
+		tr("Images (*.png)"));
+	if (!fileName.isEmpty())
+	{
+		QPixmap pixMap = imageContainer->grab(imageContainer->sceneRect().toRect());
+		pixMap.save(fileName);
 	}
 }
 
-void MainWindow::setDetector(cv::Mat& frame)
+void MainWindow::setDetector()
 {
 	// detect if a detector is selected
 	try {
@@ -132,7 +155,32 @@ void MainWindow::setDetector(cv::Mat& frame)
 	}
 }
 
-void MainWindow::displayImage(const cv::Mat& frame)
+void MainWindow::showRes()
+{
+	if (menu->showRes->isChecked()) {
+		displayInfo(frame, "Resolution", std::to_string(frame.size().width) + "x" + std::to_string(frame.size().height), cv::Point(10, 30 + displayedInfoCount * 30));
+		displayedInfoCount++;
+	}
+}
+
+void MainWindow::showFPS(int& fps, int& avgFps, std::deque<int>& fpsArray)
+{
+	if (menu->showFps->isChecked()) {
+		displayInfo(frame, "FPS", std::to_string(fps), cv::Point(10, 30 + displayedInfoCount * 30));
+		displayedInfoCount++;
+		displayInfo(frame, "Average FPS", std::to_string(avgFps), cv::Point(10, 30 + displayedInfoCount * 30));
+		displayedInfoCount++;
+	}
+}
+
+void MainWindow::flipImage()
+{
+	if (menu->flip->isChecked()) {
+		cv::flip(frame, frame, 1);
+	}
+}
+
+void MainWindow::displayImage()
 {
 	// create a scene to display the captured image from the webcam
 	QGraphicsScene* scene = new QGraphicsScene();
@@ -157,7 +205,7 @@ void MainWindow::startVideoCapture() {
 	}
 
 	while (cameraIsOn && imageContainer->isVisible()) {
-		cv::Mat frame;
+		displayedInfoCount = 0;
 
 		// measure live fps, create a queue of 60 measurements and find the average value
 		Timer timer(fps);
@@ -171,68 +219,26 @@ void MainWindow::startVideoCapture() {
 		if (!cap.read(frame))
 			break;
 
-		setFlip(frame);
-		setDetector(frame);
-
-		short displayedInfoCount = 0;
-
-		if (menu->showRes->isChecked()) {
-			displayInfo(frame, "Resolution", std::to_string(frame.size().width) + "x" + std::to_string(frame.size().height), cv::Point(10, 30 + displayedInfoCount * 30));
-			displayedInfoCount++;
-		}
-		if (menu->showFps->isChecked()) {
-			displayInfo(frame, "FPS", std::to_string(fps), cv::Point(10, 30 + displayedInfoCount * 30));
-			displayedInfoCount++;
-			displayInfo(frame, "Average FPS", std::to_string(avgFps), cv::Point(10, 30 + displayedInfoCount * 30));
-			displayedInfoCount++;
-		}
-
-		displayImage(frame);
+		flipImage();
+		setDetector();
+		showRes();
+		showFPS(fps, avgFps, fpsArray);
+		displayImage();
 	}
 	cap.release();
 }
 
-void MainWindow::selectDetectorEvent() {
-	detIndex = menu->detectorsList->currentIndex();
-
-	menu->toggleEyes->setEnabled((cameraIsOn || imageIsUpload) && detIndex == 1);
-	menu->showConfidence->setEnabled((cameraIsOn || imageIsUpload) && detIndex > 1);
-	menu->confSlider->setEnabled((cameraIsOn || imageIsUpload) && detIndex > 1);
-	if(imageIsUpload)
-		processImage();
-}
-
-void MainWindow::changeMinConfEvent() {
-	detList[1]->setMinConfidence(menu->confSlider->value() / static_cast<float>(100));
-	menu->confLabel->setText(QString::number(menu->confSlider->value()) + QString("%"));
-	if (imageIsUpload)
-		processImage();
-}
-
-void MainWindow::screenshotEvent() {
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Image File"),
-		QString(),
-		tr("Images (*.png)"));
-	if (!fileName.isEmpty())
-	{
-		QPixmap pixMap = imageContainer->grab(imageContainer->sceneRect().toRect());
-		pixMap.save(fileName);
-	}
-}
-
-QString MainWindow::getImageFileName()
-{
-	return QFileDialog::getOpenFileName(this, tr("Open Image"), "", tr("Image Files (*.png *.jpg *.bmp)"));
-}
-
 void MainWindow::processImage()
 {
-	cv::Mat frame = cv::imread(fileName.toStdString());
-	setFlip(frame);
-	setDetector(frame);
-	if (menu->showRes->isChecked())
-		displayInfo(frame, "Resolution", std::to_string(frame.size().width) + "x" + std::to_string(frame.size().height), cv::Point(10, 30));
+	displayedInfoCount = 0;
+	frame = cv::imread(fileName.toStdString());
+
+	flipImage();
+	setDetector();
+	showRes();
+
 	if (frame.empty())
 		return;
-	displayImage(frame);
+
+	displayImage();
 }
