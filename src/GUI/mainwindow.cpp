@@ -129,10 +129,17 @@ void MainWindow::screenshotEvent() {
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Image File"),
 		QString(),
 		tr("Images (*.png)"));
-	if (!fileName.isEmpty())
-	{
-		QPixmap pixMap = imageContainer->grab(imageContainer->sceneRect().toRect());
-		pixMap.save(fileName);
+	if (!fileName.isEmpty()) {
+		// Re-shrink the scene to it's bounding contents
+		imageContainer->scene()->setSceneRect(imageContainer->scene()->itemsBoundingRect());
+		// Create the image with the exact size of the shrunk scene
+		QImage image(imageContainer->scene()->sceneRect().size().toSize(), QImage::Format_ARGB32);
+		// Start all pixels transparent to avoid white background
+		image.fill(Qt::transparent); 
+
+		QPainter painter(&image); // paint the image over the transparent pixels
+		imageContainer->scene()->render(&painter);
+		image.save(fileName);
 	}
 }
 
