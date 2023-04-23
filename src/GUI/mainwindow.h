@@ -8,6 +8,7 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QGraphicsView>
+#include <QGraphicsPixmapItem>
 #include <QListWidget>
 #include <QMainWindow>
 #include <QPushButton>
@@ -30,22 +31,15 @@ public:
 	void startVideoCapture();
 
 private slots:
-	void setOptions();
 	void toggleCameraEvent();
-	QString getImageFileName();
-	void toggleImageEvent();
-	void verifyImageIsUpload();
+	void uploadImageEvent();
 	void selectDetectorEvent();
 	void changeMinConfEvent();
 	void screenshotEvent();
-	void setDetector();
-	void showRes();
-	void showFPS(int& fps, int& avgFps, std::deque<int>& fpsArray);
-	void flipImage();
-	void displayImage();
 	void processImage();
 
 private:
+	QGraphicsPixmapItem pixmap;
 	cv::Mat frame;
 	QString fileName;
 	std::vector<Detector*> detList;
@@ -53,4 +47,11 @@ private:
 	short displayedInfoCount;
 	bool cameraIsOn = false;
 	bool imageIsUpload = false;
+	void setOptions();
+	void setDetector();
+	void showRes();
+	void showFPS(int& fps, int& avgFps);
+	void flipImage();
+	void displayImage();
+	QString getImageFileName();
 };

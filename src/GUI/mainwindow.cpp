@@ -31,16 +31,16 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 	// syntax: connect(widget that emits a signal, the type of the signal, the object that acts on the signal, the method (slot) that will be called)
 	connect(menu->exit, &QPushButton::clicked, this, &MainWindow::close);
 	connect(menu->toggleCamera, &QAbstractButton::toggled, this, &MainWindow::toggleCameraEvent);
-	connect(menu->uploadButton, &QPushButton::clicked, this, &MainWindow::toggleImageEvent);
+	connect(menu->uploadButton, &QPushButton::clicked, this, &MainWindow::uploadImageEvent);
 	connect(menu->detectorsList, &QComboBox::currentIndexChanged, this, &MainWindow::selectDetectorEvent);
 	connect(menu->confSlider, &QSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
-	connect(menu->toggleEyes, &QCheckBox::stateChanged, this, &MainWindow::verifyImageIsUpload);
-	connect(menu->showRes, &QCheckBox::stateChanged, this, &MainWindow::verifyImageIsUpload);
-	connect(menu->flip, &QCheckBox::stateChanged, this, &MainWindow::verifyImageIsUpload);
-	connect(menu->showConfidence, &QCheckBox::stateChanged, this, &MainWindow::verifyImageIsUpload);
+	connect(menu->toggleEyes, &QCheckBox::toggled, this, &MainWindow::processImage);
+	connect(menu->showRes, &QCheckBox::toggled, this, &MainWindow::processImage);
+	connect(menu->flip, &QCheckBox::toggled, this, &MainWindow::processImage);
+	connect(menu->showConfidence, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
 
-	imageContainer->setFixedSize(642, 482);
+	imageContainer->setFixedSize(640, 480);
 	statusBar->setMaximumHeight(50);
 	statusBar->addItem("Status Bar (WIP - currently it's just a list item as placeholder)");
 
@@ -59,6 +59,12 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 	menu->flip->setChecked(true); // the image is flipped
 	menu->detectorsList->setCurrentIndex(0); // 0 = no detection, 1 = face detection, 2 = object detection
 	menu->confSlider->setValue(60);
+
+	// init the PixMap
+	imageContainer->setScene(new QGraphicsScene(this));
+	imageContainer->scene()->addItem(&pixmap);
+	imageContainer->setSceneRect(imageContainer->scene()->sceneRect());
+	imageContainer->setAlignment(Qt::AlignCenter);
 }
 
 void MainWindow::setOptions()
@@ -77,11 +83,18 @@ void MainWindow::toggleCameraEvent() {
 	cameraIsOn = menu->toggleCamera->isChecked();
 	menu->uploadButton->setChecked(false);
 	imageIsUpload = menu->uploadButton->isChecked();
-	menu->flip->setChecked(true);
 	setOptions();
 
-	if (cameraIsOn) startVideoCapture();
-	else delete imageContainer->scene();
+	if (cameraIsOn) {
+		menu->flip->setChecked(true);
+		imageContainer->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		imageContainer->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+		startVideoCapture();
+	}
+	else {
+		frame.setTo(cv::Scalar(255, 255, 255));
+		displayImage();
+	}
 }
 
 QString MainWindow::getImageFileName()
@@ -89,25 +102,21 @@ QString MainWindow::getImageFileName()
 	return QFileDialog::getOpenFileName(this, tr("Open Image"), "", tr("Image Files (*.png *.jpg *.bmp)"));
 }
 
-void MainWindow::toggleImageEvent()
+void MainWindow::uploadImageEvent()
 {
 	fileName = getImageFileName();
 
 	if (fileName.isEmpty()) {
 		return;
 	}
+	frame = cv::imread(fileName.toStdString());
 
 	menu->toggleCamera->setChecked(false);
-	cameraIsOn = menu->toggleCamera->isChecked();
 	menu->flip->setChecked(false);
 	imageIsUpload = true;
 	setOptions();
 	processImage();
-}
-
-void MainWindow::verifyImageIsUpload()
-{
-	if (imageIsUpload) processImage();
+	displayImage();
 }
 
 void MainWindow::selectDetectorEvent() {
@@ -116,13 +125,12 @@ void MainWindow::selectDetectorEvent() {
 	menu->toggleEyes->setEnabled((cameraIsOn || imageIsUpload) && detIndex == 1);
 	menu->showConfidence->setEnabled((cameraIsOn || imageIsUpload) && detIndex > 1);
 	menu->confSlider->setEnabled((cameraIsOn || imageIsUpload) && detIndex > 1);
-	verifyImageIsUpload();
 }
 
 void MainWindow::changeMinConfEvent() {
 	detList[1]->setMinConfidence(menu->confSlider->value() / static_cast<float>(100));
 	menu->confLabel->setText(QString::number(menu->confSlider->value()) + QString("%"));
-	verifyImageIsUpload();
+	if (imageIsUpload) processImage();
 }
 
 void MainWindow::screenshotEvent() {
@@ -170,7 +178,7 @@ void MainWindow::showRes()
 	}
 }
 
-void MainWindow::showFPS(int& fps, int& avgFps, std::deque<int>& fpsArray)
+void MainWindow::showFPS(int& fps, int& avgFps)
 {
 	if (menu->showFps->isChecked()) {
 		displayInfo(frame, "FPS", std::to_string(fps), cv::Point(10, 30 + displayedInfoCount * 30));
@@ -187,16 +195,10 @@ void MainWindow::flipImage()
 	}
 }
 
-void MainWindow::displayImage()
-{
-	// create a scene to display the captured image from the webcam
-	QGraphicsScene* scene = new QGraphicsScene();
-	imageContainer->setScene(scene);
-
+void MainWindow::displayImage() {
 	QImage qimg(frame.data, frame.cols, frame.rows, static_cast<int>(frame.step), QImage::Format_BGR888);
-	QGraphicsPixmapItem* pixmapItem = new QGraphicsPixmapItem(QPixmap::fromImage(qimg));
-	scene->addItem(pixmapItem);
-	imageContainer->fitInView(pixmapItem, Qt::KeepAspectRatio);
+	pixmap.setPixmap(QPixmap::fromImage(qimg));
+	imageContainer->fitInView(&pixmap, Qt::KeepAspectRatio);
 
 	QCoreApplication::processEvents();
 }
@@ -212,8 +214,6 @@ void MainWindow::startVideoCapture() {
 	}
 
 	while (cameraIsOn && imageContainer->isVisible()) {
-		displayedInfoCount = 0;
-
 		// measure live fps, create a queue of 60 measurements and find the average value
 		Timer timer(fps);
 		fpsArray.emplace_back(fps);
@@ -226,19 +226,18 @@ void MainWindow::startVideoCapture() {
 		if (!cap.read(frame))
 			break;
 
-		flipImage();
-		setDetector();
-		showRes();
-		showFPS(fps, avgFps, fpsArray);
+		processImage();
+		showFPS(fps, avgFps);
 		displayImage();
 	}
 	cap.release();
+	QCoreApplication::processEvents();
 }
 
-void MainWindow::processImage()
-{
+void MainWindow::processImage() {
 	displayedInfoCount = 0;
-	frame = cv::imread(fileName.toStdString());
+	if (imageIsUpload)
+		frame = cv::imread(fileName.toStdString());
 
 	flipImage();
 	setDetector();
@@ -247,5 +246,5 @@ void MainWindow::processImage()
 	if (frame.empty())
 		return;
 
-	displayImage();
+	if (imageIsUpload) displayImage();
 }
