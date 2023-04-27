@@ -37,6 +37,7 @@ private slots:
 	void changeMinConfEvent();
 	void screenshotEvent();
 	void processImage();
+	void changeThresholdEvent();
 
 private:
 	QGraphicsPixmapItem pixmap;
@@ -54,4 +55,6 @@ private:
 	void flipImage();
 	void displayImage();
 	QString getImageFileName();
+	void setLabelMinConf();
+	void setLabelThreshold();
 };

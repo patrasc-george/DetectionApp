@@ -27,6 +27,7 @@ Menu::Menu(QWidget* parent)
 	confSlider = new QSlider(Qt::Horizontal);
 	confLabel = new QLabel("");
 	uploadButton = new QPushButton("Upload Image");
+	thresholdSlider = new QSlider(Qt::Horizontal);
 
 	/* the 'label' for minimum confidence is made up of two elements :
 		- a static label with text
@@ -35,17 +36,20 @@ Menu::Menu(QWidget* parent)
 		- they are wrapped in a horizontal box (confBox)
 	*/
 	auto* confHbox = new QHBoxLayout();
-	confHbox->addWidget(new QLabel("Min confidence"));
-	confHbox->addStretch(1);
 	confHbox->addWidget(confLabel);
+	confHbox->addStretch(1);
 	confHbox->setEnabled(false);
-	confLabel->setAlignment(Qt::AlignRight);
 
 	// configuring the slider
 	confSlider->setRange(10, 95);
 	confSlider->setSingleStep(5);
 	confSlider->setTickPosition(QSlider::TicksBelow);
 	confSlider->setTickInterval(5);
+
+	thresholdSlider->setRange(10, 250);
+	thresholdSlider->setSingleStep(10);
+	thresholdSlider->setTickPosition(QSlider::TicksBelow);
+	thresholdSlider->setTickInterval(10);
 
 	// we make the Camera Toggle pushButton behave like a checkbox so we can access its 'checked' state
 	toggleCamera->setCheckable(true);
@@ -67,6 +71,7 @@ Menu::Menu(QWidget* parent)
 	vbox->addWidget(showConfidence);
 	vbox->addLayout(confHbox); // we add the horizontal wrapper
 	vbox->addWidget(confSlider);
+	vbox->addWidget(thresholdSlider);
 
 	vbox->addStretch(1); // add spacing so the next controls will appear at the bottom of the menu
 	vbox->addWidget(uploadButton);

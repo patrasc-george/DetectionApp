@@ -39,6 +39,7 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 	connect(menu->flip, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->showConfidence, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
+	connect(menu->thresholdSlider, &QSlider::valueChanged, this, &MainWindow::changeThresholdEvent);
 
 	imageContainer->setFixedSize(640, 480);
 	statusBar->setMaximumHeight(50);
@@ -59,6 +60,7 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 	menu->flip->setChecked(true); // the image is flipped
 	menu->detectorsList->setCurrentIndex(0); // 0 = no detection, 1 = face detection, 2 = object detection
 	menu->confSlider->setValue(60);
+	menu->thresholdSlider->setValue(128);
 
 	// init the PixMap
 	imageContainer->setScene(new QGraphicsScene(this));
@@ -73,10 +75,12 @@ void MainWindow::setOptions()
 	menu->toggleEyes->setVisible((cameraIsOn || imageIsUpload) && detIndex == 1);
 	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && detIndex == 2);
 	menu->confSlider->setVisible((cameraIsOn || imageIsUpload) && detIndex == 2);
+	menu->confLabel->setVisible((cameraIsOn || imageIsUpload) && (detIndex == 2 || detIndex == 3));
 	menu->showRes->setVisible(cameraIsOn || imageIsUpload);
 	menu->showFps->setVisible(cameraIsOn);
 	menu->flip->setVisible(cameraIsOn || imageIsUpload);
 	menu->screenshot->setVisible(cameraIsOn || imageIsUpload);
+	menu->thresholdSlider->setVisible((cameraIsOn || imageIsUpload) && detIndex == 3);
 }
 
 void MainWindow::toggleCameraEvent() {
@@ -122,15 +126,20 @@ void MainWindow::uploadImageEvent()
 void MainWindow::selectDetectorEvent() {
 	detIndex = menu->detectorsList->currentIndex();
 
+	if (detIndex == 2) setLabelMinConf();
+	else if (detIndex == 3) setLabelThreshold();
+
 	menu->toggleEyes->setVisible((cameraIsOn || imageIsUpload) && detIndex == 1);
 	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && detIndex == 2);
 	menu->confSlider->setVisible((cameraIsOn || imageIsUpload) && detIndex == 2);
+	menu->confLabel->setVisible((cameraIsOn || imageIsUpload) && (detIndex == 2 || detIndex == 3));
+	menu->thresholdSlider->setVisible((cameraIsOn || imageIsUpload) && detIndex == 3);
 	if (imageIsUpload) processImage();
 }
 
 void MainWindow::changeMinConfEvent() {
 	detList[1]->setMinConfidence(menu->confSlider->value() / static_cast<float>(100));
-	menu->confLabel->setText(QString::number(menu->confSlider->value()) + QString("%"));
+	setLabelMinConf();
 	if (imageIsUpload) processImage();
 }
 
@@ -163,7 +172,7 @@ void MainWindow::setDetector()
 			detList[detIndex - 1]->detect(frame, menu->showConfidence->isChecked());
 		}
 		else if (detIndex == 3) {
-			binaryThresholding(frame, 0);
+			binaryThresholding(frame, menu->thresholdSlider->value());
 		}
 		else if (detIndex == 4) {
 			histogramEqualization(frame);
@@ -254,4 +263,22 @@ void MainWindow::processImage() {
 		return;
 
 	if (imageIsUpload) displayImage();
+}
+
+void MainWindow::setLabelMinConf()
+{
+	menu->confLabel->setText(QString("Min confidence: %1%").arg(menu->confSlider->value()));
+	menu->confLabel->setAlignment(Qt::AlignLeft);
+}
+
+void MainWindow::setLabelThreshold()
+{
+	menu->confLabel->setText(QString("Threshold: %1").arg(menu->thresholdSlider->value()));
+	menu->confLabel->setAlignment(Qt::AlignLeft);
+}
+
+void MainWindow::changeThresholdEvent()
+{
+	setLabelThreshold();
+	if (imageIsUpload) processImage();
 }

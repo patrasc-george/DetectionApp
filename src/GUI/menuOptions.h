@@ -18,6 +18,7 @@ public:
 	QSlider* confSlider;
 	QLabel* confLabel;
 	QPushButton* uploadButton;
+	QSlider* thresholdSlider;
 
 public:
 	Menu(QWidget* parent = nullptr);
