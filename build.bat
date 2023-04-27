@@ -1,4 +1,8 @@
-cd build/src
+mkdir build
+cd build
+cmake ../
+
+cd src
 mkdir data
 cd ../../data
 tar -xf models.rar 
@@ -14,6 +18,5 @@ rmdir lbpcascades /s/q
 
 cd ../
 xcopy "assets" "build/src/assets" /h /i /c /k /e /r /y
-y
-y
-y
+
+pause
