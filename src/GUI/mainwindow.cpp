@@ -39,6 +39,8 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 	connect(menu->flip, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->showConfidence, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
+	connect(menu->binaryThresholding, &QCheckBox::toggled, this, &MainWindow::processImage);
+	connect(menu->histogramEqualization, &QCheckBox::toggled, this, &MainWindow::processImage);
 
 	imageContainer->setFixedSize(640, 480);
 	statusBar->setMaximumHeight(50);
@@ -59,6 +61,8 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 	menu->flip->setChecked(true); // the image is flipped
 	menu->detectorsList->setCurrentIndex(0); // 0 = no detection, 1 = face detection, 2 = object detection
 	menu->confSlider->setValue(60);
+	menu->binaryThresholding->setChecked(false);
+	menu->histogramEqualization->setChecked(false);
 
 	// init the PixMap
 	imageContainer->setScene(new QGraphicsScene(this));
@@ -70,13 +74,15 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 void MainWindow::setOptions()
 {
 	menu->toggleCamera->setText("Turn " + QString(cameraIsOn ? "Off" : "On"));
-	menu->toggleEyes->setEnabled((cameraIsOn || imageIsUpload) && detIndex == 1);
-	menu->showConfidence->setEnabled((cameraIsOn || imageIsUpload) && detIndex > 1);
-	menu->confSlider->setEnabled((cameraIsOn || imageIsUpload) && detIndex > 1);
-	menu->showRes->setEnabled(cameraIsOn || imageIsUpload);
-	menu->showFps->setEnabled(cameraIsOn);
-	menu->flip->setEnabled(cameraIsOn || imageIsUpload);
-	menu->screenshot->setEnabled(cameraIsOn || imageIsUpload);
+	menu->toggleEyes->setVisible((cameraIsOn || imageIsUpload) && detIndex == 1);
+	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && detIndex > 1);
+	menu->confSlider->setVisible((cameraIsOn || imageIsUpload) && detIndex > 1);
+	menu->showRes->setVisible(cameraIsOn || imageIsUpload);
+	menu->showFps->setVisible(cameraIsOn);
+	menu->flip->setVisible(cameraIsOn || imageIsUpload);
+	menu->screenshot->setVisible(cameraIsOn || imageIsUpload);
+	menu->binaryThresholding->setVisible(cameraIsOn || imageIsUpload);
+	menu->histogramEqualization->setVisible(cameraIsOn || imageIsUpload);
 }
 
 void MainWindow::toggleCameraEvent() {
@@ -122,9 +128,10 @@ void MainWindow::uploadImageEvent()
 void MainWindow::selectDetectorEvent() {
 	detIndex = menu->detectorsList->currentIndex();
 
-	menu->toggleEyes->setEnabled((cameraIsOn || imageIsUpload) && detIndex == 1);
-	menu->showConfidence->setEnabled((cameraIsOn || imageIsUpload) && detIndex > 1);
-	menu->confSlider->setEnabled((cameraIsOn || imageIsUpload) && detIndex > 1);
+	menu->toggleEyes->setVisible((cameraIsOn || imageIsUpload) && detIndex == 1);
+	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && detIndex > 1);
+	menu->confSlider->setVisible((cameraIsOn || imageIsUpload) && detIndex > 1);
+	if (imageIsUpload) processImage();
 }
 
 void MainWindow::changeMinConfEvent() {
@@ -242,9 +249,19 @@ void MainWindow::processImage() {
 	flipImage();
 	setDetector();
 	showRes();
-
+	binaryThresholdingProcess();
 	if (frame.empty())
 		return;
 
 	if (imageIsUpload) displayImage();
+}
+
+void MainWindow::binaryThresholdingProcess()
+{
+
+}
+
+void MainWindow::histogramEqualizationProcess()
+{
+
 }

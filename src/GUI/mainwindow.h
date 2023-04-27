@@ -54,4 +54,6 @@ private:
 	void flipImage();
 	void displayImage();
 	QString getImageFileName();
+	void binaryThresholdingProcess();
+	void histogramEqualizationProcess();
 };
