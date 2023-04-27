@@ -17,9 +17,7 @@ public:
 	QPushButton* screenshot;
 	QSlider* confSlider;
 	QLabel* confLabel;
-	QPushButton* uploadButton;	
-	QCheckBox* binaryThresholding;
-	QCheckBox* histogramEqualization;
+	QPushButton* uploadButton;
 
 public:
 	Menu(QWidget* parent = nullptr);

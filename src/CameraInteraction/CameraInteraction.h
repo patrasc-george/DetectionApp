@@ -9,6 +9,8 @@
 
 
 void CAMERAINTERACTION_API displayInfo(cv::Mat &image, std::string key, std::string value, cv::Point pos);
+void CAMERAINTERACTION_API binaryThresholding(cv::Mat& inputImage, int threshold);
+void CAMERAINTERACTION_API histogramEqualization(cv::Mat& inputImage);
 
 struct CAMERAINTERACTION_API Timer {
 private:

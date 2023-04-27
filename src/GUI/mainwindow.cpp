@@ -39,8 +39,6 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 	connect(menu->flip, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->showConfidence, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
-	connect(menu->binaryThresholding, &QCheckBox::toggled, this, &MainWindow::processImage);
-	connect(menu->histogramEqualization, &QCheckBox::toggled, this, &MainWindow::processImage);
 
 	imageContainer->setFixedSize(640, 480);
 	statusBar->setMaximumHeight(50);
@@ -61,8 +59,6 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 	menu->flip->setChecked(true); // the image is flipped
 	menu->detectorsList->setCurrentIndex(0); // 0 = no detection, 1 = face detection, 2 = object detection
 	menu->confSlider->setValue(60);
-	menu->binaryThresholding->setChecked(false);
-	menu->histogramEqualization->setChecked(false);
 
 	// init the PixMap
 	imageContainer->setScene(new QGraphicsScene(this));
@@ -75,14 +71,12 @@ void MainWindow::setOptions()
 {
 	menu->toggleCamera->setText("Turn " + QString(cameraIsOn ? "Off" : "On"));
 	menu->toggleEyes->setVisible((cameraIsOn || imageIsUpload) && detIndex == 1);
-	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && detIndex > 1);
-	menu->confSlider->setVisible((cameraIsOn || imageIsUpload) && detIndex > 1);
+	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && detIndex == 2);
+	menu->confSlider->setVisible((cameraIsOn || imageIsUpload) && detIndex == 2);
 	menu->showRes->setVisible(cameraIsOn || imageIsUpload);
 	menu->showFps->setVisible(cameraIsOn);
 	menu->flip->setVisible(cameraIsOn || imageIsUpload);
 	menu->screenshot->setVisible(cameraIsOn || imageIsUpload);
-	menu->binaryThresholding->setVisible(cameraIsOn || imageIsUpload);
-	menu->histogramEqualization->setVisible(cameraIsOn || imageIsUpload);
 }
 
 void MainWindow::toggleCameraEvent() {
@@ -129,8 +123,8 @@ void MainWindow::selectDetectorEvent() {
 	detIndex = menu->detectorsList->currentIndex();
 
 	menu->toggleEyes->setVisible((cameraIsOn || imageIsUpload) && detIndex == 1);
-	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && detIndex > 1);
-	menu->confSlider->setVisible((cameraIsOn || imageIsUpload) && detIndex > 1);
+	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && detIndex == 2);
+	menu->confSlider->setVisible((cameraIsOn || imageIsUpload) && detIndex == 2);
 	if (imageIsUpload) processImage();
 }
 
@@ -150,7 +144,7 @@ void MainWindow::screenshotEvent() {
 		// Create the image with the exact size of the shrunk scene
 		QImage image(imageContainer->scene()->sceneRect().size().toSize(), QImage::Format_ARGB32);
 		// Start all pixels transparent to avoid white background
-		image.fill(Qt::transparent); 
+		image.fill(Qt::transparent);
 
 		QPainter painter(&image); // paint the image over the transparent pixels
 		imageContainer->scene()->render(&painter);
@@ -165,8 +159,14 @@ void MainWindow::setDetector()
 		if (detIndex == 1) {
 			detList[detIndex - 1]->detect(frame, menu->toggleEyes->isChecked());
 		}
-		else if (detIndex > 1) {
+		else if (detIndex == 2) {
 			detList[detIndex - 1]->detect(frame, menu->showConfidence->isChecked());
+		}
+		else if (detIndex == 3) {
+			binaryThresholding(frame, 0);
+		}
+		else if (detIndex == 4) {
+			histogramEqualization(frame);
 		}
 	}
 	catch (const std::exception& ex)
@@ -249,19 +249,9 @@ void MainWindow::processImage() {
 	flipImage();
 	setDetector();
 	showRes();
-	binaryThresholdingProcess();
+
 	if (frame.empty())
 		return;
 
 	if (imageIsUpload) displayImage();
-}
-
-void MainWindow::binaryThresholdingProcess()
-{
-
-}
-
-void MainWindow::histogramEqualizationProcess()
-{
-
 }

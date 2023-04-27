@@ -27,8 +27,6 @@ Menu::Menu(QWidget* parent)
 	confSlider = new QSlider(Qt::Horizontal);
 	confLabel = new QLabel("");
 	uploadButton = new QPushButton("Upload Image");
-	binaryThresholding = new QCheckBox("Binary thresholding");
-	histogramEqualization = new QCheckBox("Histogram equalization");
 
 	/* the 'label' for minimum confidence is made up of two elements :
 		- a static label with text
@@ -55,13 +53,14 @@ Menu::Menu(QWidget* parent)
 	detectorsList->addItem("No detection");
 	detectorsList->addItem("Faces");
 	detectorsList->addItem("Objects");
+	detectorsList->addItem("Binary Thresholding");
+	detectorsList->addItem("Histogram Equalization");
+
 
 	// we add the controls in our vertical box
 	vbox->addWidget(toggleCamera);
 	vbox->addWidget(detectorsList);
 	vbox->addWidget(flip);
-	vbox->addWidget(binaryThresholding);
-	vbox->addWidget(histogramEqualization);
 	vbox->addWidget(showRes);
 	vbox->addWidget(showFps);
 	vbox->addWidget(toggleEyes);
