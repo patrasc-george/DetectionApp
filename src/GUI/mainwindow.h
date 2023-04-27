@@ -55,6 +55,4 @@ private:
 	void flipImage();
 	void displayImage();
 	QString getImageFileName();
-	void setLabelMinConf();
-	void setLabelThreshold();
 };

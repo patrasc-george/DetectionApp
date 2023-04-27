@@ -58,7 +58,7 @@ void FaceDetector::detect(cv::Mat& image, bool showEyes) {
         }
     }
     for (auto&& face : facesInFrame)
-        if (face.size().width > 1 && face.size().height > 1)
+        if (face.size().width > 1 || face.size().height > 1)
             drawLabel(image, "Face", face.x, face.y);
 }
 
