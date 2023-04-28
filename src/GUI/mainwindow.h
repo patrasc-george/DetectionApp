@@ -49,6 +49,7 @@ private:
 	short displayedInfoCount;
 	bool cameraIsOn = false;
 	bool imageIsUpload = false;
+	bool isGrayscale = false;
 	void setOptions();
 	void setDetector();
 	void showRes();

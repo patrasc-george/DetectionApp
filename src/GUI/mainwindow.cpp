@@ -156,6 +156,7 @@ void MainWindow::screenshotEvent() {
 
 void MainWindow::setDetector()
 {
+	isGrayscale = false;
 	// detect if a detector is selected
 	try {
 		if (detIndex == 1) {
@@ -176,9 +177,11 @@ void MainWindow::setDetector()
 		}
 
 		else if (detIndex == 3) {
+			isGrayscale = true;
 			binaryThresholding(frame, menu->thresholdControl->value());
 		}
 		else if (detIndex == 4) {
+			isGrayscale = true;
 			histogramEqualization(frame);
 		}
 	}
@@ -216,7 +219,12 @@ void MainWindow::flipImage()
 }
 
 void MainWindow::displayImage() {
-	QImage qimg(frame.data, frame.cols, frame.rows, static_cast<int>(frame.step), QImage::Format_BGR888);
+	QImage qimg;
+	if (isGrayscale)
+		qimg = QImage(frame.data, frame.cols, frame.rows, static_cast<int>(frame.step), QImage::Format_Grayscale8);
+	else
+		qimg = QImage(frame.data, frame.cols, frame.rows, static_cast<int>(frame.step), QImage::Format_BGR888);
+
 	pixmap.setPixmap(QPixmap::fromImage(qimg));
 	imageContainer->fitInView(&pixmap, Qt::KeepAspectRatio);
 	QString res = QString("Resolution: %1 x %2")
@@ -231,6 +239,7 @@ void MainWindow::startVideoCapture() {
 	int fps = 0, avgFps = 0;
 	std::deque<int> fpsArray;
 	cv::VideoCapture cap(0);
+	isGrayscale = false;
 
 	if (!cap.isOpened()) {
 		qDebug() << "Could not open video camera.";
@@ -260,6 +269,8 @@ void MainWindow::startVideoCapture() {
 
 void MainWindow::processImage() {
 	displayedInfoCount = 0;
+	isGrayscale = false;
+
 	if (imageIsUpload)
 		frame = cv::imread(fileName.toStdString());
 
