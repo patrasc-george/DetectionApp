@@ -24,8 +24,8 @@ Menu::Menu(QWidget* parent)
 	screenshot = new QPushButton("Save screenshot");
 	flip = new QCheckBox("Flip image");
 	showConfidence = new QCheckBox("Show confidences");
-	confControl = new labeledSlider("Min confidence", 5, 95, 5, true);
-	thresholdControl = new labeledSlider("Threshold", 1, 250, 10);
+	confControl = new LabeledSlider("Min confidence", 5, 95, 5, true);
+	thresholdControl = new LabeledSlider("Threshold", 1, 250, 10);
 	uploadButton = new QPushButton("Upload Image");
 
 

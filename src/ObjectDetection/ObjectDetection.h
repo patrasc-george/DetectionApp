@@ -28,6 +28,8 @@ protected:
 public:
 	virtual void detect(cv::Mat& image, bool = false) = 0;
 	virtual void setMinConfidence(float c) {};
+	virtual cv::Rect getLastRect() = 0;
+	std::string currentClassName = "";
 };
 
 class OBJECTDETECTION_API FaceDetector : public Detector {
@@ -38,8 +40,10 @@ private:
 	std::vector<cv::Rect> facesInFrame;
 	std::vector<cv::Rect> eyes;
 public:
+	std::string currentClassName;
 	FaceDetector(detectorProperties& props, std::string eyeClassifierPath = "\0");
 	void detect(cv::Mat& image, bool showEyes = false);
+	cv::Rect getLastRect();
 };
 
 class OBJECTDETECTION_API ObjectDetector : public Detector {
@@ -52,8 +56,11 @@ private:
 	cv::dnn::Net model;
 	bool showConfidence;
 	float minConfidence = 0.6;
+	cv::Rect lastRect;
 public:
+	std::string currentlassName;
 	ObjectDetector(detectorProperties props);
 	void detect(cv::Mat& image , bool showConf = false);
 	void setMinConfidence(float c);
+	cv::Rect getLastRect();
 };

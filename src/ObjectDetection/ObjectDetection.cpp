@@ -16,6 +16,7 @@ void drawLabel(cv::Mat & image, std::string label, int left, int top) {
 }
 
 FaceDetector::FaceDetector(detectorProperties& props, std::string eyeClassifierPath) {
+    currentClassName = "Face";
     modelPath = props.modelPath;
     shouldSwapRB = props.shouldSwapRB;
     try {
@@ -62,6 +63,13 @@ void FaceDetector::detect(cv::Mat& image, bool showEyes) {
             drawLabel(image, "Face", face.x, face.y);
 }
 
+cv::Rect FaceDetector::getLastRect() {
+    return facesInFrame.back();
+}
+cv::Rect ObjectDetector::getLastRect() {
+    return lastRect;
+}
+
 ObjectDetector::ObjectDetector(detectorProperties props) {
     modelPath = props.modelPath;
     classNamesPath = props.classNamesPath;
@@ -106,10 +114,13 @@ void ObjectDetector::detect(cv::Mat& image, bool showConf) {
             int box_y = (int) (detectionMat.at<float>(i, 4) * image.rows);
             int box_width = (int) (detectionMat.at<float>(i, 5) * image.cols - box_x);
             int box_height = (int) (detectionMat.at<float>(i, 6) * image.rows - box_y);
-            cv::rectangle(image, cv::Point(box_x, box_y), cv::Point(box_x + box_width, box_y + box_height), cv::Scalar(147, 167, 255), 2);
+            lastRect = cv::Rect(box_x, box_y, box_width, box_height);
 
+            cv::rectangle(image, lastRect, cv::Scalar(147, 167, 255), 2);
+
+            currentClassName = classNames[classId - 1].c_str();
             std::stringstream ss;
-            ss << classNames[classId - 1].c_str();
+            ss << currentClassName;
             if (showConf)
                 ss << ": confidence = " + std::to_string((int)(confidence * 100)) + "%";
             drawLabel(image, ss.str(), box_x, box_y);

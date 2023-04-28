@@ -11,6 +11,7 @@
 #include <QCoreApplication>
 #include <QVBoxLayout>
 #include <QFileDialog>
+#include <QStatusBar>
 
 #include "ObjectDetection.h"
 #include "CameraInteraction.h"
@@ -25,7 +26,9 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 	// instantiate the menu (see constructor), image container and status bar
 	menu = new Menu;
 	imageContainer = new QGraphicsView;
-	statusBar = new QListWidget;
+	statusBar = new QStatusBar();
+	resLabel = new QLabel();
+	statusBar->addPermanentWidget(resLabel);
 
 	// link the controls defined in our menu to the events of our window
 	// syntax: connect(widget that emits a signal, the type of the signal, the object that acts on the signal, the method (slot) that will be called)
@@ -33,17 +36,15 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 	connect(menu->toggleCamera, &QAbstractButton::toggled, this, &MainWindow::toggleCameraEvent);
 	connect(menu->uploadButton, &QPushButton::clicked, this, &MainWindow::uploadImageEvent);
 	connect(menu->detectorsList, &QComboBox::currentIndexChanged, this, &MainWindow::selectDetectorEvent);
-	connect(menu->confControl, &labeledSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
+	connect(menu->confControl, &LabeledSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
 	connect(menu->toggleEyes, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->showRes, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->flip, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->showConfidence, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
-	connect(menu->thresholdControl, &labeledSlider::valueChanged, this, &MainWindow::changeThresholdEvent);
+	connect(menu->thresholdControl, &LabeledSlider::valueChanged, this, &MainWindow::changeThresholdEvent);
 
 	imageContainer->setFixedSize(640, 480);
-	statusBar->setMaximumHeight(50);
-	statusBar->addItem("Status Bar (WIP - currently it's just a list item as placeholder)");
 
 	// create a grid that will contain the 3 main components
 	QGridLayout* grid = new QGridLayout;
@@ -111,6 +112,7 @@ void MainWindow::uploadImageEvent()
 		return;
 	}
 	frame = cv::imread(fileName.toStdString());
+	statusBar->showMessage(QString("Uploaded file: %1").arg(fileName));
 
 	menu->toggleCamera->setChecked(false);
 	menu->flip->setChecked(false);
@@ -148,6 +150,7 @@ void MainWindow::screenshotEvent() {
 		QPainter painter(&image); // paint the image over the transparent pixels
 		imageContainer->scene()->render(&painter);
 		image.save(fileName);
+		statusBar->showMessage(QString("Saved file: %1").arg(fileName));
 	}
 }
 
@@ -161,6 +164,17 @@ void MainWindow::setDetector()
 		else if (detIndex == 2) {
 			detList[detIndex - 1]->detect(frame, menu->showConfidence->isChecked());
 		}
+
+		if (detIndex > 0 && detIndex <= 2 && detList[detIndex - 1]->getLastRect().empty() == false) {
+			cv::Rect rect = detList[detIndex - 1]->getLastRect();
+			statusBar->showMessage(QString("Detected %5 at: <%1 %2> - <%3 %4>")
+				.arg(QString::number(rect.x))
+				.arg(QString::number(rect.y))
+				.arg(QString::number(rect.x + rect.width))
+				.arg(QString::number(rect.y + rect.height))
+				.arg(QString::fromStdString(detList[detIndex - 1]->currentClassName)));
+		}
+
 		else if (detIndex == 3) {
 			binaryThresholding(frame, menu->thresholdControl->value());
 		}
@@ -205,7 +219,11 @@ void MainWindow::displayImage() {
 	QImage qimg(frame.data, frame.cols, frame.rows, static_cast<int>(frame.step), QImage::Format_BGR888);
 	pixmap.setPixmap(QPixmap::fromImage(qimg));
 	imageContainer->fitInView(&pixmap, Qt::KeepAspectRatio);
-
+	QString res = QString("Resolution: %1 x %2")
+		.arg(QString::number(frame.size().width))
+		.arg(QString::number(frame.size().height));
+	resLabel->setText(res);
+	
 	QCoreApplication::processEvents();
 }
 
@@ -255,8 +273,8 @@ void MainWindow::processImage() {
 	if (imageIsUpload) displayImage();
 }
 
-
 void MainWindow::changeThresholdEvent() {
 	if (imageIsUpload)
 		processImage();
+	statusBar->showMessage(QString("Applied binary thresholding: %1").arg(menu->thresholdControl->value()));
 }

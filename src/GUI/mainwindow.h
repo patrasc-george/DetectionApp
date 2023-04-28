@@ -23,7 +23,8 @@ public:
 	// three main sections
 	Menu* menu; // controls
 	QGraphicsView* imageContainer;
-	QListWidget* statusBar;
+	QStatusBar* statusBar;
+	QLabel* resLabel;
 
 public:
 	MainWindow(std::vector<Detector*>& detList, QWidget* parent = nullptr);
