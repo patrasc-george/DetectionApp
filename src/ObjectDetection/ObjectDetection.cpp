@@ -16,7 +16,7 @@ void drawLabel(cv::Mat & image, std::string label, int left, int top) {
 }
 
 FaceDetector::FaceDetector(detectorProperties& props, std::string eyeClassifierPath) {
-    currentClassName = "Face";
+    currentClassName = "face";
     modelPath = props.modelPath;
     shouldSwapRB = props.shouldSwapRB;
     try {

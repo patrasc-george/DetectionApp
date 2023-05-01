@@ -35,8 +35,8 @@ Menu::Menu(QWidget* parent)
 	detectorsList->addItem("No detection");
 	detectorsList->addItem("Faces");
 	detectorsList->addItem("Objects");
-	detectorsList->addItem("Binary Thresholding");
-	detectorsList->addItem("Histogram Equalization");
+	//detectorsList->addItem("Binary Thresholding");
+	//detectorsList->addItem("Histogram Equalization");
 
 
 	// we add the controls in our vertical box
