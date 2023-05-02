@@ -8,13 +8,9 @@
 #include "ModelLoader.h"
 
 int main(int argc, char* argv[]) {
-    std::vector<Detector*> detList;
-
-    ModelLoader::load("../data/models.json", detList);
-
     QApplication app(argc, argv);
 
-    MainWindow window(detList);
+    MainWindow window;
 
     window.setWindowTitle("Detection App");
     window.show();

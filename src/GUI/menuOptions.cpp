@@ -33,8 +33,6 @@ Menu::Menu(QWidget* parent)
 	toggleCamera->setCheckable(true);
 
 	detectorsList->addItem("No detection");
-	detectorsList->addItem("Faces");
-	detectorsList->addItem("Objects");
 	//detectorsList->addItem("Binary Thresholding");
 	//detectorsList->addItem("Histogram Equalization");
 

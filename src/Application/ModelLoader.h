@@ -1,7 +1,9 @@
-#include <qjsondocument.h>
 #include <ObjectDetection.h>
 
 class ModelLoader {
 public:
-	static void load(QString jsonPath, std::vector<Detector*>& vector);
+	static void loadAll(QString jsonPath, QVector<Detector*>& vector);
+	static QVector<QString> getNames(QString jsonPath);
+	static bool getFromFileByName(Detector*&, QString name, QString path);
+	static bool getFromJsonObject(Detector*&, QJsonObject);
 };

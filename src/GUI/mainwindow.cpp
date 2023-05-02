@@ -15,12 +15,15 @@
 
 #include "ObjectDetection.h"
 #include "CameraInteraction.h"
+#include "../Application/ModelLoader.h"
+
+#define modelsJSON "../data/models.json"
 
 
-MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget(parent) {
+MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	// instantiate the list of detectors
-	this->detList = dList;
-	this->detIndex = 0;
+	this->detList;
+	this->currDet = nullptr;
 	displayedInfoCount = 0;
 
 	// instantiate the menu (see constructor), image container and status bar
@@ -66,19 +69,33 @@ MainWindow::MainWindow(std::vector<Detector*>& dList, QWidget* parent) : QWidget
 	imageContainer->scene()->addItem(&pixmap);
 	imageContainer->setSceneRect(imageContainer->scene()->sceneRect());
 	imageContainer->setAlignment(Qt::AlignCenter);
+
+	QVector<QString> names = ModelLoader::getNames(modelsJSON);
+	for (QString name : names) {
+		Detector* det = nullptr;
+		try {
+			if (ModelLoader::getFromFileByName(det, name, modelsJSON)) {
+				detList.push_back(det);
+				menu->detectorsList->addItem(name);
+			}
+		}
+		catch (const std::exception&) {
+			delete& det;
+		}
+	}
 }
 
 void MainWindow::setOptions()
 {
 	menu->toggleCamera->setText("Turn " + QString(cameraIsOn ? "Off" : "On"));
-	menu->toggleEyes->setVisible((cameraIsOn || imageIsUpload) && detIndex == 1);
-	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && detIndex == 2);
-	menu->confControl->setVisible((cameraIsOn || imageIsUpload) && detIndex == 2);
+	menu->toggleEyes->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == cascade && currDet->canDetectEyes());
+	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
+	menu->confControl->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
 	menu->showRes->setVisible(cameraIsOn || imageIsUpload);
 	menu->showFps->setVisible(cameraIsOn);
 	menu->flip->setVisible(cameraIsOn || imageIsUpload);
 	menu->screenshot->setVisible(cameraIsOn || imageIsUpload);
-	menu->thresholdControl->setVisible((cameraIsOn || imageIsUpload) && detIndex == 3);
+	//menu->thresholdControl->setVisible((cameraIsOn || imageIsUpload) && detIndex == 3);
 }
 
 void MainWindow::toggleCameraEvent() {
@@ -123,8 +140,10 @@ void MainWindow::uploadImageEvent()
 }
 
 void MainWindow::selectDetectorEvent() {
-	detIndex = menu->detectorsList->currentIndex();
-
+	if (menu->detectorsList->currentIndex() != 0)
+		currDet = detList[menu->detectorsList->currentIndex() - 1];
+	else
+		currDet = nullptr;
 	setOptions();
 	if (imageIsUpload) processImage();
 }
@@ -156,33 +175,25 @@ void MainWindow::screenshotEvent() {
 
 void MainWindow::setDetector()
 {
-	isGrayscale = false;
+	if (currDet == nullptr) return;
+	//isGrayscale = false;
 	// detect if a detector is selected
 	try {
-		if (detIndex == 1) {
-			detList[detIndex - 1]->detect(frame, menu->toggleEyes->isChecked());
+		if (currDet->getType() == cascade) {
+			currDet->detect(frame, menu->toggleEyes->isChecked());
 		}
-		else if (detIndex == 2) {
-			detList[detIndex - 1]->detect(frame, menu->showConfidence->isChecked());
+		else if (currDet->getType() == network) {
+			currDet->detect(frame, menu->showConfidence->isChecked());
 		}
 
-		if (detIndex > 0 && detIndex <= 2 && detList[detIndex - 1]->getLastRect().empty() == false) {
-			cv::Rect rect = detList[detIndex - 1]->getLastRect();
+		if (currDet != nullptr && currDet->getLastRect().empty() == false) {
+			cv::Rect rect = currDet->getLastRect();
 			statusBar->showMessage(QString("Detected %5 at: <%1 %2> - <%3 %4>")
 				.arg(QString::number(rect.x))
 				.arg(QString::number(rect.y))
 				.arg(QString::number(rect.x + rect.width))
 				.arg(QString::number(rect.y + rect.height))
-				.arg(QString::fromStdString(detList[detIndex - 1]->currentClassName)));
-		}
-
-		else if (detIndex == 3) {
-			isGrayscale = true;
-			binaryThresholding(frame, menu->thresholdControl->value());
-		}
-		else if (detIndex == 4) {
-			isGrayscale = true;
-			histogramEqualization(frame);
+				.arg(QString::fromStdString(currDet->currentClassName)));
 		}
 	}
 	catch (const std::exception& ex)

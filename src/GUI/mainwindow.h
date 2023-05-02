@@ -27,7 +27,7 @@ public:
 	QLabel* resLabel;
 
 public:
-	MainWindow(std::vector<Detector*>& detList, QWidget* parent = nullptr);
+	MainWindow(QWidget* parent = nullptr);
 	~MainWindow() {};
 	void startVideoCapture();
 
@@ -44,8 +44,8 @@ private:
 	QGraphicsPixmapItem pixmap;
 	cv::Mat frame;
 	QString fileName;
-	std::vector<Detector*> detList;
-	short detIndex;
+	QVector<Detector*> detList;
+	Detector* currDet;
 	short displayedInfoCount;
 	bool cameraIsOn = false;
 	bool imageIsUpload = false;

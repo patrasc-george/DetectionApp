@@ -19,21 +19,28 @@ FaceDetector::FaceDetector(detectorProperties& props, std::string eyeClassifierP
     currentClassName = "face";
     modelPath = props.modelPath;
     shouldSwapRB = props.shouldSwapRB;
+    this->eyeClassifierPath = eyeClassifierPath;
+    type = cascade;
+}
+bool FaceDetector::init() {
     try {
         faceClassifier.load(modelPath);
-}
+    }
     catch (const std::exception& ex) {
         std::cerr << "Couldn't load face classifier!" << std::endl;
+        throw ex;
+        return false;
     }
 
-    if (eyeClassifierPath != "\0") {
-        try {
-            eyeClassifier.load(eyeClassifierPath);
-        }
-        catch (const std::exception&) {
-            std::cerr << "Couldn't load eye classifier!" << std::endl;
-        }
+    try {
+        eyeClassifier.load(eyeClassifierPath);
+        eyesClassifierLoaded = true;
     }
+    catch (const std::exception&) {
+        std::cerr << "Couldn't load eye classifier!" << std::endl;
+        eyesClassifierLoaded = false;
+    }
+    return true;
 }
 
 void FaceDetector::detect(cv::Mat& image, bool showEyes) {
@@ -49,6 +56,9 @@ void FaceDetector::detect(cv::Mat& image, bool showEyes) {
         cv::Mat faceROI = image(face);
 
         // In each face, detect eyes
+        if ((eyesClassifierLoaded && showEyes) == false)
+            break;
+
         eyeClassifier.detectMultiScale(faceROI, eyes);
         if (eyes.size() == 0)
             break;
@@ -77,25 +87,27 @@ ObjectDetector::ObjectDetector(detectorProperties props) {
     framework = props.framework;
     shouldSwapRB = props.shouldSwapRB;
     meanValues = props.meanValues;
-
+    type = network;
+} 
+bool ObjectDetector::init() {
     try {
         std::ifstream ifs(classNamesPath);
         std::string line;
-        while (getline(ifs, line))
-        {
+        while (getline(ifs, line)) {
             classNames.push_back(line);
         }
     }
     catch (const std::exception& ex) {
-        throw ex;
+        return false;
     }
     try {
         model = cv::dnn::readNet(infGraphPath, modelPath, framework);
+        return true;
     }
     catch (const std::exception& ex) {
-        throw ex;
+        return false;
     }
-} 
+}
 
 void ObjectDetector::detect(cv::Mat& image, bool showConf) {
     cv::Mat blob = cv::dnn::blobFromImage(image, 1.0, cv::Size(320,320), meanValues, shouldSwapRB, false);

@@ -20,16 +20,23 @@ struct detectorProperties {
 	detectorProperties()
 		: modelPath("\0"), classNamesPath("\0"), infGraphPath("\0"), framework("\0"), shouldSwapRB(true), meanValues(cv::Scalar(0,0,0)) {}
 };
-
+enum type {
+	cascade, network
+};
 class Detector {
 protected:
 	std::string modelPath;
 	bool shouldSwapRB = false;
+	type type;
 public:
 	virtual void detect(cv::Mat& image, bool = false) = 0;
 	virtual void setMinConfidence(float c) {};
+	bool canDetectEyes() { return false; };
+	virtual int getType() { return 0; };
 	virtual cv::Rect getLastRect() = 0;
 	std::string currentClassName = "";
+	virtual bool init() = 0;
+
 };
 
 class OBJECTDETECTION_API FaceDetector : public Detector {
@@ -39,10 +46,14 @@ private:
 	cv::CascadeClassifier eyeClassifier;
 	std::vector<cv::Rect> facesInFrame;
 	std::vector<cv::Rect> eyes;
+	bool eyesClassifierLoaded;
 public:
 	FaceDetector(detectorProperties& props, std::string eyeClassifierPath = "\0");
 	void detect(cv::Mat& image, bool showEyes = false);
 	cv::Rect getLastRect();
+	bool init();
+	bool canDetectEyes() { return eyesClassifierLoaded; };
+	int getType() { return type; };
 };
 
 class OBJECTDETECTION_API ObjectDetector : public Detector {
@@ -61,4 +72,6 @@ public:
 	void detect(cv::Mat& image , bool showConf = false);
 	void setMinConfidence(float c);
 	cv::Rect getLastRect();
+	bool init();
+	int getType() { return type; };
 };
