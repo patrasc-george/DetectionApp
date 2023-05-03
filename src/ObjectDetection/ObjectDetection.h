@@ -31,7 +31,8 @@ protected:
 public:
 	virtual void detect(cv::Mat& image, bool = false) = 0;
 	virtual void setMinConfidence(float c) {};
-	bool canDetectEyes() { return false; };
+	virtual bool canDetectEyes() { return false; };
+	virtual bool canDetectSmiles() { return false; };
 	virtual int getType() { return 0; };
 	virtual cv::Rect getLastRect() = 0;
 	std::string currentClassName = "";
@@ -42,17 +43,22 @@ public:
 class OBJECTDETECTION_API FaceDetector : public Detector {
 private:
 	std::string eyeClassifierPath;
+	std::string smileClassifierPath;
 	cv::CascadeClassifier faceClassifier;
 	cv::CascadeClassifier eyeClassifier;
+	cv::CascadeClassifier smileClassifier;
 	std::vector<cv::Rect> facesInFrame;
 	std::vector<cv::Rect> eyes;
+	std::vector<cv::Rect> smiles;
 	bool eyesClassifierLoaded;
+	bool smileClassifierLoaded;
 public:
-	FaceDetector(detectorProperties& props, std::string eyeClassifierPath = "\0");
-	void detect(cv::Mat& image, bool showEyes = false);
+	FaceDetector(detectorProperties& props, std::string eyeClassifierPath = "\0", std::string smileClassifierPath = "\0");
+	void detect(cv::Mat& image, bool showFeatures = false);
 	cv::Rect getLastRect();
 	bool init();
 	bool canDetectEyes() { return eyesClassifierLoaded; };
+	bool canDetectSmiles() { return smileClassifierLoaded; };
 	int getType() { return type; };
 };
 

@@ -99,7 +99,8 @@ bool ModelLoader::getFromJsonObject(Detector*& det, QJsonObject obj) {
         props.modelPath = item["face"].toString().toStdString();
 
         try {
-            det = new FaceDetector(props, item["eyes"].toString().toStdString());
+            det = new FaceDetector(props, item["eyes"].toString().toStdString(), item["smile"].toString().toStdString());
+            det->currentClassName = obj.value("name").toString().toStdString();
             return det->init();
         }
         catch (const std::exception& ex) {

@@ -17,7 +17,7 @@
 #include "CameraInteraction.h"
 #include "../Application/ModelLoader.h"
 
-#define modelsJSON "../data/models.json"
+#define modelsJSON "../data/detectors.json"
 
 
 MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
@@ -40,7 +40,7 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	connect(menu->uploadButton, &QPushButton::clicked, this, &MainWindow::uploadImageEvent);
 	connect(menu->detectorsList, &QComboBox::currentIndexChanged, this, &MainWindow::selectDetectorEvent);
 	connect(menu->confControl, &LabeledSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
-	connect(menu->toggleEyes, &QCheckBox::toggled, this, &MainWindow::processImage);
+	connect(menu->toggleFaceFeatures, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->showRes, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->flip, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->showConfidence, &QCheckBox::toggled, this, &MainWindow::processImage);
@@ -88,7 +88,7 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 void MainWindow::setOptions()
 {
 	menu->toggleCamera->setText("Turn " + QString(cameraIsOn ? "Off" : "On"));
-	menu->toggleEyes->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == cascade && currDet->canDetectEyes());
+	menu->toggleFaceFeatures->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == cascade && (currDet->canDetectEyes() || currDet->canDetectSmiles()));
 	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
 	menu->confControl->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
 	menu->showRes->setVisible(cameraIsOn || imageIsUpload);
@@ -96,6 +96,7 @@ void MainWindow::setOptions()
 	menu->flip->setVisible(cameraIsOn || imageIsUpload);
 	menu->screenshot->setVisible(cameraIsOn || imageIsUpload);
 	//menu->thresholdControl->setVisible((cameraIsOn || imageIsUpload) && detIndex == 3);
+	menu->thresholdControl->setVisible(false);
 }
 
 void MainWindow::toggleCameraEvent() {
@@ -180,7 +181,7 @@ void MainWindow::setDetector()
 	// detect if a detector is selected
 	try {
 		if (currDet->getType() == cascade) {
-			currDet->detect(frame, menu->toggleEyes->isChecked());
+			currDet->detect(frame, menu->toggleFaceFeatures->isChecked());
 		}
 		else if (currDet->getType() == network) {
 			currDet->detect(frame, menu->showConfidence->isChecked());

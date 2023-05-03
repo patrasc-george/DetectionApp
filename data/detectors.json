@@ -1,15 +1,23 @@
 [
   {
-    "type": "cascade",
     "name": "Frontal Face",
+    "type": "cascade",
     "paths": {
       "face": "../data/lbpcascades/lbpcascade_frontalface_improved.xml",
-      "eyes": "../data/haarcascades/haarcascade_eye_tree_eyeglasses.xml"
+      "eyes": "../data/haarcascades/haarcascade_eye_tree_eyeglasses.xml",
+      "smile": "../data/haarcascades/haarcascade_smile.xml"
     }
   },
   {
-    "type": "network",
+    "name": "Profile Face",
+    "type": "cascade",
+    "paths": {
+      "face": "../data/haarcascades/haarcascade_profileface.xml"
+    }
+  },
+  {
     "name": "Mobile Net v2",
+    "type": "network",
     "properties": {
       "framework": "TensorFlow",
       "swapRB": false,

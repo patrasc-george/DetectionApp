@@ -17,7 +17,7 @@ Menu::Menu(QWidget* parent)
 	// initialize controls
 	exit = new QPushButton("Exit");
 	toggleCamera = new QPushButton("Turn On");
-	toggleEyes = new QCheckBox("Detect eyes");
+	toggleFaceFeatures = new QCheckBox("Detect eyes and smiles");
 	detectorsList = new QComboBox;
 	showRes = new QCheckBox("Show resolution");
 	showFps = new QCheckBox("Show framerate");
@@ -43,7 +43,7 @@ Menu::Menu(QWidget* parent)
 	vbox->addWidget(flip);
 	vbox->addWidget(showRes);
 	vbox->addWidget(showFps);
-	vbox->addWidget(toggleEyes);
+	vbox->addWidget(toggleFaceFeatures);
 	vbox->addWidget(showConfidence);
 	vbox->addWidget(confControl); // we add the horizontal wrapper
 	vbox->addWidget(thresholdControl);

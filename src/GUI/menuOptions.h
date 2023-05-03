@@ -9,7 +9,7 @@ class Menu : public QWidget {
 public:
 	QPushButton* exit;
 	QPushButton* toggleCamera;
-	QCheckBox* toggleEyes;
+	QCheckBox* toggleFaceFeatures;
 	QCheckBox* showRes;
 	QCheckBox* showFps;
 	QCheckBox* flip;
