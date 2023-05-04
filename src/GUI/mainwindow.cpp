@@ -18,11 +18,11 @@
 #include "../Application/ModelLoader.h"
 
 #define modelsJSON "../data/detectors.json"
+QVector<QString> names = ModelLoader::getNames(modelsJSON);
 
 
 MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	// instantiate the list of detectors
-	this->detList;
 	this->currDet = nullptr;
 	displayedInfoCount = 0;
 
@@ -70,18 +70,9 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	imageContainer->setSceneRect(imageContainer->scene()->sceneRect());
 	imageContainer->setAlignment(Qt::AlignCenter);
 
-	QVector<QString> names = ModelLoader::getNames(modelsJSON);
+	// load labels for detectors (after being seleced they might be deleted if the corresponding detector didn't load succesfully)
 	for (QString name : names) {
-		Detector* det = nullptr;
-		try {
-			if (ModelLoader::getFromFileByName(det, name, modelsJSON)) {
-				detList.push_back(det);
-				menu->detectorsList->addItem(name);
-			}
-		}
-		catch (const std::exception&) {
-			delete& det;
-		}
+		menu->detectorsList->addItem(name);
 	}
 }
 
@@ -110,10 +101,13 @@ void MainWindow::toggleCameraEvent() {
 		imageContainer->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		imageContainer->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		startVideoCapture();
+		selectDetectorEvent();
 	}
 	else {
 		frame.setTo(cv::Scalar(255, 255, 255));
 		displayImage();
+		delete currDet;
+		currDet = nullptr;
 	}
 }
 
@@ -141,16 +135,23 @@ void MainWindow::uploadImageEvent()
 }
 
 void MainWindow::selectDetectorEvent() {
-	if (menu->detectorsList->currentIndex() != 0)
-		currDet = detList[menu->detectorsList->currentIndex() - 1];
-	else
+	if (currDet != nullptr) {
+		delete currDet;
 		currDet = nullptr;
+	}
+	if (menu->detectorsList->currentIndex() != 0) {
+		if (ModelLoader::getFromFileByName(currDet, menu->detectorsList->currentText(), modelsJSON) == false) {
+			QMessageBox::critical(this, "Error", "The selected detector could did not load succesfully! You might need to check if the right files are provided and the paths are set accordingly in models.json");
+			menu->detectorsList->removeItem(menu->detectorsList->findText(menu->detectorsList->currentText()));
+			menu->detectorsList->setCurrentIndex(0);
+		}
+	}
 	setOptions();
 	if (imageIsUpload) processImage();
 }
 
 void MainWindow::changeMinConfEvent() {
-	detList[1]->setMinConfidence(menu->confControl->value() / static_cast<float>(100));
+	currDet->setMinConfidence(menu->confControl->value() / static_cast<float>(100));
 	if (imageIsUpload)
 		processImage();
 }
@@ -187,7 +188,7 @@ void MainWindow::setDetector()
 			currDet->detect(frame, menu->showConfidence->isChecked());
 		}
 
-		if (currDet != nullptr && currDet->getLastRect().empty() == false) {
+		if (currDet->getLastRect().empty() == false) {
 			cv::Rect rect = currDet->getLastRect();
 			statusBar->showMessage(QString("Detected %5 at: <%1 %2> - <%3 %4>")
 				.arg(QString::number(rect.x))
@@ -196,6 +197,7 @@ void MainWindow::setDetector()
 				.arg(QString::number(rect.y + rect.height))
 				.arg(QString::fromStdString(currDet->currentClassName)));
 		}
+		else statusBar->clearMessage();
 	}
 	catch (const std::exception& ex)
 	{

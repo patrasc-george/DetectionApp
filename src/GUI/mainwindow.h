@@ -44,7 +44,6 @@ private:
 	QGraphicsPixmapItem pixmap;
 	cv::Mat frame;
 	QString fileName;
-	QVector<Detector*> detList;
 	Detector* currDet;
 	short displayedInfoCount;
 	bool cameraIsOn = false;

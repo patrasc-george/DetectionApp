@@ -37,6 +37,7 @@ public:
 	virtual cv::Rect getLastRect() = 0;
 	std::string currentClassName = "";
 	virtual bool init() = 0;
+	virtual ~Detector() { std::cout << "detector destroyed" << std::endl; }
 
 };
 

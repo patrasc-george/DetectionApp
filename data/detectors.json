@@ -12,7 +12,6 @@
     "name": "Profile Face",
     "type": "cascade",
     "paths": {
-      "face": "../data/haarcascades/haarcascade_profileface.xml"
     }
   },
   {

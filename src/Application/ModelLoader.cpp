@@ -89,7 +89,7 @@ bool ModelLoader::getFromJsonObject(Detector*& det, QJsonObject obj) {
         }
         catch (const std::exception& ex) {
             qCritical(ex.what());
-            return false;
+            throw ex;
         }
     }
     else if (value == "cascade") {

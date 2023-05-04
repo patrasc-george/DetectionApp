@@ -24,6 +24,7 @@ FaceDetector::FaceDetector(detectorProperties& props, std::string eyeClassifierP
     type = cascade;
 }
 bool FaceDetector::init() {
+    if (modelPath == "\0") return false;
     try {
         faceClassifier.load(modelPath);
     }
@@ -88,7 +89,7 @@ void FaceDetector::detect(cv::Mat& image, bool showFeatures) {
 }
 
 cv::Rect FaceDetector::getLastRect() {
-    return facesInFrame.back();
+    return facesInFrame.empty() ? cv::Rect() : facesInFrame.back();
 }
 cv::Rect ObjectDetector::getLastRect() {
     return lastRect;
@@ -125,9 +126,26 @@ bool ObjectDetector::init() {
 
 void ObjectDetector::detect(cv::Mat& image, bool showConf) {
     cv::Mat blob = cv::dnn::blobFromImage(image, 1.0, cv::Size(320,320), meanValues, shouldSwapRB, false);
+    std::vector<std::string> layers = model.getLayerNames();
 
     model.setInput(blob);
-    blob = model.forward();
+    try {
+        /* 
+        In Debug mode, the forward method requires a string argument representing the layer,
+        otherwise it throws a fatal exception and the whole app crashes.
+        In Release mode, it automatically chooses the right layer
+        */
+        #ifdef NDEBUG
+            blob = model.forward();
+        #else
+            blob = model.forward("layer");
+        #endif
+    }
+    catch (const std::exception& e) {
+        std::exception ex("No valid layer was provided to model.forward(). This would happen if the application is run in Debug mode.");
+        throw ex;
+        return;
+    }
 
     cv::Mat detectionMat(blob.size[2], blob.size[3], CV_32F, blob.ptr<float>());
 
@@ -136,10 +154,10 @@ void ObjectDetector::detect(cv::Mat& image, bool showConf) {
         float confidence = detectionMat.at<float>(i, 2);
 
         if (confidence > minConfidence) {
-            int box_x = (int) (detectionMat.at<float>(i, 3) * image.cols);
-            int box_y = (int) (detectionMat.at<float>(i, 4) * image.rows);
-            int box_width = (int) (detectionMat.at<float>(i, 5) * image.cols - box_x);
-            int box_height = (int) (detectionMat.at<float>(i, 6) * image.rows - box_y);
+            int box_x = (int)(detectionMat.at<float>(i, 3) * image.cols);
+            int box_y = (int)(detectionMat.at<float>(i, 4) * image.rows);
+            int box_width = (int)(detectionMat.at<float>(i, 5) * image.cols - box_x);
+            int box_height = (int)(detectionMat.at<float>(i, 6) * image.rows - box_y);
             lastRect = cv::Rect(box_x, box_y, box_width, box_height);
 
             cv::rectangle(image, lastRect, cv::Scalar(147, 167, 255), 2);
@@ -151,6 +169,7 @@ void ObjectDetector::detect(cv::Mat& image, bool showConf) {
                 ss << ": confidence = " + std::to_string((int)(confidence * 100)) + "%";
             drawLabel(image, ss.str(), box_x, box_y);
         }
+        else lastRect = cv::Rect();
     }
 }
 
