@@ -19,6 +19,9 @@ public:
 	LabeledSlider* confControl;
 	LabeledSlider* thresholdControl;
 	QPushButton* uploadButton;
+	QPushButton* zoomIn;
+	QPushButton* zoomOut;
+	QPushButton* zoomReset;
 
 public:
 	Menu(QWidget* parent = nullptr);

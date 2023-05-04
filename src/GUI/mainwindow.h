@@ -22,7 +22,7 @@ class MainWindow : public QWidget {
 public:
 	// three main sections
 	Menu* menu; // controls
-	QGraphicsView* imageContainer;
+	SceneImageViewer* imageContainer;
 	QStatusBar* statusBar;
 	QLabel* resLabel;
 
@@ -56,4 +56,14 @@ private:
 	void flipImage();
 	void displayImage();
 	QString getImageFileName();
+	void resizeEvent(QResizeEvent* event) override {
+		if (cameraIsOn || imageIsUpload)
+			imageContainer->fitInView(&pixmap, Qt::KeepAspectRatio);
+		if (imageContainer->getZoomCount() > 0) {
+			int temp = imageContainer->getZoomCount();
+			imageContainer->zoomReset();
+			imageContainer->zoomIn(temp);
+		}
+		imageContainer->setAlignment(Qt::AlignCenter);
+	}
 };

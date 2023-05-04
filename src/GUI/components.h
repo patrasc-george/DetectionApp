@@ -3,6 +3,12 @@
 #include <QWidget>
 #include <QLabel>
 #include <QSlider>
+#include <QGraphicsView>
+#include <QGraphicsScene>
+#include <QGraphicsItem>
+#include <QWidget>
+
+#include <iostream>
 
 class LabeledSlider : public QWidget {
 	Q_OBJECT
@@ -18,4 +24,18 @@ protected:
 	void changeLabelValue();
 signals:
 	void valueChanged(int x);
+};
+
+class SceneImageViewer : public QGraphicsView {
+private:
+    QGraphicsScene m_scene;
+    QGraphicsPixmapItem m_item;
+    int zoomCount;
+public:
+    SceneImageViewer();
+    void setPixmap(const QPixmap& pixmap);
+    void zoomIn(int times = 1);
+    void zoomOut(int times = 1);
+    void zoomReset();
+	int getZoomCount();
 };

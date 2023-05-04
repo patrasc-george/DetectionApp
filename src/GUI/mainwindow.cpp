@@ -12,6 +12,7 @@
 #include <QVBoxLayout>
 #include <QFileDialog>
 #include <QStatusBar>
+#include <QStandardPaths>
 
 #include "ObjectDetection.h"
 #include "CameraInteraction.h"
@@ -28,7 +29,7 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 
 	// instantiate the menu (see constructor), image container and status bar
 	menu = new Menu;
-	imageContainer = new QGraphicsView;
+	imageContainer = new SceneImageViewer;
 	statusBar = new QStatusBar();
 	resLabel = new QLabel();
 	statusBar->addPermanentWidget(resLabel);
@@ -46,30 +47,45 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	connect(menu->showConfidence, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
 	connect(menu->thresholdControl, &LabeledSlider::valueChanged, this, &MainWindow::changeThresholdEvent);
+	connect(menu->zoomIn, &QPushButton::clicked, [&] {
+		imageContainer->zoomIn(); 	
+		setOptions();
+		});
+	connect(menu->zoomOut, &QPushButton::clicked, [&] {
+		imageContainer->zoomOut();
+		if (imageContainer->getZoomCount() == 0)
+			imageContainer->fitInView(&pixmap, Qt::KeepAspectRatio);
+		setOptions();
+		});
+	connect(menu->zoomReset, &QPushButton::clicked, [&] {
+		imageContainer->zoomReset();
+		imageContainer->fitInView(&pixmap, Qt::KeepAspectRatio);
+		setOptions();
+		});
 
-	imageContainer->setFixedSize(640, 480);
+	imageContainer->setMinimumSize(640, 480);
 
-	// create a grid that will contain the 3 main components
-	QGridLayout* grid = new QGridLayout;
-	grid->addWidget(imageContainer, 0, 0, 1, 1);
-	grid->addWidget(menu, 0, 1, 1, 1);
-	grid->addWidget(statusBar, 1, 0, 1, 2);
+	QVBoxLayout* vbox = new QVBoxLayout;
+	QHBoxLayout* hbox = new QHBoxLayout;
+	hbox->addWidget(imageContainer);
+	hbox->addWidget(menu, 0);
+	vbox->addLayout(hbox);
+	vbox->addWidget(statusBar);
 	// give the grid some whitespace around
-	grid->setContentsMargins(10, 10, 10, 10);
+	vbox->setContentsMargins(10, 10, 10, 10);
 	// the main window will show the grid
-	setLayout(grid);
-	setFixedSize(sizeHint());
+	setLayout(vbox);
+	//setFixedSize(sizeHint());
 
 	// set the initial values of the menu controls
 	menu->flip->setChecked(true); // the image is flipped
-	menu->detectorsList->setCurrentIndex(0); // 0 = no detection, 1 = face detection, 2 = object detection
+	menu->detectorsList->setCurrentIndex(0); // 0 = no detection, 1... = other options
 
 	// init the PixMap
-	imageContainer->setScene(new QGraphicsScene(this));
+	imageContainer->setScene(new QGraphicsScene);
 	imageContainer->scene()->addItem(&pixmap);
-	imageContainer->setSceneRect(imageContainer->scene()->sceneRect());
 	imageContainer->setAlignment(Qt::AlignCenter);
-
+	
 	// load labels for detectors (after being seleced they might be deleted if the corresponding detector didn't load succesfully)
 	for (QString name : names) {
 		menu->detectorsList->addItem(name);
@@ -88,6 +104,9 @@ void MainWindow::setOptions()
 	menu->screenshot->setVisible(cameraIsOn || imageIsUpload);
 	//menu->thresholdControl->setVisible((cameraIsOn || imageIsUpload) && detIndex == 3);
 	menu->thresholdControl->setVisible(false);
+	menu->zoomIn->setEnabled(imageIsUpload);
+	menu->zoomOut->setEnabled(imageIsUpload && (imageContainer->getZoomCount() > 0));
+	menu->zoomReset->setEnabled(menu->zoomOut->isEnabled());
 }
 
 void MainWindow::toggleCameraEvent() {
@@ -98,13 +117,24 @@ void MainWindow::toggleCameraEvent() {
 
 	if (cameraIsOn) {
 		menu->flip->setChecked(true);
-		imageContainer->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-		imageContainer->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		startVideoCapture();
 		selectDetectorEvent();
 	}
 	else {
-		frame.setTo(cv::Scalar(255, 255, 255));
+		QImage img(imageContainer->size().width(), imageContainer->size().height(), QImage::Format::Format_RGB32);
+		QImage logo("../assets/camera.png");
+		QPainter p;
+		img.fill(Qt::white);
+		p.begin(&img);
+
+		p.drawImage(imageContainer->size().width() / 2.0 - logo.size().width() / 2.0, imageContainer->size().height() / 2.0 - logo.size().height() / 2.0, logo);
+		p.drawText(0, imageContainer->size().height() / 2.0 + logo.size().height() / 2.0 + 20, imageContainer->size().width(), 10, Qt::AlignCenter, "Camera is unavailable");
+		p.end();
+		cv::Mat  mat(img.height(), img.width(), CV_8UC4, const_cast<uchar*>(img.bits()), static_cast<size_t>(img.bytesPerLine()));
+
+		cv::cvtColor(mat, mat, cv::COLOR_BGRA2BGR);
+		frame = mat;
+
 		displayImage();
 		delete currDet;
 		currDet = nullptr;
@@ -113,11 +143,10 @@ void MainWindow::toggleCameraEvent() {
 
 QString MainWindow::getImageFileName()
 {
-	return QFileDialog::getOpenFileName(this, tr("Open Image"), "", tr("Image Files (*.png *.jpg *.bmp)"));
+	return QFileDialog::getOpenFileName(this, tr("Open Image"), QStandardPaths::standardLocations(QStandardPaths::PicturesLocation).first(), tr("Image Files (*.png *.jpg *.bmp)"));
 }
 
-void MainWindow::uploadImageEvent()
-{
+void MainWindow::uploadImageEvent() {
 	fileName = getImageFileName();
 
 	if (fileName.isEmpty()) {
@@ -135,6 +164,7 @@ void MainWindow::uploadImageEvent()
 	menu->toggleCamera->setChecked(false);
 	menu->flip->setChecked(false);
 	imageIsUpload = true;
+	imageContainer->zoomReset();
 	setOptions();
 	processImage();
 	displayImage();
@@ -146,10 +176,11 @@ void MainWindow::selectDetectorEvent() {
 		currDet = nullptr;
 	}
 	if (menu->detectorsList->currentIndex() != 0) {
-		if (ModelLoader::getFromFileByName(currDet, menu->detectorsList->currentText(), modelsJSON) == false) {
-			QMessageBox::critical(this, "Error", "The selected detector could did not load succesfully! You might need to check if the right files are provided and the paths are set accordingly in models.json");
-			menu->detectorsList->removeItem(menu->detectorsList->findText(menu->detectorsList->currentText()));
+		QString currText = menu->detectorsList->currentText();
+		if (ModelLoader::getFromFileByName(currDet, currText, modelsJSON) == false) {
+			QMessageBox::critical(this, "Error", "The selected detector could did not load succesfully! You might need to check if the right files are provided and the paths are set accordingly in detectors.json");
 			menu->detectorsList->setCurrentIndex(0);
+			menu->detectorsList->removeItem(menu->detectorsList->findText(currText));
 		}
 	}
 	setOptions();
@@ -168,7 +199,7 @@ void MainWindow::screenshotEvent() {
 		tr("Images (*.png)"));
 	if (!fileName.isEmpty()) {
 		// Re-shrink the scene to it's bounding contents
-		imageContainer->scene()->setSceneRect(imageContainer->scene()->itemsBoundingRect());
+		imageContainer->scene()->setSceneRect(imageContainer->scene()->sceneRect());
 		// Create the image with the exact size of the shrunk scene
 		QImage image(imageContainer->scene()->sceneRect().size().toSize(), QImage::Format_ARGB32);
 		// Start all pixels transparent to avoid white background

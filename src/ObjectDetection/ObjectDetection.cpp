@@ -169,7 +169,6 @@ void ObjectDetector::detect(cv::Mat& image, bool showConf) {
                 ss << ": confidence = " + std::to_string((int)(confidence * 100)) + "%";
             drawLabel(image, ss.str(), box_x, box_y);
         }
-        else lastRect = cv::Rect();
     }
 }
 

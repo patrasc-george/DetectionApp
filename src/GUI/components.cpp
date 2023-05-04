@@ -35,3 +35,48 @@ void LabeledSlider::changeLabelValue() {
 	if (isPercent) text += "%";
 	label->setText(text);
 };
+
+
+SceneImageViewer::SceneImageViewer() {
+	zoomCount = 0;
+	setScene(&m_scene);
+	m_scene.addItem(&m_item);
+	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	setResizeAnchor(QGraphicsView::AnchorViewCenter);
+}
+
+void SceneImageViewer::setPixmap(const QPixmap& pixmap) {
+	m_item.setPixmap(pixmap);
+	auto offset = -QRectF(pixmap.rect()).center();
+	m_item.setOffset(offset);
+	setSceneRect(offset.x() * 4, offset.y() * 4, -offset.x() * 8, -offset.y() * 8);
+	translate(1, 1);
+}
+
+void SceneImageViewer::zoomIn(int times) {
+	QGraphicsView::scale(pow(1.1, times), pow(1.1, times));
+	zoomCount += times;
+	setDragMode(QGraphicsView::ScrollHandDrag);
+}
+
+void SceneImageViewer::zoomOut(int times) {
+	if (zoomCount > 0) {
+		QGraphicsView::scale(pow(1.0 / 1.1, times), pow(1.0 / 1.1, times));
+		zoomCount -= times;
+		if (zoomCount == 0) {
+			setDragMode(QGraphicsView::NoDrag);
+		}
+	}
+}
+
+void SceneImageViewer::zoomReset() {
+	if (zoomCount == 0) return;
+	zoomCount = 0;
+	setDragMode(QGraphicsView::NoDrag);
+	fitInView(&m_item, Qt::KeepAspectRatio);
+}
+
+int SceneImageViewer::getZoomCount() {
+	return zoomCount;
+}
