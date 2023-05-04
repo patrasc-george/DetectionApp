@@ -123,7 +123,13 @@ void MainWindow::uploadImageEvent()
 	if (fileName.isEmpty()) {
 		return;
 	}
-	frame = cv::imread(fileName.toStdString());
+	cv::Mat image = cv::imread(fileName.toStdString());
+	if (image.data != NULL)
+		frame = image;
+	else {
+		QMessageBox::critical(this, "Error", QString("Couldnt't read image from %1. The file may be corrupted or not a valid image file.").arg(fileName));
+		return;
+	}
 	statusBar->showMessage(QString("Uploaded file: %1").arg(fileName));
 
 	menu->toggleCamera->setChecked(false);
