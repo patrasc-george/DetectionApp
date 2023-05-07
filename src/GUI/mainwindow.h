@@ -56,14 +56,8 @@ private:
 	void flipImage();
 	void displayImage();
 	QString getImageFileName();
+	void preventReset();
 	void resizeEvent(QResizeEvent* event) override {
-		if (cameraIsOn || imageIsUpload)
-			imageContainer->fitInView(&pixmap, Qt::KeepAspectRatio);
-		if (imageContainer->getZoomCount() > 0) {
-			int temp = imageContainer->getZoomCount();
-			imageContainer->zoomReset();
-			imageContainer->zoomIn(temp);
-		}
-		imageContainer->setAlignment(Qt::AlignCenter);
+		preventReset();
 	}
 };

@@ -11,7 +11,6 @@ public:
 	QCheckBox* toggleFaceFeatures;
 	QCheckBox* showRes;
 	QCheckBox* showFps;
-	QCheckBox* flip;
 	QCheckBox* showConfidence;
 	QComboBox* detectorsList;
 	QPushButton* screenshot;
@@ -21,6 +20,10 @@ public:
 	QPushButton* zoomIn;
 	QPushButton* zoomOut;
 	QPushButton* zoomReset;
+	QPushButton* flipHorizontal;
+	QPushButton* flipVertical;
+	QPushButton* undoBtn;
+	QPushButton* redoBtn;
 
 public:
 	Menu(QWidget* parent = nullptr);

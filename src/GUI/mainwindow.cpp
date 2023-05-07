@@ -46,10 +46,11 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	connect(menu->confControl, &LabeledSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
 	connect(menu->toggleFaceFeatures, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->showRes, &QCheckBox::toggled, this, &MainWindow::processImage);
-	connect(menu->flip, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->showConfidence, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
 	connect(menu->thresholdControl, &LabeledSlider::valueChanged, this, &MainWindow::changeThresholdEvent);
+	connect(menu->flipHorizontal, &QCheckBox::toggled, this, &MainWindow::processImage);
+	connect(menu->flipVertical, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->zoomIn, &QPushButton::clicked, [&] {
 		imageContainer->zoomIn(); 	
 		setOptions();
@@ -79,7 +80,7 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	layout()->setContentsMargins(0, 20, 0, 0);
 
 	// set the initial values of the menu controls
-	menu->flip->setChecked(true); // the image is flipped
+	menu->flipHorizontal->setChecked(true); // the image is flipped
 	menu->detectorsList->setCurrentIndex(0); // 0 = no detection, 1... = other options
 
 	// init the PixMap
@@ -95,19 +96,24 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 
 void MainWindow::setOptions()
 {
+	menu->detectorsList->setEnabled(cameraIsOn || imageIsUpload);
 	menu->toggleCamera->setText("   Turn Camera " + QString(cameraIsOn ? "Off" : "On"));
 	menu->toggleFaceFeatures->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == cascade && (currDet->canDetectEyes() || currDet->canDetectSmiles()));
 	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
 	menu->confControl->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
 	menu->showRes->setVisible(cameraIsOn || imageIsUpload);
 	menu->showFps->setVisible(cameraIsOn);
-	menu->flip->setVisible(cameraIsOn || imageIsUpload);
+	menu->flipHorizontal ->setEnabled(cameraIsOn || imageIsUpload);
+	menu->flipVertical->setEnabled(cameraIsOn || imageIsUpload);
 	menu->screenshot->setVisible(cameraIsOn || imageIsUpload);
 	//menu->thresholdControl->setVisible((cameraIsOn || imageIsUpload) && detIndex == 3);
 	menu->thresholdControl->setVisible(false);
 	menu->zoomIn->setEnabled(imageIsUpload);
 	menu->zoomOut->setEnabled(imageIsUpload && (imageContainer->getZoomCount() > 0));
 	menu->zoomReset->setEnabled(menu->zoomOut->isEnabled());
+
+	menu->undoBtn->setEnabled(false); // temporary
+	menu->redoBtn->setEnabled(false); // temporary
 }
 
 void MainWindow::toggleCameraEvent() {
@@ -116,9 +122,11 @@ void MainWindow::toggleCameraEvent() {
 	imageIsUpload = menu->uploadButton->isChecked();
 	setOptions();
 	menu->toggleCamera->clearFocus();
+	imageContainer->zoomReset();
 
 	if (cameraIsOn) {
-		menu->flip->setChecked(true);
+		menu->flipHorizontal->setChecked(true);
+		menu->flipVertical->setChecked(false);
 		startVideoCapture();
 		selectDetectorEvent();
 	}
@@ -165,7 +173,8 @@ void MainWindow::uploadImageEvent() {
 	statusBar->showMessage(QString("Uploaded file: %1").arg(fileName));
 
 	menu->toggleCamera->setChecked(false);
-	menu->flip->setChecked(false);
+	menu->flipHorizontal->setChecked(false);
+	menu->flipVertical->setChecked(false);
 	imageIsUpload = true;
 	imageContainer->zoomReset();
 	setOptions();
@@ -273,8 +282,11 @@ void MainWindow::showFPS(int& fps, int& avgFps)
 
 void MainWindow::flipImage()
 {
-	if (menu->flip->isChecked()) {
+	if (menu->flipHorizontal->isChecked()) {
 		cv::flip(frame, frame, 1);
+	}
+	if (menu->flipVertical->isChecked()) {
+		cv::flip(frame, frame, 0);
 	}
 }
 
@@ -287,7 +299,9 @@ void MainWindow::displayImage() {
 
 	pixmap.setPixmap(QPixmap::fromImage(qimg));
 	imageContainer->scene()->setSceneRect(imageContainer->scene()->itemsBoundingRect());
-	imageContainer->fitInView(&pixmap, Qt::KeepAspectRatio);
+	
+	preventReset();
+	
 	QString res = QString("Resolution: %1 x %2")
 		.arg(QString::number(frame.size().width))
 		.arg(QString::number(frame.size().height));
@@ -350,4 +364,14 @@ void MainWindow::changeThresholdEvent() {
 	if (imageIsUpload)
 		processImage();
 	statusBar->showMessage(QString("Applied binary thresholding: %1").arg(menu->thresholdControl->value()));
+}
+
+void MainWindow::preventReset() {
+	// prevent the container from losing the zoom applying other actions on the image (e.g. flip) or on resize
+	imageContainer->fitInView(&pixmap, Qt::KeepAspectRatio);
+	if (imageContainer->getZoomCount() > 0) {
+		int temp = imageContainer->getZoomCount();
+		imageContainer->zoomReset();
+		imageContainer->zoomIn(temp);
+	}
 }
