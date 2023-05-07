@@ -24,6 +24,9 @@ Menu::Menu(QWidget* parent)
 	confControl = new LabeledSlider("Min confidence", 5, 95, 5, true);
 	thresholdControl = new LabeledSlider("Threshold", 1, 250, 10);
 	uploadButton = new QPushButton("Upload image");
+	imageAlgorithms = new QListWidget;
+	binaryThresholdingButton = new QListWidgetItem("Binary Thresholding", imageAlgorithms);
+	histogramEqualizationButton = new QListWidgetItem("Histogram Equalization", imageAlgorithms);
 
 	zoomIn = new QPushButton();
 	zoomIn->setIcon(QIcon(":/assets/zoom-in_dark.png"));
@@ -55,6 +58,8 @@ Menu::Menu(QWidget* parent)
 	redoBtn->setIcon(QIcon(":/assets/redo_dark.png"));
 	redoBtn->setToolTip("Redo");
 
+	imageAlgorithms->setSelectionMode(QAbstractItemView::MultiSelection);
+
 	// we make the Camera Toggle pushButton behave like a checkbox so we can access its 'checked' state
 	toggleCamera->setCheckable(true);
 	toggleCamera->setObjectName("CameraToggle");
@@ -75,6 +80,7 @@ Menu::Menu(QWidget* parent)
 	vbox->addLayout(miniButtons);
 	vbox->addWidget(new QLabel("Select a detector"));
 	vbox->addWidget(detectorsList);
+	vbox->addWidget(imageAlgorithms);
 	vbox->addWidget(showRes);
 	vbox->addWidget(showFps);
 	vbox->addWidget(toggleFaceFeatures);
