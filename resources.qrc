@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/">
+        <file>assets/camera_light.png</file>
+        <file>assets/camera_dark.png</file>
+        <file>assets/check.png</file>
+        <file>assets/down-arrow_light.png</file>
+        <file>assets/down-arrow_dark.png</file>
+        <file>assets/reset-arrow_light.png</file>
+        <file>assets/reset-arrow_dark.png</file>
+        <file>assets/tracker.png</file>
+        <file>assets/tracker-hover.png</file>
+	    <file>assets/stylesheet.qss</file>
+    </qresource>
+</RCC>

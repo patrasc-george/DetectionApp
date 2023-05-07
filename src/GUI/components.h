@@ -8,8 +8,6 @@
 #include <QGraphicsItem>
 #include <QWidget>
 
-#include <iostream>
-
 class LabeledSlider : public QWidget {
 	Q_OBJECT
 private:

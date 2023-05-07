@@ -10,9 +10,12 @@ LabeledSlider::LabeledSlider(QString name, short min, short max, short step, boo
 	slider->setSingleStep(step);
 	slider->setTickPosition(QSlider::TicksBelow);
 	slider->setTickInterval(step);
+	slider->setContentsMargins(10, 0, 10, 0);
 
 	auto* vbox = new QVBoxLayout();
 	auto* hbox = new QHBoxLayout();
+	vbox->setContentsMargins(0, 10, 0, 0);
+
 	hbox->addWidget(new QLabel(name));
 	hbox->addStretch(1);
 	hbox->addWidget(label);
@@ -24,6 +27,7 @@ LabeledSlider::LabeledSlider(QString name, short min, short max, short step, boo
 	connect(slider, &QSlider::valueChanged, this, &LabeledSlider::changeLabelValue);
 	slider->setValue((int)(min + max) / 2);
 }
+
 void LabeledSlider::setInitialValue(int value) {
 	slider->setValue(value);
 }
@@ -44,6 +48,8 @@ SceneImageViewer::SceneImageViewer() {
 	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	setResizeAnchor(QGraphicsView::AnchorViewCenter);
+	setAlignment(Qt::AlignCenter);
+	setStyleSheet("border: 0px");
 }
 
 void SceneImageViewer::setPixmap(const QPixmap& pixmap) {
@@ -51,7 +57,6 @@ void SceneImageViewer::setPixmap(const QPixmap& pixmap) {
 	auto offset = -QRectF(pixmap.rect()).center();
 	m_item.setOffset(offset);
 	setSceneRect(offset.x() * 4, offset.y() * 4, -offset.x() * 8, -offset.y() * 8);
-	translate(1, 1);
 }
 
 void SceneImageViewer::zoomIn(int times) {

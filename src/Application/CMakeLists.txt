@@ -3,9 +3,11 @@ project(Application)
 
 # Add the executable
 file(GLOB SOURCE_FILES "*.cpp")
-file(GLOB UI_FILES "*.ui")
 file(GLOB HEADER_FILES "*.h")
-add_executable(${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES} ${UI_FILES})
+
+set(CMAME_AUTORCC ON)
+qt6_add_resources(RES "../../resources.qrc")
+add_executable(${PROJECT_NAME} ${RES} ${HEADER_FILES} ${SOURCE_FILES})
 
 # Add the libraries
 add_dependencies(${PROJECT_NAME}

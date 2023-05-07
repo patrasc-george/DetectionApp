@@ -9,13 +9,11 @@
 Menu::Menu(QWidget* parent)
 	: QWidget(parent) {
 
-	setFixedWidth(200);
-
+	setFixedWidth(230);
 	// arrange controls in a vertical box (as in display:flexbox from CSS)
 	auto* vbox = new QVBoxLayout();
 
 	// initialize controls
-	exit = new QPushButton("Exit");
 	toggleCamera = new QPushButton("Turn On");
 	toggleFaceFeatures = new QCheckBox("Detect eyes and smiles");
 	detectorsList = new QComboBox;
@@ -30,10 +28,12 @@ Menu::Menu(QWidget* parent)
 
 	zoomIn = new QPushButton("+");
 	zoomOut = new QPushButton("-");
-	zoomReset = new QPushButton(QString("Fit ") + QString::fromUtf8("\u27f3"));
+	zoomReset = new QPushButton("  Fit to view");
+	zoomReset->setIcon(QIcon(":/assets/reset-arrow_dark.png"));
 
 	// we make the Camera Toggle pushButton behave like a checkbox so we can access its 'checked' state
 	toggleCamera->setCheckable(true);
+	toggleCamera->setObjectName("CameraToggle");
 
 	detectorsList->addItem("No detection");
 
@@ -43,7 +43,9 @@ Menu::Menu(QWidget* parent)
 	zooms->addWidget(zoomOut, 0,1,1,1);
 	zooms->addWidget(zoomReset, 0,2,1,4);
 	vbox->addWidget(toggleCamera);
+	vbox->addWidget(new QLabel("Zoom"));
 	vbox->addLayout(zooms);
+	vbox->addWidget(new QLabel("Select a detector"));
 	vbox->addWidget(detectorsList);
 	vbox->addWidget(flip);
 	vbox->addWidget(showRes);
@@ -56,7 +58,6 @@ Menu::Menu(QWidget* parent)
 	vbox->addStretch(1); // add spacing so the next controls will appear at the bottom of the menu
 	vbox->addWidget(uploadButton);
 	vbox->addWidget(screenshot);
-	vbox->addWidget(exit);
 
 	vbox->setContentsMargins(10, 0, 10, 0); // add some whitespace
 	setLayout(vbox); // our menu will show the vertical box

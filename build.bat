@@ -17,7 +17,4 @@ rmdir models /s/q
 rmdir haarcascades /s/q
 rmdir lbpcascades /s/q
 
-cd ../
-xcopy "assets" "build/src/assets" /h /i /c /k /e /r /y
-
 pause

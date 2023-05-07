@@ -23,6 +23,7 @@ QVector<QString> names = ModelLoader::getNames(modelsJSON);
 
 
 MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
+
 	// instantiate the list of detectors
 	this->currDet = nullptr;
 	displayedInfoCount = 0;
@@ -33,10 +34,12 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	statusBar = new QStatusBar();
 	resLabel = new QLabel();
 	statusBar->addPermanentWidget(resLabel);
+	statusBar->setSizeGripEnabled(false);
+	statusBar->setFixedHeight(35);
+	statusBar->setContentsMargins(0, 0, 20, 0);
 
 	// link the controls defined in our menu to the events of our window
 	// syntax: connect(widget that emits a signal, the type of the signal, the object that acts on the signal, the method (slot) that will be called)
-	connect(menu->exit, &QPushButton::clicked, this, &MainWindow::close);
 	connect(menu->toggleCamera, &QAbstractButton::toggled, this, &MainWindow::toggleCameraEvent);
 	connect(menu->uploadButton, &QPushButton::clicked, this, &MainWindow::uploadImageEvent);
 	connect(menu->detectorsList, &QComboBox::currentIndexChanged, this, &MainWindow::selectDetectorEvent);
@@ -71,11 +74,9 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	hbox->addWidget(menu, 0);
 	vbox->addLayout(hbox);
 	vbox->addWidget(statusBar);
-	// give the grid some whitespace around
-	vbox->setContentsMargins(10, 10, 10, 10);
-	// the main window will show the grid
+	hbox->setContentsMargins(20, 0, 20, 0);
 	setLayout(vbox);
-	//setFixedSize(sizeHint());
+	layout()->setContentsMargins(0, 20, 0, 0);
 
 	// set the initial values of the menu controls
 	menu->flip->setChecked(true); // the image is flipped
@@ -94,7 +95,7 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 
 void MainWindow::setOptions()
 {
-	menu->toggleCamera->setText("Turn " + QString(cameraIsOn ? "Off" : "On"));
+	menu->toggleCamera->setText("   Turn Camera " + QString(cameraIsOn ? "Off" : "On"));
 	menu->toggleFaceFeatures->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == cascade && (currDet->canDetectEyes() || currDet->canDetectSmiles()));
 	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
 	menu->confControl->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
@@ -114,6 +115,7 @@ void MainWindow::toggleCameraEvent() {
 	menu->uploadButton->setChecked(false);
 	imageIsUpload = menu->uploadButton->isChecked();
 	setOptions();
+	menu->toggleCamera->clearFocus();
 
 	if (cameraIsOn) {
 		menu->flip->setChecked(true);
@@ -122,11 +124,12 @@ void MainWindow::toggleCameraEvent() {
 	}
 	else {
 		QImage img(imageContainer->size().width(), imageContainer->size().height(), QImage::Format::Format_RGB32);
-		QImage logo("../assets/camera.png");
+		QImage logo(":/assets/camera_dark.png");
+		logo = logo.scaled(100, 100, Qt::KeepAspectRatio);
+
 		QPainter p;
 		img.fill(Qt::white);
 		p.begin(&img);
-
 		p.drawImage(imageContainer->size().width() / 2.0 - logo.size().width() / 2.0, imageContainer->size().height() / 2.0 - logo.size().height() / 2.0, logo);
 		p.drawText(0, imageContainer->size().height() / 2.0 + logo.size().height() / 2.0 + 20, imageContainer->size().width(), 10, Qt::AlignCenter, "Camera is unavailable");
 		p.end();
@@ -167,6 +170,7 @@ void MainWindow::uploadImageEvent() {
 	imageContainer->zoomReset();
 	setOptions();
 	processImage();
+	imageContainer->fitInView(&pixmap, Qt::KeepAspectRatio);
 	displayImage();
 }
 
@@ -177,14 +181,19 @@ void MainWindow::selectDetectorEvent() {
 	}
 	if (menu->detectorsList->currentIndex() != 0) {
 		QString currText = menu->detectorsList->currentText();
-		if (ModelLoader::getFromFileByName(currDet, currText, modelsJSON) == false) {
+		int index = menu->detectorsList->findText(currText);
+		if (!ModelLoader::getFromFileByName(currDet, currText, modelsJSON)) {
 			QMessageBox::critical(this, "Error", "The selected detector could did not load succesfully! You might need to check if the right files are provided and the paths are set accordingly in detectors.json");
+			menu->detectorsList->setItemIcon(index, QIcon(QApplication::style()->standardIcon(QStyle::SP_MessageBoxCritical)));
 			menu->detectorsList->setCurrentIndex(0);
-			menu->detectorsList->removeItem(menu->detectorsList->findText(currText));
+		}
+		else {
+			menu->detectorsList->setItemIcon(index, QIcon());
 		}
 	}
 	setOptions();
-	if (imageIsUpload) processImage();
+	if (imageIsUpload)
+		processImage();
 }
 
 void MainWindow::changeMinConfEvent() {
@@ -199,7 +208,7 @@ void MainWindow::screenshotEvent() {
 		tr("Images (*.png)"));
 	if (!fileName.isEmpty()) {
 		// Re-shrink the scene to it's bounding contents
-		imageContainer->scene()->setSceneRect(imageContainer->scene()->sceneRect());
+		imageContainer->scene()->setSceneRect(imageContainer->scene()->itemsBoundingRect());
 		// Create the image with the exact size of the shrunk scene
 		QImage image(imageContainer->scene()->sceneRect().size().toSize(), QImage::Format_ARGB32);
 		// Start all pixels transparent to avoid white background
@@ -277,6 +286,7 @@ void MainWindow::displayImage() {
 		qimg = QImage(frame.data, frame.cols, frame.rows, static_cast<int>(frame.step), QImage::Format_BGR888);
 
 	pixmap.setPixmap(QPixmap::fromImage(qimg));
+	imageContainer->scene()->setSceneRect(imageContainer->scene()->itemsBoundingRect());
 	imageContainer->fitInView(&pixmap, Qt::KeepAspectRatio);
 	QString res = QString("Resolution: %1 x %2")
 		.arg(QString::number(frame.size().width))
@@ -284,6 +294,7 @@ void MainWindow::displayImage() {
 	resLabel->setText(res);
 	
 	QCoreApplication::processEvents();
+
 }
 
 void MainWindow::startVideoCapture() {
