@@ -54,7 +54,10 @@ bool FaceDetector::init() {
 }
 
 void FaceDetector::detect(cv::Mat& image, bool showFeatures) {
-    faceClassifier.detectMultiScale(image, facesInFrame, 1.4, 10);
+    cv::Mat gray;
+    cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+
+    faceClassifier.detectMultiScale(gray, facesInFrame, 1.1, 6);
     if (facesInFrame.size() == 0)
         return;
     for (auto&& face : facesInFrame) {
@@ -62,30 +65,31 @@ void FaceDetector::detect(cv::Mat& image, bool showFeatures) {
             break;
         // find eyes on face
         if (eyesClassifierLoaded) {
-            cv::Mat faceROI = image(face);
-            faceROI(cv::Range(0, face.height/2), cv::Range(0, face.width));
+            cv::Mat faceROI = gray(face);
+            faceROI = faceROI(cv::Range(0, face.height/2), cv::Range(0, face.width));
             eyeClassifier.detectMultiScale(faceROI, eyes);
         }
         // find smile on face
         if (smileClassifierLoaded) {
-            cv::Mat faceROI = image(face);
-            faceROI(cv::Range(face.height/2, face.height), cv::Range(0, face.width));
-            smileClassifier.detectMultiScale(faceROI, smiles, 1.3, 20);
+            cv::Mat faceROI = gray(face);
+            faceROI = faceROI(cv::Range(face.height/2, face.height), cv::Range(0, face.width));
+            smileClassifier.detectMultiScale(faceROI, smiles, 1.2, 6);
         }
     }
-    for (auto&& face : facesInFrame)
+    for (auto&& face : facesInFrame) {
         if (face.size().width > 10 || face.size().height > 10) {
             rectangle(image, face, cv::Scalar(147, 167, 255), 2);
             drawLabel(image, currentClassName, face.x, face.y);
-            for (auto&& eye : eyes) {
-                cv::Point eye_center(face.x + eye.x + eye.width / 2, face.y + eye.y + eye.height / 2);
-                short radius = cvRound((eye.width + eye.height) * 0.25);
-                circle(image, eye_center, radius, cv::Scalar(239, 190, 98), 2);
-            }
-            for (auto&& smile : smiles) {
-                rectangle(image, cv::Rect(face.x + smile.x, face.y + smile.y, smile.width, smile.height), cv::Scalar(100, 167, 255), 2);
-            }
         }
+        for (auto&& eye : eyes) {
+            cv::Point eye_center(face.x + eye.x + eye.width / 2, face.y + eye.y + eye.height / 2);
+            short radius = cvRound((eye.width + eye.height) * 0.25);
+            circle(image, eye_center, radius, cv::Scalar(239, 190, 98), 2);
+        }
+        for (auto&& smile : smiles) {
+            rectangle(image, cv::Rect(face.x + smile.x, face.y + face.width - smile.y * 2, smile.width, smile.height), cv::Scalar(100, 167, 255), 2);
+        }
+    }
 }
 
 cv::Rect FaceDetector::getLastRect() {
