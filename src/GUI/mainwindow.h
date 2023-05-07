@@ -39,6 +39,7 @@ private slots:
 	void screenshotEvent();
 	void processImage();
 	void changeThresholdEvent();
+	void selectAlgorithmsEvent();
 
 private:
 	QGraphicsPixmapItem pixmap;

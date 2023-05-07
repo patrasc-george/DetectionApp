@@ -10,12 +10,10 @@ void displayInfo(cv::Mat& image, std::string key, std::string value, cv::Point p
 
 void binaryThresholding(cv::Mat& image, short threshold)
 {
-	cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
 	cv::threshold(image, image, threshold, 255, cv::THRESH_BINARY);
 }
 
 void histogramEqualization(cv::Mat& image)
 {
-	cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
 	cv::equalizeHist(image, image);
 }

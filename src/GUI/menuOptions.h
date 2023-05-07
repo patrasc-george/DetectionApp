@@ -2,7 +2,7 @@
 
 #include <QWidget>
 #include <QComboBox>
-
+#include <QListWidget>
 #include "components.h"
 
 class Menu : public QWidget {
@@ -24,6 +24,9 @@ public:
 	QPushButton* flipVertical;
 	QPushButton* undoBtn;
 	QPushButton* redoBtn;
+	QListWidget* imageAlgorithms;
+	QListWidgetItem* binaryThresholdingButton;
+	QListWidgetItem* histogramEqualizationButton;
 
 public:
 	Menu(QWidget* parent = nullptr);

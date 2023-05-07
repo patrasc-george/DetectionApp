@@ -49,9 +49,10 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	connect(menu->showConfidence, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
 	connect(menu->thresholdControl, &LabeledSlider::valueChanged, this, &MainWindow::changeThresholdEvent);
+	connect(menu->binaryThresholdingButton->listWidget(), &QListWidget::itemChanged, this, &MainWindow::processImage);
+	connect(menu->histogramEqualizationButton->listWidget(), &QListWidget::itemChanged, this, &MainWindow::processImage);
 	connect(menu->flipHorizontal, &QCheckBox::toggled, this, &MainWindow::processImage);
-	connect(menu->flipVertical, &QCheckBox::toggled, this, &MainWindow::processImage);
-	connect(menu->zoomIn, &QPushButton::clicked, [&] {
+	connect(menu->flipVertical, &QCheckBox::toggled, this, &MainWindow::processImage);	connect(menu->zoomIn, &QPushButton::clicked, [&] {
 		imageContainer->zoomIn(); 	
 		setOptions();
 		});
@@ -83,6 +84,9 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	menu->flipHorizontal->setChecked(true); // the image is flipped
 	menu->detectorsList->setCurrentIndex(0); // 0 = no detection, 1... = other options
 
+	menu->binaryThresholdingButton->setCheckState(Qt::Unchecked);
+	menu->histogramEqualizationButton->setCheckState(Qt::Unchecked);
+
 	// init the PixMap
 	imageContainer->setScene(new QGraphicsScene);
 	imageContainer->scene()->addItem(&pixmap);
@@ -106,8 +110,7 @@ void MainWindow::setOptions()
 	menu->flipHorizontal ->setEnabled(cameraIsOn || imageIsUpload);
 	menu->flipVertical->setEnabled(cameraIsOn || imageIsUpload);
 	menu->screenshot->setVisible(cameraIsOn || imageIsUpload);
-	//menu->thresholdControl->setVisible((cameraIsOn || imageIsUpload) && detIndex == 3);
-	menu->thresholdControl->setVisible(false);
+	menu->thresholdControl->setVisible((cameraIsOn || imageIsUpload) && menu->imageAlgorithms->item(0)->checkState() == Qt::Checked);
 	menu->zoomIn->setEnabled(imageIsUpload);
 	menu->zoomOut->setEnabled(imageIsUpload && (imageContainer->getZoomCount() > 0));
 	menu->zoomReset->setEnabled(menu->zoomOut->isEnabled());
@@ -350,6 +353,7 @@ void MainWindow::processImage() {
 	if (imageIsUpload)
 		frame = cv::imread(fileName.toStdString());
 
+	selectAlgorithmsEvent();
 	flipImage();
 	setDetector();
 	showRes();
@@ -374,4 +378,23 @@ void MainWindow::preventReset() {
 		imageContainer->zoomReset();
 		imageContainer->zoomIn(temp);
 	}
+}
+
+void MainWindow::selectAlgorithmsEvent() 
+{
+	for (int i = 0; i < menu->imageAlgorithms->count(); ++i) 
+		if (menu->imageAlgorithms->item(i)->checkState() == Qt::Checked)
+		{
+			isGrayscale = true;
+			break;
+		}
+	if (isGrayscale)
+		cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
+	else
+		return;
+	if (menu->imageAlgorithms->item(0)->checkState() == Qt::Checked) 
+		binaryThresholding(frame, menu->thresholdControl->value());
+	if (menu->imageAlgorithms->item(1)->checkState() == Qt::Checked) 
+		histogramEqualization(frame);
+	setOptions();
 }
