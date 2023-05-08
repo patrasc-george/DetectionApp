@@ -44,6 +44,7 @@ private slots:
 
 private:
 	QGraphicsPixmapItem pixmap;
+	cv::Mat orgFrame;
 	cv::Mat frame;
 	QString fileName;
 	Detector* currDet;
@@ -58,5 +59,12 @@ private:
 	void preventReset();
 	void resizeEvent(QResizeEvent* event) override {
 		preventReset();
+	}
+	bool thresholdActive() {
+		return (
+			menu->binaryThresholdingButton->isChecked() ||
+			menu->zeroThresholdingButton->isChecked() ||
+			menu->adaptiveThresholdingButton->isChecked()
+			);
 	}
 };

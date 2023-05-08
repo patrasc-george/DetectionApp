@@ -11,9 +11,9 @@ static enum ModelErrors {
 
 class ModelLoader {
 public:
-	static void loadAll(QString jsonPath, QVector<Detector*>& vector);
-	static QVector<QString> getNames(QString jsonPath);
-	static QJsonObject getObjectByName(QString name, QString jsonPath);
-	static int getFromFileByName(Detector*&, QString name, QString path);
-	static int getFromJsonObject(Detector*&, QJsonObject);
+	static void loadAll(const QString& jsonPath, QVector<Detector*>& vector);
+	static QVector<QString> getNames(const QString& jsonPath);
+	static QJsonObject getObjectByName(const QString& name, const QString& jsonPath);
+	static int getFromFileByName(Detector*&, const QString& name, const QString& path);
+	static int getFromJsonObject(Detector*&, const QJsonObject&);
 };

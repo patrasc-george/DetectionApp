@@ -22,10 +22,26 @@ Menu::Menu(QWidget* parent)
 	confControl = new LabeledSlider("Min confidence", 5, 95, 5, true);
 	thresholdControl = new LabeledSlider("Threshold", 1, 250, 10);
 	uploadButton = new QPushButton("Upload image");
-	imageAlgorithms = new QListWidget;
-	binaryThresholdingButton = new QListWidgetItem("Binary Thresholding", imageAlgorithms);
-	histogramEqualizationButton = new QListWidgetItem("Histogram Equalization", imageAlgorithms);
-	detectEdgesButton = new QListWidgetItem("Detect Edges", imageAlgorithms);
+
+	imageAlgorithms = new QGroupBox("Image processing");
+	binaryThresholdingButton = new QPushButton("Binary Thresholding", imageAlgorithms);
+	binaryThresholdingButton->setCheckable(true);
+	zeroThresholdingButton = new QPushButton("Thresholding to zero", imageAlgorithms);
+	zeroThresholdingButton->setCheckable(true);
+	adaptiveThresholdingButton = new QPushButton("Adaptive Thresholding", imageAlgorithms);
+	adaptiveThresholdingButton->setCheckable(true);
+	histogramEqualizationButton = new QPushButton("Histogram Equalization", imageAlgorithms);
+	histogramEqualizationButton->setCheckable(true);
+	detectEdgesButton = new QPushButton("Detect Edges", imageAlgorithms);
+	detectEdgesButton->setCheckable(true);
+
+	QVBoxLayout* algVbox = new QVBoxLayout;
+	algVbox->addWidget(binaryThresholdingButton);
+	algVbox->addWidget(zeroThresholdingButton);
+	algVbox->addWidget(adaptiveThresholdingButton);
+	algVbox->addWidget(histogramEqualizationButton);
+	algVbox->addWidget(detectEdgesButton);
+	imageAlgorithms->setLayout(algVbox);
 
 	zoomIn = new QPushButton();
 	zoomIn->setIcon(QIcon(":/assets/zoom-in_dark.png"));
@@ -57,7 +73,6 @@ Menu::Menu(QWidget* parent)
 	redoBtn->setIcon(QIcon(":/assets/redo_dark.png"));
 	redoBtn->setToolTip("Redo");
 
-	imageAlgorithms->setSelectionMode(QAbstractItemView::MultiSelection);
 	// we make the Camera Toggle pushButton behave like a checkbox so we can access its 'checked' state
 	toggleCamera->setCheckable(true);
 	toggleCamera->setObjectName("CameraToggle");
@@ -78,6 +93,7 @@ Menu::Menu(QWidget* parent)
 	vbox->addLayout(miniButtons);
 	vbox->addWidget(new QLabel("Select a detector"));
 	vbox->addWidget(detectorsList);
+	//vbox->addWidget(new QLabel("Image processing"));
 	vbox->addWidget(imageAlgorithms);
 
 	vbox->addWidget(toggleFaceFeatures);

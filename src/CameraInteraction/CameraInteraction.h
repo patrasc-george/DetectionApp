@@ -9,7 +9,11 @@
 
 
 void CAMERAINTERACTION_API binaryThresholding(cv::Mat& image, short threshold);
+void CAMERAINTERACTION_API zeroThresholding(cv::Mat& image, short threshold);
+void CAMERAINTERACTION_API adaptiveThresholding(cv::Mat& image, short threshold);
+
 void CAMERAINTERACTION_API histogramEqualization(cv::Mat& image);
+
 void CAMERAINTERACTION_API detectEdges(cv::Mat& image);
 
 struct CAMERAINTERACTION_API Timer {

@@ -2,7 +2,8 @@
 
 #include <QWidget>
 #include <QComboBox>
-#include <QListWidget>
+#include <QGroupBox>
+
 #include "components.h"
 
 class Menu : public QWidget {
@@ -15,17 +16,24 @@ public:
 	LabeledSlider* confControl;
 	LabeledSlider* thresholdControl;
 	QPushButton* uploadButton;
+
 	QPushButton* zoomIn;
 	QPushButton* zoomOut;
 	QPushButton* zoomReset;
+
 	QPushButton* flipHorizontal;
 	QPushButton* flipVertical;
+
 	QPushButton* undoBtn;
 	QPushButton* redoBtn;
-	QListWidget* imageAlgorithms;
-	QListWidgetItem* binaryThresholdingButton;
-	QListWidgetItem* histogramEqualizationButton;
-	QListWidgetItem* detectEdgesButton;
+
+	QGroupBox* imageAlgorithms;
+	QPushButton* binaryThresholdingButton;
+	QPushButton* zeroThresholdingButton;
+	QPushButton* adaptiveThresholdingButton;
+	QPushButton* histogramEqualizationButton;
+	QPushButton* detectEdgesButton;
+
 
 public:
 	Menu(QWidget* parent = nullptr);

@@ -37,6 +37,8 @@ public:
 	virtual cv::Rect getLastRect() = 0;
 	std::string currentClassName = "";
 	virtual int init() = 0;
+	virtual ~Detector() { std::cout << "detector destroyed" << std::endl; }
+
 };
 
 class OBJECTDETECTION_API FaceDetector : public Detector {
@@ -49,8 +51,8 @@ private:
 	std::vector<cv::Rect> facesInFrame;
 	std::vector<cv::Rect> eyes;
 	std::vector<cv::Rect> smiles;
-	bool eyesClassifierLoaded = false;
-	bool smileClassifierLoaded = false;
+	bool eyesClassifierLoaded;
+	bool smileClassifierLoaded;
 public:
 	FaceDetector(detectorProperties& props, std::string eyeClassifierPath = "\0", std::string smileClassifierPath = "\0");
 	void detect(cv::Mat& image, bool showFeatures = false);

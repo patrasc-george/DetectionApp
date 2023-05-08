@@ -117,3 +117,15 @@ QStatusBar {
 QMessageBox QPushButton {
     min-width: 100px;
 }
+
+QGroupBox QPushButton {
+    height: 25;
+    background-color: hsl(0, 0%, 90%);
+}
+QGroupBox QPushButton:checked {
+    height: 25;
+    background-color: hsl(202, 90%, 90%);
+}
+QGroupBox QPushButton:disabled {
+    background-color: hsl(0, 88%, 90%);
+}

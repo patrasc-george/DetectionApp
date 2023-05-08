@@ -9,7 +9,7 @@
 #include <ObjectDetection.h>
 #include "ModelLoader.h"
 
-void ModelLoader::loadAll(QString path, QVector<Detector*>& vector) {
+void ModelLoader::loadAll(const QString& path, QVector<Detector*>& vector) {
     // read the json file
     QString jsonText;
     QFile file(path);
@@ -39,7 +39,7 @@ void ModelLoader::loadAll(QString path, QVector<Detector*>& vector) {
     }
 }
 
-int ModelLoader::getFromFileByName(Detector*& det, QString name, QString jsonPath) {
+int ModelLoader::getFromFileByName(Detector*& det, const QString& name, const QString& jsonPath) {
     QJsonObject obj = getObjectByName(name, jsonPath);
     if (!obj.empty())
         return getFromJsonObject(det, obj);
@@ -47,7 +47,7 @@ int ModelLoader::getFromFileByName(Detector*& det, QString name, QString jsonPat
     return NAME_NOT_FOUND;
 }
 
-int ModelLoader::getFromJsonObject(Detector*& det, QJsonObject obj) {
+int ModelLoader::getFromJsonObject(Detector*& det, const QJsonObject& obj) {
     detectorProperties props;
 
     QJsonValue value = obj.value("type");
@@ -84,7 +84,7 @@ int ModelLoader::getFromJsonObject(Detector*& det, QJsonObject obj) {
     return TYPE_NOT_PROVIDED;
 }
 
-QVector<QString> ModelLoader::getNames(QString jsonPath) {
+QVector<QString> ModelLoader::getNames(const QString& jsonPath) {
     QString jsonText;
     QFile file(jsonPath);
     file.open(QIODevice::ReadOnly | QIODevice::Text);
@@ -107,7 +107,7 @@ QVector<QString> ModelLoader::getNames(QString jsonPath) {
     return v;
 }
 
-QJsonObject ModelLoader::getObjectByName(QString name, QString jsonPath) {
+QJsonObject ModelLoader::getObjectByName(const QString& name, const QString& jsonPath) {
     QString jsonText;
     QFile file(jsonPath);
     file.open(QIODevice::ReadOnly | QIODevice::Text);
