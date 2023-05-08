@@ -25,6 +25,7 @@ public:
 	SceneImageViewer* imageContainer;
 	QStatusBar* statusBar;
 	QLabel* resLabel;
+	QLabel* fpsLabel;
 
 public:
 	MainWindow(QWidget* parent = nullptr);
@@ -46,14 +47,11 @@ private:
 	cv::Mat frame;
 	QString fileName;
 	Detector* currDet;
-	short displayedInfoCount;
 	bool cameraIsOn = false;
 	bool imageIsUpload = false;
 	bool isGrayscale = false;
 	void setOptions();
 	void setDetector();
-	void showRes();
-	void showFPS(int& fps, int& avgFps);
 	void flipImage();
 	void displayImage();
 	QString getImageFileName();

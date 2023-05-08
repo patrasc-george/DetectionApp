@@ -9,8 +9,6 @@ class Menu : public QWidget {
 public:
 	QPushButton* toggleCamera;
 	QCheckBox* toggleFaceFeatures;
-	QCheckBox* showRes;
-	QCheckBox* showFps;
 	QCheckBox* showConfidence;
 	QComboBox* detectorsList;
 	QPushButton* screenshot;

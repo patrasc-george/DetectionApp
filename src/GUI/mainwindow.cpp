@@ -27,14 +27,15 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 
 	// instantiate the list of detectors
 	this->currDet = nullptr;
-	displayedInfoCount = 0;
 
 	// instantiate the menu (see constructor), image container and status bar
 	menu = new Menu;
 	imageContainer = new SceneImageViewer;
 	statusBar = new QStatusBar();
 	resLabel = new QLabel();
+	fpsLabel = new QLabel();
 	statusBar->addPermanentWidget(resLabel);
+	statusBar->addPermanentWidget(fpsLabel);
 	statusBar->setSizeGripEnabled(false);
 	statusBar->setFixedHeight(35);
 	statusBar->setContentsMargins(0, 0, 20, 0);
@@ -46,7 +47,6 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	connect(menu->detectorsList, &QComboBox::currentIndexChanged, this, &MainWindow::selectDetectorEvent);
 	connect(menu->confControl, &LabeledSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
 	connect(menu->toggleFaceFeatures, &QCheckBox::toggled, this, &MainWindow::processImage);
-	connect(menu->showRes, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->showConfidence, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
 	connect(menu->thresholdControl, &LabeledSlider::valueChanged, this, &MainWindow::changeThresholdEvent);
@@ -108,8 +108,6 @@ void MainWindow::setOptions()
 	menu->toggleFaceFeatures->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == cascade && (currDet->canDetectEyes() || currDet->canDetectSmiles()));
 	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
 	menu->confControl->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
-	menu->showRes->setVisible(cameraIsOn || imageIsUpload);
-	menu->showFps->setVisible(cameraIsOn);
 	menu->flipHorizontal ->setEnabled(cameraIsOn || imageIsUpload);
 	menu->flipVertical->setEnabled(cameraIsOn || imageIsUpload);
 	menu->screenshot->setVisible(cameraIsOn || imageIsUpload);
@@ -269,9 +267,9 @@ void MainWindow::selectDetectorEvent() {
 	}
 	else
 		menu->detectorsList->setItemIcon(index, QIcon());
-	setOptions();
 	if (imageIsUpload)
 		processImage();
+	setOptions();
 }
 
 void MainWindow::changeMinConfEvent() {
@@ -323,26 +321,9 @@ void MainWindow::setDetector()
 		}
 		else statusBar->clearMessage();
 	}
-	catch (const std::exception&) {
+	catch (const std::exception& e) {
+		QMessageBox::critical(this, "Error", e.what());
 		menu->detectorsList->setCurrentIndex(0);
-	}
-}
-
-void MainWindow::showRes()
-{
-	if (menu->showRes->isChecked()) {
-		displayInfo(frame, "Resolution", std::to_string(frame.size().width) + "x" + std::to_string(frame.size().height), cv::Point(10, 30 + displayedInfoCount * 30));
-		displayedInfoCount++;
-	}
-}
-
-void MainWindow::showFPS(int& fps, int& avgFps)
-{
-	if (menu->showFps->isChecked()) {
-		displayInfo(frame, "FPS", std::to_string(fps), cv::Point(10, 30 + displayedInfoCount * 30));
-		displayedInfoCount++;
-		displayInfo(frame, "Average FPS", std::to_string(avgFps), cv::Point(10, 30 + displayedInfoCount * 30));
-		displayedInfoCount++;
 	}
 }
 
@@ -368,10 +349,15 @@ void MainWindow::displayImage() {
 	
 	preventReset();
 	
-	QString res = QString("Resolution: %1 x %2")
+	QString res = QString("Resolution: %1 x %2  ")
 		.arg(QString::number(frame.size().width))
 		.arg(QString::number(frame.size().height));
-	resLabel->setText(res);
+	if (!cameraIsOn && !imageIsUpload) {
+		resLabel->setText("");
+		fpsLabel->setText("");
+	}
+	else
+		resLabel->setText(res);
 	
 	QCoreApplication::processEvents();
 
@@ -403,7 +389,7 @@ void MainWindow::startVideoCapture() {
 			break;
 
 		processImage();
-		showFPS(fps, avgFps);
+		fpsLabel->setText(QString("FPS: %1   (avg: %2)  ").arg(QString::number(fps)).arg(QString::number(avgFps)));
 		displayImage();
 	}
 	cap.release();
@@ -411,7 +397,6 @@ void MainWindow::startVideoCapture() {
 }
 
 void MainWindow::processImage() {
-	displayedInfoCount = 0;
 	isGrayscale = false;
 
 	if (imageIsUpload)
@@ -420,7 +405,6 @@ void MainWindow::processImage() {
 	selectAlgorithmsEvent();
 	flipImage();
 	setDetector();
-	showRes();
 
 	if (frame.empty())
 		return;

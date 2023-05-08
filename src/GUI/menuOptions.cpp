@@ -17,8 +17,6 @@ Menu::Menu(QWidget* parent)
 	toggleCamera = new QPushButton("Turn On");
 	toggleFaceFeatures = new QCheckBox("Detect eyes and smiles");
 	detectorsList = new QComboBox;
-	showRes = new QCheckBox("Show resolution");
-	showFps = new QCheckBox("Show framerate");
 	screenshot = new QPushButton("Save screenshot");
 	showConfidence = new QCheckBox("Show confidences");
 	confControl = new LabeledSlider("Min confidence", 5, 95, 5, true);
@@ -81,8 +79,7 @@ Menu::Menu(QWidget* parent)
 	vbox->addWidget(new QLabel("Select a detector"));
 	vbox->addWidget(detectorsList);
 	vbox->addWidget(imageAlgorithms);
-	vbox->addWidget(showRes);
-	vbox->addWidget(showFps);
+
 	vbox->addWidget(toggleFaceFeatures);
 	vbox->addWidget(showConfidence);
 	vbox->addWidget(confControl);

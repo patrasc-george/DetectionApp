@@ -8,11 +8,11 @@ void drawLabel(cv::Mat & image, std::string label, int left, int top) {
     int baseLine;
     cv::Size label_size = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.7, 1.5, &baseLine);
 
-    //top = std::max(top, label_size.height);
-    //cv::Point tlc = cv::Point(left, top);
-    //cv::Point brc = cv::Point(left + label_size.width, top + label_size.height + baseLine);
+    top = std::max(top, label_size.height);
+    cv::Point tlc = cv::Point(left + 4, top  + label_size.height +6);
+    cv::Point brc = cv::Point(left + label_size.width, top + label_size.height + baseLine);
     //rectangle(image, tlc, brc, cv::Scalar(147, 167, 255), cv::FILLED);
-    putText(image, label, cv::Point(left, top - label_size.height + 1.5), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(147, 167, 255), 2);
+    putText(image, label, tlc, cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(147, 167, 255), 2);
 }
 
 FaceDetector::FaceDetector(detectorProperties& props, std::string eyeClassifierPath, std::string smileClassifierPath) {
@@ -64,6 +64,8 @@ void FaceDetector::detect(cv::Mat& image, bool showFeatures) {
             rectangle(image, face, cv::Scalar(147, 167, 255), 2);
             drawLabel(image, currentClassName, face.x, face.y);
         }
+        if (showFeatures == false)
+            break;
         for (auto&& eye : eyes) {
             cv::Point eye_center(face.x + eye.x + eye.width / 2, face.y + eye.y + eye.height / 2);
             short radius = cvRound((eye.width + eye.height) * 0.25);
