@@ -27,6 +27,7 @@ Menu::Menu(QWidget* parent)
 	imageAlgorithms = new QListWidget;
 	binaryThresholdingButton = new QListWidgetItem("Binary Thresholding", imageAlgorithms);
 	histogramEqualizationButton = new QListWidgetItem("Histogram Equalization", imageAlgorithms);
+	detectEdgesButton = new QListWidgetItem("Detect Edges", imageAlgorithms);
 
 	zoomIn = new QPushButton();
 	zoomIn->setIcon(QIcon(":/assets/zoom-in_dark.png"));
@@ -79,6 +80,7 @@ Menu::Menu(QWidget* parent)
 	vbox->addLayout(miniButtons);
 	vbox->addWidget(new QLabel("Select a detector"));
 	vbox->addWidget(detectorsList);
+	vbox->addWidget(imageAlgorithms);
 	vbox->addWidget(showRes);
 	vbox->addWidget(showFps);
 	vbox->addWidget(toggleFaceFeatures);

@@ -27,6 +27,7 @@ public:
 	QListWidget* imageAlgorithms;
 	QListWidgetItem* binaryThresholdingButton;
 	QListWidgetItem* histogramEqualizationButton;
+	QListWidgetItem* detectEdgesButton;
 
 public:
 	Menu(QWidget* parent = nullptr);

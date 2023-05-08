@@ -17,3 +17,9 @@ void histogramEqualization(cv::Mat& image)
 {
 	cv::equalizeHist(image, image);
 }
+
+void detectEdges(cv::Mat& image)
+{
+	cv::Laplacian(image, image, CV_8U);
+	cv::normalize(image, image, 0, 255, cv::NORM_MINMAX);
+}

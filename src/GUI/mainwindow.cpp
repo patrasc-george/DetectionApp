@@ -88,6 +88,7 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 
 	menu->binaryThresholdingButton->setCheckState(Qt::Unchecked);
 	menu->histogramEqualizationButton->setCheckState(Qt::Unchecked);
+	menu->detectEdgesButton->setCheckState(Qt::Unchecked);
 
 	// init the PixMap
 	imageContainer->setScene(new QGraphicsScene);
@@ -113,6 +114,7 @@ void MainWindow::setOptions()
 	menu->flipVertical->setEnabled(cameraIsOn || imageIsUpload);
 	menu->screenshot->setVisible(cameraIsOn || imageIsUpload);
 	menu->thresholdControl->setVisible((cameraIsOn || imageIsUpload) && menu->imageAlgorithms->item(0)->checkState() == Qt::Checked);
+	menu->imageAlgorithms->setEnabled(cameraIsOn || imageIsUpload);
 	menu->zoomIn->setEnabled(imageIsUpload);
 	menu->zoomOut->setEnabled(imageIsUpload && (imageContainer->getZoomCount() > 0));
 	menu->zoomReset->setEnabled(menu->zoomOut->isEnabled());
@@ -152,7 +154,7 @@ void MainWindow::toggleCameraEvent() {
 		frame = mat;
 
 		displayImage();
-		delete currDet;
+		delete currDet; 
 		currDet = nullptr;
 	}
 }
@@ -450,13 +452,19 @@ void MainWindow::selectAlgorithmsEvent()
 			isGrayscale = true;
 			break;
 		}
+	setOptions();
 	if (isGrayscale)
 		cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
 	else
+	{
+		//setOptions();
 		return;
+	}
 	if (menu->imageAlgorithms->item(0)->checkState() == Qt::Checked) 
 		binaryThresholding(frame, menu->thresholdControl->value());
 	if (menu->imageAlgorithms->item(1)->checkState() == Qt::Checked) 
 		histogramEqualization(frame);
-	setOptions();
+	if (menu->imageAlgorithms->item(2)->checkState() == Qt::Checked)
+		detectEdges(frame);
+	//setOptions();
 }
