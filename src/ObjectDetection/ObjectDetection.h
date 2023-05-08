@@ -36,7 +36,7 @@ public:
 	virtual int getType() { return 0; };
 	virtual cv::Rect getLastRect() = 0;
 	std::string currentClassName = "";
-	virtual bool init() = 0;
+	virtual int init() = 0;
 };
 
 class OBJECTDETECTION_API FaceDetector : public Detector {
@@ -49,13 +49,13 @@ private:
 	std::vector<cv::Rect> facesInFrame;
 	std::vector<cv::Rect> eyes;
 	std::vector<cv::Rect> smiles;
-	bool eyesClassifierLoaded;
-	bool smileClassifierLoaded;
+	bool eyesClassifierLoaded = false;
+	bool smileClassifierLoaded = false;
 public:
 	FaceDetector(detectorProperties& props, std::string eyeClassifierPath = "\0", std::string smileClassifierPath = "\0");
 	void detect(cv::Mat& image, bool showFeatures = false);
 	cv::Rect getLastRect();
-	bool init();
+	int init();
 	bool canDetectEyes() { return eyesClassifierLoaded; };
 	bool canDetectSmiles() { return smileClassifierLoaded; };
 	int getType() { return type; };
@@ -77,6 +77,6 @@ public:
 	void detect(cv::Mat& image , bool showConf = false);
 	void setMinConfidence(float c);
 	cv::Rect getLastRect();
-	bool init();
+	int init();
 	int getType() { return type; };
 };

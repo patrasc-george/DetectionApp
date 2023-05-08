@@ -13,6 +13,7 @@
 #include <QFileDialog>
 #include <QStatusBar>
 #include <QStandardPaths>
+#include <QJsonObject>
 
 #include "ObjectDetection.h"
 #include "CameraInteraction.h"
@@ -51,8 +52,9 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	connect(menu->thresholdControl, &LabeledSlider::valueChanged, this, &MainWindow::changeThresholdEvent);
 	connect(menu->binaryThresholdingButton->listWidget(), &QListWidget::itemChanged, this, &MainWindow::processImage);
 	connect(menu->histogramEqualizationButton->listWidget(), &QListWidget::itemChanged, this, &MainWindow::processImage);
-	connect(menu->flipHorizontal, &QCheckBox::toggled, this, &MainWindow::processImage);
-	connect(menu->flipVertical, &QCheckBox::toggled, this, &MainWindow::processImage);	connect(menu->zoomIn, &QPushButton::clicked, [&] {
+	connect(menu->flipHorizontal, &QCheckBox::clicked, this, &MainWindow::processImage);
+	connect(menu->flipVertical, &QCheckBox::clicked, this, &MainWindow::processImage);	
+	connect(menu->zoomIn, &QPushButton::clicked, [&] {
 		imageContainer->zoomIn(); 	
 		setOptions();
 		});
@@ -142,7 +144,7 @@ void MainWindow::toggleCameraEvent() {
 		img.fill(Qt::white);
 		p.begin(&img);
 		p.drawImage(imageContainer->size().width() / 2.0 - logo.size().width() / 2.0, imageContainer->size().height() / 2.0 - logo.size().height() / 2.0, logo);
-		p.drawText(0, imageContainer->size().height() / 2.0 + logo.size().height() / 2.0 + 20, imageContainer->size().width(), 10, Qt::AlignCenter, "Camera is unavailable");
+		p.drawText(0, imageContainer->size().height() / 2.0 + logo.size().height() / 2.0 + 20, imageContainer->size().width(), 10, Qt::AlignCenter, "Camera is turned off");
 		p.end();
 		cv::Mat  mat(img.height(), img.width(), CV_8UC4, const_cast<uchar*>(img.bits()), static_cast<size_t>(img.bytesPerLine()));
 
@@ -191,18 +193,80 @@ void MainWindow::selectDetectorEvent() {
 		delete currDet;
 		currDet = nullptr;
 	}
-	if (menu->detectorsList->currentIndex() != 0) {
-		QString currText = menu->detectorsList->currentText();
-		int index = menu->detectorsList->findText(currText);
-		if (!ModelLoader::getFromFileByName(currDet, currText, modelsJSON)) {
-			QMessageBox::critical(this, "Error", "The selected detector could did not load succesfully! You might need to check if the right files are provided and the paths are set accordingly in detectors.json");
-			menu->detectorsList->setItemIcon(index, QIcon(QApplication::style()->standardIcon(QStyle::SP_MessageBoxCritical)));
-			menu->detectorsList->setCurrentIndex(0);
-		}
-		else {
-			menu->detectorsList->setItemIcon(index, QIcon());
+	if (menu->detectorsList->currentIndex() == 0)
+		return;
+
+	QString currText = menu->detectorsList->currentText();
+	int index = menu->detectorsList->findText(currText);
+	int loadState = ModelLoader::getFromFileByName(currDet, currText, modelsJSON);
+	bool loaded = false;
+	switch (loadState) {
+	case ModelErrors::NAME_NOT_FOUND:
+		QMessageBox::critical(this, "Model not found",
+			QString("No entry named \"%1\" was found in %2")
+			.arg(currText)
+			.arg(modelsJSON)
+		);
+		break;
+	case ModelErrors::TYPE_NOT_PROVIDED:
+		QMessageBox::critical(this, "Type not found",
+			QString("Model \"%1\" was not provided a type (cascade or neural network) in %2")
+			.arg(currText)
+			.arg(modelsJSON)
+		);
+		break;
+	case ModelErrors::MODEL_PATH_EMPTY:
+		QMessageBox::critical(this, "Empty path",
+			QString("Model \"%1\" was not provided a path to the detection model in %2")
+			.arg(currText)
+			.arg(modelsJSON)
+		);
+		break;
+	case ModelErrors::INVALID_CASCADE:
+		QMessageBox::critical(this, "Couldn't load cascade file",
+			QString("\"%1\" is not a valid cascade file.")
+			.arg(ModelLoader::getObjectByName(currText, modelsJSON).value("paths").toObject()["face"].toString())
+		);
+		break;
+	case ModelErrors::INF_GRAPH_PATH_EMPTY:
+		QMessageBox::critical(this, "Inference graph path empty",
+			QString("Model \"%1\" was not provided a path to a frozen inference graph in %2")
+			.arg(currText)
+			.arg(modelsJSON)
+		);
+		break;
+	case ModelErrors::CANNOT_READ_NETWORK:
+		QMessageBox::critical(this, "Couldn't read model",
+			QString("Couldn't read model \"%1\". Please check to following paths in %2 lead to a valid inference graph and weights file: \n%3 \n%4")
+			.arg(currText)
+			.arg(modelsJSON)
+			.arg(ModelLoader::getObjectByName(currText, modelsJSON).value("paths").toObject()["inf"].toString())
+			.arg(ModelLoader::getObjectByName(currText, modelsJSON).value("paths").toObject()["model"].toString())
+		);
+		break;
+	case 1:
+		loaded = true;
+	}
+
+	if (!loaded) {
+		menu->detectorsList->setItemIcon(index, QIcon(QApplication::style()->standardIcon(QStyle::SP_MessageBoxCritical)));
+		menu->detectorsList->setCurrentIndex(0);
+	}
+	else if (currDet->getType() == cascade && (!currDet->canDetectEyes() || !currDet->canDetectSmiles())) {
+		if (menu->detectorsList->itemIcon(index).isNull()) {
+			QMessageBox::information(this, "Model not completely loaded",
+				QString("Model \"%1\" has only loaded cascade(s) to detect %2. If you want to be able to detect %3 you can add the paths to the cascades in %4 and reload.")
+				.arg(currText)
+				.arg(QString("faces%1")
+					.arg(currDet->canDetectEyes() ? " and eyes" : currDet->canDetectSmiles() ? " and smiles" : ""))
+				.arg(QString(!currDet->canDetectSmiles() ? currDet->canDetectEyes() ? "smiles" : "eyes or smiles" : "eyes"))
+				.arg(modelsJSON)
+			);
+			menu->detectorsList->setItemIcon(index, QIcon(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation)));
 		}
 	}
+	else
+		menu->detectorsList->setItemIcon(index, QIcon());
 	setOptions();
 	if (imageIsUpload)
 		processImage();
@@ -257,10 +321,7 @@ void MainWindow::setDetector()
 		}
 		else statusBar->clearMessage();
 	}
-	catch (const std::exception& ex)
-	{
-		QString err = tr("There was an error while loading the detection model: \n%1").arg(ex.what());
-		QMessageBox::critical(this, "Error", err);
+	catch (const std::exception&) {
 		menu->detectorsList->setCurrentIndex(0);
 	}
 }
@@ -318,6 +379,7 @@ void MainWindow::startVideoCapture() {
 	int fps = 0, avgFps = 0;
 	std::deque<int> fpsArray;
 	cv::VideoCapture cap(0);
+
 	isGrayscale = false;
 
 	if (!cap.isOpened()) {

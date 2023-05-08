@@ -39,30 +39,15 @@ void ModelLoader::loadAll(QString path, QVector<Detector*>& vector) {
     }
 }
 
-bool ModelLoader::getFromFileByName(Detector*& det, QString name, QString jsonPath) {
-    QString jsonText;
-    QFile file(jsonPath);
-    file.open(QIODevice::ReadOnly | QIODevice::Text);
-    jsonText = file.readAll();
-    file.close();
+int ModelLoader::getFromFileByName(Detector*& det, QString name, QString jsonPath) {
+    QJsonObject obj = getObjectByName(name, jsonPath);
+    if (!obj.empty())
+        return getFromJsonObject(det, obj);
 
-    // get the onjects
-    QJsonDocument doc = QJsonDocument::fromJson(jsonText.toUtf8());
-    QJsonArray objects = doc.array();
-
-    QJsonValue currName;
-    //go through every object
-    for (int i = 0; i < objects.size(); i++) {
-        QJsonObject obj = objects[i].toObject();
-         currName = obj.value("name");
-         if (currName == name) {
-             return getFromJsonObject(det, obj);
-         }
-    }
-    return false;
+    return NAME_NOT_FOUND;
 }
 
-bool ModelLoader::getFromJsonObject(Detector*& det, QJsonObject obj) {
+int ModelLoader::getFromJsonObject(Detector*& det, QJsonObject obj) {
     detectorProperties props;
 
     QJsonValue value = obj.value("type");
@@ -83,14 +68,8 @@ bool ModelLoader::getFromJsonObject(Detector*& det, QJsonObject obj) {
         props.classNamesPath = item["classes"].toString().toStdString();
         props.modelPath = item["model"].toString().toStdString();
 
-        try {
-            det = new ObjectDetector(props);
-            return det->init();
-        }
-        catch (const std::exception& ex) {
-            qCritical(ex.what());
-            throw ex;
-        }
+        det = new ObjectDetector(props);
+        return det->init();
     }
     else if (value == "cascade") {
         value = obj.value("paths");
@@ -98,17 +77,11 @@ bool ModelLoader::getFromJsonObject(Detector*& det, QJsonObject obj) {
 
         props.modelPath = item["face"].toString().toStdString();
 
-        try {
-            det = new FaceDetector(props, item["eyes"].toString().toStdString(), item["smile"].toString().toStdString());
-            det->currentClassName = obj.value("name").toString().toStdString();
-            return det->init();
-        }
-        catch (const std::exception& ex) {
-            qCritical(ex.what());
-            return false;
-        }
+        det = new FaceDetector(props, item["eyes"].toString().toStdString(), item["smile"].toString().toStdString());
+        det->currentClassName = obj.value("name").toString().toStdString();
+        return det->init();
     }
-    return false;
+    return TYPE_NOT_PROVIDED;
 }
 
 QVector<QString> ModelLoader::getNames(QString jsonPath) {
@@ -132,4 +105,26 @@ QVector<QString> ModelLoader::getNames(QString jsonPath) {
             v.push_back(currName.toString());
     }
     return v;
+}
+
+QJsonObject ModelLoader::getObjectByName(QString name, QString jsonPath) {
+    QString jsonText;
+    QFile file(jsonPath);
+    file.open(QIODevice::ReadOnly | QIODevice::Text);
+    jsonText = file.readAll();
+    file.close();
+
+    // get the onjects
+    QJsonDocument doc = QJsonDocument::fromJson(jsonText.toUtf8());
+    QJsonArray objects = doc.array();
+
+    QJsonValue currName;
+    //go through every object
+    for (int i = 0; i < objects.size(); i++) {
+        QJsonObject obj = objects[i].toObject();
+        currName = obj.value("name");
+        if (currName == name)
+            return obj;
+    }
+    return QJsonObject();
 }

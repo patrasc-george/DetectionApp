@@ -23,34 +23,17 @@ FaceDetector::FaceDetector(detectorProperties& props, std::string eyeClassifierP
     this->smileClassifierPath = smileClassifierPath;
     type = cascade;
 }
-bool FaceDetector::init() {
-    if (modelPath == "\0") return false;
-    try {
-        faceClassifier.load(modelPath);
-    }
-    catch (const std::exception& ex) {
-        std::cerr << "Couldn't load face classifier for \"" << modelPath.substr(modelPath.find_last_of("\\"), modelPath.back()) + "\"" << std::endl;
-        throw ex;
-        return false;
-    }
+int FaceDetector::init() {
+    if (modelPath == "\0") 
+        return -2;
+    if (!faceClassifier.load(modelPath))
+        return -3;
+    if (!eyeClassifierPath.empty())
+        eyesClassifierLoaded = eyeClassifier.load(eyeClassifierPath);
+    if (!smileClassifierPath.empty())
+        smileClassifierLoaded = smileClassifier.load(smileClassifierPath);
 
-    try {
-        eyeClassifier.load(eyeClassifierPath);
-        eyesClassifierLoaded = true;
-    }
-    catch (const std::exception&) {
-        std::cerr << "Couldn't load eye classifier for \"" << modelPath.substr(modelPath.find_last_of("/"), modelPath.back()) + "\"" << std::endl;
-        eyesClassifierLoaded = false;
-    }
-    try {
-        smileClassifier.load(smileClassifierPath);
-        smileClassifierLoaded = true;
-    }
-    catch (const std::exception&) {
-        std::cerr << "Couldn't load smile classifier for \"" << modelPath.substr(modelPath.find_last_of("/"), modelPath.back()) + "\"" << std::endl;
-        smileClassifierLoaded = false;
-    }
-    return true;
+    return 1;
 }
 
 void FaceDetector::detect(cv::Mat& image, bool showFeatures) {
@@ -108,24 +91,22 @@ ObjectDetector::ObjectDetector(detectorProperties props) {
     meanValues = props.meanValues;
     type = network;
 } 
-bool ObjectDetector::init() {
-    try {
-        std::ifstream ifs(classNamesPath);
-        std::string line;
-        while (getline(ifs, line)) {
-            classNames.push_back(line);
-        }
-    }
-    catch (const std::exception& ex) {
-        return false;
-    }
+int ObjectDetector::init() {
+    if (modelPath == "\0")
+        return -2;
+    if (infGraphPath == "\0")
+        return -4;
+    std::ifstream ifs(classNamesPath);
+    std::string line;
+    while (getline(ifs, line))
+        classNames.push_back(line);
     try {
         model = cv::dnn::readNet(infGraphPath, modelPath, framework);
-        return true;
     }
-    catch (const std::exception& ex) {
-        return false;
+    catch (cv::Exception&) {
+        return -5;
     }
+    return 1;
 }
 
 void ObjectDetector::detect(cv::Mat& image, bool showConf) {
