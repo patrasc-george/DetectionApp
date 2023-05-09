@@ -2,6 +2,7 @@
 
 #include <opencv2/opencv.hpp>
 #include "ObjectDetection.h"
+#include "FrameOptions.h"
 
 #include <QWidget>
 #include <QApplication>
@@ -12,6 +13,7 @@
 #include <QListWidget>
 #include <QMainWindow>
 #include <QPushButton>
+#include <stack>
 
 #include "menuOptions.h"
 
@@ -47,6 +49,9 @@ private:
 	cv::Mat frame;
 	QString fileName;
 	Detector* currDet;
+	FrameOptions o;
+	std::stack<FrameOptions> undoStack;
+	std::stack<FrameOptions> redoStack;
 	bool cameraIsOn = false;
 	bool imageIsUpload = false;
 	bool isGrayscale = false;
@@ -59,4 +64,8 @@ private:
 	void resizeEvent(QResizeEvent* event) override {
 		preventReset();
 	}
+	void undo();
+	void redo();
+	void setOptionsUndo();
+	void flip();
 };

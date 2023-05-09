@@ -52,8 +52,9 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	connect(menu->thresholdControl, &LabeledSlider::valueChanged, this, &MainWindow::changeThresholdEvent);
 	connect(menu->binaryThresholdingButton->listWidget(), &QListWidget::itemChanged, this, &MainWindow::processImage);
 	connect(menu->histogramEqualizationButton->listWidget(), &QListWidget::itemChanged, this, &MainWindow::processImage);
-	connect(menu->flipHorizontal, &QCheckBox::clicked, this, &MainWindow::processImage);
+	connect(menu->flipHorizontal, &QCheckBox::clicked, this, &MainWindow::flip);
 	connect(menu->flipVertical, &QCheckBox::clicked, this, &MainWindow::processImage);	
+	connect(menu->undoBtn, &QPushButton::clicked, this, &MainWindow::undo);
 	connect(menu->zoomIn, &QPushButton::clicked, [&] {
 		imageContainer->zoomIn(); 	
 		setOptions();
@@ -108,7 +109,7 @@ void MainWindow::setOptions()
 	menu->toggleFaceFeatures->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == cascade && (currDet->canDetectEyes() || currDet->canDetectSmiles()));
 	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
 	menu->confControl->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
-	menu->flipHorizontal ->setEnabled(cameraIsOn || imageIsUpload);
+	menu->flipHorizontal->setEnabled(cameraIsOn || imageIsUpload);
 	menu->flipVertical->setEnabled(cameraIsOn || imageIsUpload);
 	menu->screenshot->setVisible(cameraIsOn || imageIsUpload);
 	menu->thresholdControl->setVisible((cameraIsOn || imageIsUpload) && menu->imageAlgorithms->item(0)->checkState() == Qt::Checked);
@@ -117,7 +118,6 @@ void MainWindow::setOptions()
 	menu->zoomOut->setEnabled(imageIsUpload && (imageContainer->getZoomCount() > 0));
 	menu->zoomReset->setEnabled(menu->zoomOut->isEnabled());
 
-	menu->undoBtn->setEnabled(false); // temporary
 	menu->redoBtn->setEnabled(false); // temporary
 }
 
@@ -180,6 +180,10 @@ void MainWindow::uploadImageEvent() {
 	menu->toggleCamera->setChecked(false);
 	menu->flipHorizontal->setChecked(false);
 	menu->flipVertical->setChecked(false);
+
+	o.setFlip(menu->flipHorizontal->isChecked());
+	undoStack.push(o);
+
 	imageIsUpload = true;
 	imageContainer->zoomReset();
 	setOptions();
@@ -451,4 +455,39 @@ void MainWindow::selectAlgorithmsEvent()
 	if (menu->imageAlgorithms->item(2)->checkState() == Qt::Checked)
 		detectEdges(frame);
 	//setOptions();
+}
+
+void MainWindow::undo()
+{
+	redoStack.push(o);
+	if (!undoStack.empty())
+	{
+		o=undoStack.top();
+		undoStack.pop();
+	}
+	setOptionsUndo();
+}
+
+void MainWindow::redo()
+{
+	undoStack.push(o);
+	if (!redoStack.empty())
+	{
+		o = redoStack.top();
+		redoStack.pop();
+	}
+}
+
+void MainWindow::setOptionsUndo()
+{
+	menu->flipHorizontal->setChecked(o.getFlip());
+	setOptions();
+	processImage();
+}
+
+void MainWindow::flip()
+{
+	o.setFlip(menu->flipHorizontal->isChecked());
+	undoStack.push(o);
+	processImage();
 }
