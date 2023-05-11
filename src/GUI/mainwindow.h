@@ -44,7 +44,6 @@ private slots:
 
 private:
 	QGraphicsPixmapItem pixmap;
-	cv::Mat orgFrame;
 	cv::Mat frame;
 	QString fileName;
 	Detector* currDet;

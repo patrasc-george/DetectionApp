@@ -192,7 +192,6 @@ void MainWindow::uploadImageEvent() {
 		QMessageBox::critical(this, "Error", QString("Couldnt't read image from %1. The file may be corrupted or not a valid image file.").arg(fileName));
 		return;
 	}
-	orgFrame = frame;
 	statusBar->showMessage(QString("Uploaded file: %1").arg(fileName));
 
 	menu->toggleCamera->setChecked(false);
@@ -407,7 +406,6 @@ void MainWindow::startVideoCapture() {
 
 		if (!cap.read(frame))
 			break;
-		orgFrame = frame;
 
 		processImage();
 		fpsLabel->setText(QString("FPS: %1   (avg: %2)  ").arg(QString::number(fps)).arg(QString::number(avgFps)));
@@ -452,19 +450,14 @@ void MainWindow::preventReset() {
 void MainWindow::selectAlgorithmsEvent()
 {
 	setOptions();
-	bool isAnyAlgAcvtive = false;
 	for (QPushButton* btn : menu->imageAlgorithms->findChildren<QPushButton*>())
 		if (btn->isChecked()) {
-			isAnyAlgAcvtive = true;
 			break;
 		}
-	if (!isAnyAlgAcvtive)
-		return;
-	frame = orgFrame;
 
 	if (!isGrayscale && (menu->binaryThresholdingButton->isChecked() || menu->histogramEqualizationButton->isChecked() || menu->adaptiveThresholdingButton->isChecked())) {
 		isGrayscale = true;
-		cv::cvtColor(orgFrame, frame, cv::COLOR_BGR2GRAY);
+		cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
 	}
 
 	if (menu->histogramEqualizationButton->isChecked())
