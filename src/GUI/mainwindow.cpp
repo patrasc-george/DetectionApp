@@ -423,8 +423,8 @@ void MainWindow::processImage() {
 	if (imageIsUpload)
 		frame = cv::imread(fileName.toStdString());
 
-	flipImage();
 	selectAlgorithmsEvent();
+	flipImage();
 	setDetector();
 
 	if (frame.empty())
