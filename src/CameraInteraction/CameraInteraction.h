@@ -46,14 +46,15 @@ public:
 
 class OptionsStack {
 private:
-	std::stack<FrameOptions> undoStack;
-	std::stack<FrameOptions> redoStack;
+	std::deque<FrameOptions> undoStack;
+	std::deque<FrameOptions> redoStack;
 	FrameOptions currentStatus;
-	// if we want to limit the size of the stack we need access to its bottom, we should consider using a different data type, such as a deque
-	//short maxOptions = 10; 
+	short maxOptions = 10; 
 public:
 	void addToStack(revertable_options prop, short value) {
-		undoStack.push(currentStatus);
+		if (undoStack.size() >= 10)
+			undoStack.pop_front();
+		undoStack.push_back(currentStatus);
 		switch (prop) {
 		case FLIP_HORIZONTAL:
 			currentStatus.setFlipH(value);
@@ -65,7 +66,7 @@ public:
 			return;
 		}
 		if (!redoStack.empty())
-			redoStack = std::stack<FrameOptions>();
+			redoStack.clear();
 	}
 	bool canRedo() {
 		return !redoStack.empty();
@@ -74,21 +75,21 @@ public:
 		return !undoStack.empty();
 	}
 	void reset() {
-		undoStack = std::stack<FrameOptions>();
-		redoStack = std::stack<FrameOptions>();
+		undoStack.clear();
+		redoStack.clear();
 	}
 	void undo() {
 		if (!undoStack.empty()) {
-			redoStack.push(currentStatus);
-			currentStatus = undoStack.top();
-			undoStack.pop();
+			redoStack.push_back(currentStatus);
+			currentStatus = undoStack.back();
+			undoStack.pop_back();
 		}
 	}
 	void redo() {
 		if (!redoStack.empty()) {
-			undoStack.push(currentStatus);
-			currentStatus = redoStack.top();
-			redoStack.pop();
+			undoStack.push_back(currentStatus);
+			currentStatus = redoStack.back();
+			redoStack.pop_back();
 		}
 	}
 	FrameOptions* get() {
