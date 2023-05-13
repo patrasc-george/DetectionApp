@@ -93,7 +93,6 @@ Menu::Menu(QWidget* parent)
 	vbox->addLayout(miniButtons);
 	vbox->addWidget(new QLabel("Select a detector"));
 	vbox->addWidget(detectorsList);
-	//vbox->addWidget(new QLabel("Image processing"));
 	vbox->addWidget(imageAlgorithms);
 
 	vbox->addWidget(toggleFaceFeatures);

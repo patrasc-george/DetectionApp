@@ -46,8 +46,16 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	connect(menu->detectorsList, &QComboBox::currentIndexChanged, this, &MainWindow::selectDetectorEvent);
 	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
 
-	connect(menu->toggleFaceFeatures, &QCheckBox::toggled, this, &MainWindow::processImage);
-	connect(menu->showConfidence, &QCheckBox::toggled, this, &MainWindow::processImage);
+	connect(menu->toggleFaceFeatures, &QCheckBox::clicked, this, [&] {
+		history.add(SHOW_FEATURES, menu->toggleFaceFeatures->isChecked());
+		statusBar->showMessage(QString("Toggled face features %1").arg(menu->toggleFaceFeatures->isChecked() ? "on" : "off"));
+		processImage();
+		});
+	connect(menu->showConfidence, &QCheckBox::clicked, this, [&] {
+		history.add(SHOW_CONFIDENCE, menu->showConfidence->isChecked());
+		statusBar->showMessage(QString("Toggled show confidences %1").arg(menu->toggleFaceFeatures->isChecked() ? "on" : "off"));
+		processImage();
+		});
 
 	connect(menu->confControl, &LabeledSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
 	connect(menu->thresholdControl, &LabeledSlider::valueChanged, this, &MainWindow::changeThresholdEvent);
@@ -56,20 +64,24 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 		connect(btn, &QPushButton::clicked, this, &MainWindow::processImage);
 		
 	connect(menu->flipHorizontal, &QCheckBox::clicked, this, [&] {
-		statusStack.addToStack(FLIP_HORIZONTAL, menu->flipHorizontal->isChecked());
+		history.add(FLIP_HORIZONTAL, menu->flipHorizontal->isChecked());
+		statusBar->showMessage("Flipped horizontally");
 		processImage();
 		});
 	connect(menu->flipVertical, &QCheckBox::clicked, this, [&] {
-		statusStack.addToStack(FLIP_VERTICAL, menu->flipVertical->isChecked());
+		history.add(FLIP_VERTICAL, menu->flipVertical->isChecked());
+		statusBar->showMessage("Flipped vertically");
 		processImage();
 		});
 	connect(menu->undoBtn, &QPushButton::clicked, this, [&] {
-		statusStack.undo();
+		history.undo();
+		statusBar->showMessage(QString("Undone %1").arg(history.lastChange().c_str()));
 		processImage();
 		setOptions();
 		});
 	connect(menu->redoBtn, &QPushButton::clicked, this, [&] {
-		statusStack.redo();
+		history.redo();
+		statusBar->showMessage(QString("Redone %1").arg(history.lastChange().c_str()));
 		processImage();
 		setOptions();
 		});
@@ -136,10 +148,14 @@ void MainWindow::setOptions()
 	menu->zoomOut->setEnabled(imageIsUpload && (imageContainer->getZoomCount() > 0));
 	menu->zoomReset->setEnabled(menu->zoomOut->isEnabled());
 
-	menu->undoBtn->setEnabled(statusStack.canUndo());
-	menu->redoBtn->setEnabled(statusStack.canRedo());
-	menu->flipHorizontal->setChecked(statusStack.get()->getFlipH());
-	menu->flipVertical->setChecked(statusStack.get()->getFlipV());
+	menu->undoBtn->setEnabled(history.canUndo());
+	menu->redoBtn->setEnabled(history.canRedo());
+
+	menu->showConfidence->setChecked(history.get()->getShowConfidence());
+	menu->toggleFaceFeatures->setChecked(history.get()->getShowFeatures());
+	menu->flipHorizontal->setChecked(history.get()->getFlipH());
+	menu->flipVertical->setChecked(history.get()->getFlipV());
+
 	menu->binaryThresholdingButton->setEnabled(
 		!menu->zeroThresholdingButton->isChecked() &&
 		!menu->adaptiveThresholdingButton->isChecked()
@@ -161,11 +177,15 @@ void MainWindow::toggleCameraEvent() {
 	imageIsUpload = menu->uploadButton->isChecked();
 	setOptions();
 	menu->toggleCamera->clearFocus();
+	history.reset();
 	imageContainer->zoomReset();
 
 	if (cameraIsOn) {
 		menu->flipHorizontal->setChecked(true);
+		history.get()->setFlipH(menu->flipHorizontal->isChecked());
 		menu->flipVertical->setChecked(false);
+		history.get()->setFlipV(menu->flipVertical->isChecked());
+
 		startVideoCapture();
 		selectDetectorEvent();
 	}
@@ -215,9 +235,9 @@ void MainWindow::uploadImageEvent() {
 	menu->flipHorizontal->setChecked(false);
 	menu->flipVertical->setChecked(false);
 
-	statusStack.reset();
-	statusStack.get()->setFlipH(menu->flipHorizontal->isChecked());
-	statusStack.get()->setFlipV(menu->flipVertical->isChecked());
+	history.reset();
+	history.get()->setFlipH(menu->flipHorizontal->isChecked());
+	history.get()->setFlipV(menu->flipVertical->isChecked());
 
 	imageIsUpload = true;
 	imageContainer->zoomReset();
@@ -368,8 +388,7 @@ void MainWindow::setDetector() {
 	}
 }
 
-void MainWindow::flipImage()
-{
+void MainWindow::flipImage() {
 	if (menu->flipHorizontal->isChecked()) {
 		cv::flip(frame, frame, 1);
 	}

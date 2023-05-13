@@ -3,7 +3,6 @@
 #include <opencv2/opencv.hpp>
 #include "ObjectDetection.h"
 #include "CameraInteraction.h"
-//#include "FrameOptions.h"
 
 #include <QWidget>
 #include <QApplication>
@@ -50,7 +49,7 @@ private:
 	cv::Mat frame;
 	QString fileName;
 	Detector* currDet;
-	OptionsStack statusStack;
+	OptionsHistory history;
 	bool cameraIsOn = false;
 	bool imageIsUpload = false;
 	bool isGrayscale = false;
