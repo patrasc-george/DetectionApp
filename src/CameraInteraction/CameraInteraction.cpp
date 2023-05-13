@@ -6,7 +6,14 @@ void binaryThresholding(cv::Mat& image, short threshold)
 {
 	cv::threshold(image, image, threshold, 255, cv::THRESH_BINARY);
 }
-
+void zeroThresholding(cv::Mat& image, short threshold)
+{
+	cv::threshold(image, image, threshold, 255, cv::THRESH_TOZERO);
+}
+void adaptiveThresholding(cv::Mat& image, short threshold)
+{
+	cv::adaptiveThreshold(image, image, threshold, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 11, 2);
+}
 void histogramEqualization(cv::Mat& image)
 {
 	cv::equalizeHist(image, image);

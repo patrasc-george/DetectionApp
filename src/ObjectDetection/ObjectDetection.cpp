@@ -10,8 +10,6 @@ void drawLabel(cv::Mat & image, std::string label, int left, int top) {
 
     top = std::max(top, label_size.height);
     cv::Point tlc = cv::Point(left + 4, top  + label_size.height +6);
-    cv::Point brc = cv::Point(left + label_size.width, top + label_size.height + baseLine);
-    //rectangle(image, tlc, brc, cv::Scalar(147, 167, 255), cv::FILLED);
     putText(image, label, tlc, cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(147, 167, 255), 2);
 }
 
@@ -24,7 +22,7 @@ FaceDetector::FaceDetector(detectorProperties& props, std::string eyeClassifierP
     type = cascade;
 }
 int FaceDetector::init() {
-    if (modelPath == "\0") 
+    if (modelPath == "\0")
         return -2;
     if (!faceClassifier.load(modelPath))
         return -3;
@@ -38,7 +36,10 @@ int FaceDetector::init() {
 
 void FaceDetector::detect(cv::Mat& image, bool showFeatures) {
     cv::Mat gray;
-    cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+    if (image.type() != CV_8UC1)
+        cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+    else
+        gray = image;
 
     faceClassifier.detectMultiScale(gray, facesInFrame, 1.1, 6);
     if (facesInFrame.size() == 0)

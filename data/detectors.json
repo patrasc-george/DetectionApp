@@ -4,15 +4,14 @@
     "type": "cascade",
     "paths": {
       "face": "../data/lbpcascades/lbpcascade_frontalface_improved.xml",
-      "eyes": "../data/haarcascades/haarcascade_eye_tree_eyeglasses.xml"
+      "eyes": "../data/haarcascades/haarcascade_eye_tree_eyeglasses.xml",
+      "smile": "../data/haarcascades/haarcascade_smile.xml"
     }
   },
   {
     "name": "Profile Face",
     "type": "cascade",
     "paths": {
-
-
     }
   },
   {

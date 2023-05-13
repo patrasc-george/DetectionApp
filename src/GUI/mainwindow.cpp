@@ -24,7 +24,6 @@ QVector<QString> names = ModelLoader::getNames(modelsJSON);
 
 
 MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
-
 	// instantiate the list of detectors
 	this->currDet = nullptr;
 
@@ -45,13 +44,17 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	connect(menu->toggleCamera, &QAbstractButton::toggled, this, &MainWindow::toggleCameraEvent);
 	connect(menu->uploadButton, &QPushButton::clicked, this, &MainWindow::uploadImageEvent);
 	connect(menu->detectorsList, &QComboBox::currentIndexChanged, this, &MainWindow::selectDetectorEvent);
-	connect(menu->confControl, &LabeledSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
+	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
+
 	connect(menu->toggleFaceFeatures, &QCheckBox::toggled, this, &MainWindow::processImage);
 	connect(menu->showConfidence, &QCheckBox::toggled, this, &MainWindow::processImage);
-	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
+
+	connect(menu->confControl, &LabeledSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
 	connect(menu->thresholdControl, &LabeledSlider::valueChanged, this, &MainWindow::changeThresholdEvent);
-	connect(menu->binaryThresholdingButton->listWidget(), &QListWidget::itemChanged, this, &MainWindow::processImage);
-	connect(menu->histogramEqualizationButton->listWidget(), &QListWidget::itemChanged, this, &MainWindow::processImage);
+	
+	for (QPushButton* btn : menu->imageAlgorithms->findChildren<QPushButton*>())
+		connect(btn, &QPushButton::clicked, this, &MainWindow::processImage);
+		
 	connect(menu->flipHorizontal, &QCheckBox::clicked, this, [&] {
 		statusStack.addToStack(FLIP_HORIZONTAL, menu->flipHorizontal->isChecked());
 		processImage();
@@ -72,7 +75,7 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 		});
 
 	connect(menu->zoomIn, &QPushButton::clicked, [&] {
-		imageContainer->zoomIn(); 	
+		imageContainer->zoomIn();
 		setOptions();
 		});
 	connect(menu->zoomOut, &QPushButton::clicked, [&] {
@@ -103,15 +106,15 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	menu->flipHorizontal->setChecked(true); // the image is flipped
 	menu->detectorsList->setCurrentIndex(0); // 0 = no detection, 1... = other options
 
-	menu->binaryThresholdingButton->setCheckState(Qt::Unchecked);
-	menu->histogramEqualizationButton->setCheckState(Qt::Unchecked);
-	menu->detectEdgesButton->setCheckState(Qt::Unchecked);
+	menu->binaryThresholdingButton->setChecked(false);
+	menu->histogramEqualizationButton->setChecked(false);
+	menu->detectEdgesButton->setChecked(false);
 
 	// init the PixMap
 	imageContainer->setScene(new QGraphicsScene);
 	imageContainer->scene()->addItem(&pixmap);
 	imageContainer->setAlignment(Qt::AlignCenter);
-	
+
 	// load labels for detectors (after being seleced they might be deleted if the corresponding detector didn't load succesfully)
 	for (QString name : names) {
 		menu->detectorsList->addItem(name);
@@ -128,8 +131,7 @@ void MainWindow::setOptions()
 	menu->flipHorizontal->setEnabled(cameraIsOn || imageIsUpload);
 	menu->flipVertical->setEnabled(cameraIsOn || imageIsUpload);
 	menu->screenshot->setVisible(cameraIsOn || imageIsUpload);
-	menu->thresholdControl->setVisible((cameraIsOn || imageIsUpload) && menu->imageAlgorithms->item(0)->checkState() == Qt::Checked);
-	menu->imageAlgorithms->setEnabled(cameraIsOn || imageIsUpload);
+	menu->thresholdControl->setVisible((cameraIsOn || imageIsUpload) && thresholdActive());
 	menu->zoomIn->setEnabled(imageIsUpload);
 	menu->zoomOut->setEnabled(imageIsUpload && (imageContainer->getZoomCount() > 0));
 	menu->zoomReset->setEnabled(menu->zoomOut->isEnabled());
@@ -138,6 +140,19 @@ void MainWindow::setOptions()
 	menu->redoBtn->setEnabled(statusStack.canRedo());
 	menu->flipHorizontal->setChecked(statusStack.get()->getFlipH());
 	menu->flipVertical->setChecked(statusStack.get()->getFlipV());
+	menu->binaryThresholdingButton->setEnabled(
+		!menu->zeroThresholdingButton->isChecked() &&
+		!menu->adaptiveThresholdingButton->isChecked()
+	);
+	menu->zeroThresholdingButton->setEnabled(
+		!menu->binaryThresholdingButton->isChecked() &&
+		!menu->adaptiveThresholdingButton->isChecked()
+	);
+	menu->adaptiveThresholdingButton->setEnabled(
+		!menu->binaryThresholdingButton->isChecked() &&
+		!menu->zeroThresholdingButton->isChecked()
+	);
+	menu->imageAlgorithms->setVisible(cameraIsOn || imageIsUpload);
 }
 
 void MainWindow::toggleCameraEvent() {
@@ -171,7 +186,7 @@ void MainWindow::toggleCameraEvent() {
 		frame = mat;
 
 		displayImage();
-		delete currDet; 
+		delete currDet;
 		currDet = nullptr;
 	}
 }
@@ -213,13 +228,11 @@ void MainWindow::uploadImageEvent() {
 }
 
 void MainWindow::selectDetectorEvent() {
-	if (currDet != nullptr) {
-		delete currDet;
-		currDet = nullptr;
-	}
+	delete currDet;
+	currDet = nullptr;
 	if (menu->detectorsList->currentIndex() == 0)
 		return;
-
+	
 	QString currText = menu->detectorsList->currentText();
 	int index = menu->detectorsList->findText(currText);
 	int loadState = ModelLoader::getFromFileByName(currDet, currText, modelsJSON);
@@ -275,6 +288,8 @@ void MainWindow::selectDetectorEvent() {
 	if (!loaded) {
 		menu->detectorsList->setItemIcon(index, QIcon(QApplication::style()->standardIcon(QStyle::SP_MessageBoxCritical)));
 		menu->detectorsList->setCurrentIndex(0);
+		delete currDet;
+		currDet = nullptr;
 	}
 	else if (currDet->getType() == cascade && (!currDet->canDetectEyes() || !currDet->canDetectSmiles())) {
 		if (menu->detectorsList->itemIcon(index).isNull()) {
@@ -321,16 +336,18 @@ void MainWindow::screenshotEvent() {
 	}
 }
 
-void MainWindow::setDetector()
-{
+void MainWindow::setDetector() {
 	if (currDet == nullptr) return;
-	//isGrayscale = false;
-	// detect if a detector is selected
 	try {
 		if (currDet->getType() == cascade) {
 			currDet->detect(frame, menu->toggleFaceFeatures->isChecked());
 		}
 		else if (currDet->getType() == network) {
+			if (frame.type() == CV_8UC1) {
+				QMessageBox::critical(this, "Error", "This detector does not work on 1-channel images");
+				menu->detectorsList->setCurrentIndex(0);
+				return;
+			}
 			currDet->detect(frame, menu->showConfidence->isChecked());
 		}
 
@@ -370,9 +387,9 @@ void MainWindow::displayImage() {
 
 	pixmap.setPixmap(QPixmap::fromImage(qimg));
 	imageContainer->scene()->setSceneRect(imageContainer->scene()->itemsBoundingRect());
-	
+
 	preventReset();
-	
+
 	QString res = QString("Resolution: %1 x %2  ")
 		.arg(QString::number(frame.size().width))
 		.arg(QString::number(frame.size().height));
@@ -382,7 +399,7 @@ void MainWindow::displayImage() {
 	}
 	else
 		resLabel->setText(res);
-	
+
 	QCoreApplication::processEvents();
 
 }
@@ -452,27 +469,40 @@ void MainWindow::preventReset() {
 	}
 }
 
-void MainWindow::selectAlgorithmsEvent() 
+void MainWindow::selectAlgorithmsEvent()
 {
-	for (int i = 0; i < menu->imageAlgorithms->count(); ++i) 
-		if (menu->imageAlgorithms->item(i)->checkState() == Qt::Checked)
-		{
-			isGrayscale = true;
+	setOptions();
+	for (QPushButton* btn : menu->imageAlgorithms->findChildren<QPushButton*>())
+		if (btn->isChecked()) {
 			break;
 		}
-	setOptions();
-	if (isGrayscale)
+
+	if (!isGrayscale && (menu->binaryThresholdingButton->isChecked() || menu->histogramEqualizationButton->isChecked() || menu->adaptiveThresholdingButton->isChecked())) {
+		isGrayscale = true;
 		cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
-	else
-	{
-		//setOptions();
-		return;
 	}
-	if (menu->imageAlgorithms->item(0)->checkState() == Qt::Checked) 
-		binaryThresholding(frame, menu->thresholdControl->value());
-	if (menu->imageAlgorithms->item(1)->checkState() == Qt::Checked) 
+
+	if (menu->histogramEqualizationButton->isChecked())
 		histogramEqualization(frame);
-	if (menu->imageAlgorithms->item(2)->checkState() == Qt::Checked)
+	if (menu->binaryThresholdingButton->isChecked())
+		binaryThresholding(frame, menu->thresholdControl->value());
+	if (menu->adaptiveThresholdingButton->isChecked())
+		adaptiveThresholding(frame, menu->thresholdControl->value());
+
+	if (menu->zeroThresholdingButton->isChecked()) {
+		if (isGrayscale) {
+			cv::cvtColor(frame, frame, cv::COLOR_GRAY2BGR);
+			isGrayscale = false;
+
+		}
+		zeroThresholding(frame, menu->thresholdControl->value());
+	}
+	if (menu->detectEdgesButton->isChecked()) {
+		if (isGrayscale) {
+			cv::cvtColor(frame, frame, cv::COLOR_GRAY2BGR);
+
+			isGrayscale = false;
+		}
 		detectEdges(frame);
-	//setOptions();
+	}
 }
