@@ -181,8 +181,7 @@ void MainWindow::uploadImageEvent() {
 	menu->flipHorizontal->setChecked(false);
 	menu->flipVertical->setChecked(false);
 
-	o.setFlip(menu->flipHorizontal->isChecked());
-	undoStack.push(o);
+	options.setFlip(menu->flipHorizontal->isChecked());
 
 	imageIsUpload = true;
 	imageContainer->zoomReset();
@@ -459,10 +458,10 @@ void MainWindow::selectAlgorithmsEvent()
 
 void MainWindow::undo()
 {
-	redoStack.push(o);
 	if (!undoStack.empty())
 	{
-		o=undoStack.top();
+		redoStack.push(options);
+		options=undoStack.top();
 		undoStack.pop();
 	}
 	setOptionsUndo();
@@ -470,24 +469,24 @@ void MainWindow::undo()
 
 void MainWindow::redo()
 {
-	undoStack.push(o);
+	undoStack.push(options);
 	if (!redoStack.empty())
 	{
-		o = redoStack.top();
+		options = redoStack.top();
 		redoStack.pop();
 	}
 }
 
 void MainWindow::setOptionsUndo()
 {
-	menu->flipHorizontal->setChecked(o.getFlip());
+	menu->flipHorizontal->setChecked(options.getFlip());
 	setOptions();
 	processImage();
 }
 
 void MainWindow::flip()
 {
-	o.setFlip(menu->flipHorizontal->isChecked());
-	undoStack.push(o);
+	undoStack.push(options);
+	options.setFlip(menu->flipHorizontal->isChecked());
 	processImage();
 }

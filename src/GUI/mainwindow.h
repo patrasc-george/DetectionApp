@@ -49,7 +49,7 @@ private:
 	cv::Mat frame;
 	QString fileName;
 	Detector* currDet;
-	FrameOptions o;
+	FrameOptions options;
 	std::stack<FrameOptions> undoStack;
 	std::stack<FrameOptions> redoStack;
 	bool cameraIsOn = false;
