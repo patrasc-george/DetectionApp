@@ -15,7 +15,7 @@
 #include <QStandardPaths>
 #include <QJsonObject>
 
-#include "ObjectDetection.h"
+//#include "ObjectDetection.h"
 #include "CameraInteraction.h"
 #include "../Application/ModelLoader.h"
 
@@ -52,9 +52,25 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	connect(menu->thresholdControl, &LabeledSlider::valueChanged, this, &MainWindow::changeThresholdEvent);
 	connect(menu->binaryThresholdingButton->listWidget(), &QListWidget::itemChanged, this, &MainWindow::processImage);
 	connect(menu->histogramEqualizationButton->listWidget(), &QListWidget::itemChanged, this, &MainWindow::processImage);
-	connect(menu->flipHorizontal, &QCheckBox::clicked, this, &MainWindow::flip);
-	connect(menu->flipVertical, &QCheckBox::clicked, this, &MainWindow::processImage);	
-	connect(menu->undoBtn, &QPushButton::clicked, this, &MainWindow::undo);
+	connect(menu->flipHorizontal, &QCheckBox::clicked, this, [&] {
+		statusStack.addToStack(FLIP_HORIZONTAL, menu->flipHorizontal->isChecked());
+		processImage();
+		});
+	connect(menu->flipVertical, &QCheckBox::clicked, this, [&] {
+		statusStack.addToStack(FLIP_VERTICAL, menu->flipVertical->isChecked());
+		processImage();
+		});
+	connect(menu->undoBtn, &QPushButton::clicked, this, [&] {
+		statusStack.undo();
+		processImage();
+		setOptions();
+		});
+	connect(menu->redoBtn, &QPushButton::clicked, this, [&] {
+		statusStack.redo();
+		processImage();
+		setOptions();
+		});
+
 	connect(menu->zoomIn, &QPushButton::clicked, [&] {
 		imageContainer->zoomIn(); 	
 		setOptions();
@@ -118,7 +134,10 @@ void MainWindow::setOptions()
 	menu->zoomOut->setEnabled(imageIsUpload && (imageContainer->getZoomCount() > 0));
 	menu->zoomReset->setEnabled(menu->zoomOut->isEnabled());
 
-	menu->redoBtn->setEnabled(false); // temporary
+	menu->undoBtn->setEnabled(statusStack.canUndo());
+	menu->redoBtn->setEnabled(statusStack.canRedo());
+	menu->flipHorizontal->setChecked(statusStack.get()->getFlipH());
+	menu->flipVertical->setChecked(statusStack.get()->getFlipV());
 }
 
 void MainWindow::toggleCameraEvent() {
@@ -181,7 +200,9 @@ void MainWindow::uploadImageEvent() {
 	menu->flipHorizontal->setChecked(false);
 	menu->flipVertical->setChecked(false);
 
-	options.setFlip(menu->flipHorizontal->isChecked());
+	statusStack.reset();
+	statusStack.get()->setFlipH(menu->flipHorizontal->isChecked());
+	statusStack.get()->setFlipV(menu->flipVertical->isChecked());
 
 	imageIsUpload = true;
 	imageContainer->zoomReset();
@@ -454,39 +475,4 @@ void MainWindow::selectAlgorithmsEvent()
 	if (menu->imageAlgorithms->item(2)->checkState() == Qt::Checked)
 		detectEdges(frame);
 	//setOptions();
-}
-
-void MainWindow::undo()
-{
-	if (!undoStack.empty())
-	{
-		redoStack.push(options);
-		options=undoStack.top();
-		undoStack.pop();
-	}
-	setOptionsUndo();
-}
-
-void MainWindow::redo()
-{
-	undoStack.push(options);
-	if (!redoStack.empty())
-	{
-		options = redoStack.top();
-		redoStack.pop();
-	}
-}
-
-void MainWindow::setOptionsUndo()
-{
-	menu->flipHorizontal->setChecked(options.getFlip());
-	setOptions();
-	processImage();
-}
-
-void MainWindow::flip()
-{
-	undoStack.push(options);
-	options.setFlip(menu->flipHorizontal->isChecked());
-	processImage();
 }
