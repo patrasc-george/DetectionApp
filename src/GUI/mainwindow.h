@@ -32,7 +32,7 @@ public:
 	~MainWindow() {};
 	void startVideoCapture();
 
-private slots:
+public slots:
 	void toggleCameraEvent();
 	void uploadImageEvent();
 	void selectDetectorEvent();
@@ -42,7 +42,7 @@ private slots:
 	void changeThresholdEvent();
 	void selectAlgorithmsEvent();
 
-private:
+public:
 	QGraphicsPixmapItem pixmap;
 	cv::Mat frame;
 	QString fileName;

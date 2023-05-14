@@ -106,6 +106,13 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	}
 }
 
+/**
+ * @brief Set the menu options based on the camera and image upload state.
+ *
+ * @details This function performs several checks to determine which menu items should be enabled and visible based on the current state of the application.
+ *
+ * @post The menu will be updated accordingly to reflect the current state of the application.
+ */
 void MainWindow::setOptions()
 {
 	menu->detectorsList->setEnabled(cameraIsOn || imageIsUpload);
@@ -138,6 +145,13 @@ void MainWindow::setOptions()
 	menu->redoBtn->setEnabled(false); // temporary
 }
 
+/**
+ * @brief Toggle the state of the camera.
+ *
+ * @details This function updates the state of the camera by checking if it is turned on or off. If the camera is turned on, this function sets the appropriate menu options and starts capturing video. If the camera is turned off, a placeholder image is displayed on the screen and the video capture is stopped. Additionally, the current detector is deleted when the camera is turned off.
+ *
+ * @post The state of the camera will be toggled and the menu options will be updated accordingly. If the camera is turned off, the current detector will be deleted and a placeholder image will be displayed on the screen.
+ */
 void MainWindow::toggleCameraEvent() {
 	cameraIsOn = menu->toggleCamera->isChecked();
 	menu->uploadButton->setChecked(false);
@@ -174,11 +188,25 @@ void MainWindow::toggleCameraEvent() {
 	}
 }
 
+/**
+* @brief Returns the full path of a selected image file using a file dialog.
+* The function opens a file dialog for the user to select an image file from their computer,
+* restricted to the PNG, JPG, and BMP file formats. It returns the full path of the selected file.
+* 
+* @return The full path of the selected image file as a QString.
+*/
+
 QString MainWindow::getImageFileName()
 {
 	return QFileDialog::getOpenFileName(this, tr("Open Image"), QStandardPaths::standardLocations(QStandardPaths::PicturesLocation).first(), tr("Image Files (*.png *.jpg *.bmp)"));
 }
 
+/**
+ * @brief Displays a file dialog to select an image file to upload and sets it as the current image.
+ *
+ * If the selected file is a valid image file, it is read into a cv::Mat and set as the current frame.
+ * If not, an error message is displayed.
+ */
 void MainWindow::uploadImageEvent() {
 	fileName = getImageFileName();
 
