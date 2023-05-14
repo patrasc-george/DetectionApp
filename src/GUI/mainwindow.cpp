@@ -475,6 +475,21 @@ void MainWindow::preventReset() {
 	}
 }
 
+/**
+* @brief Handles the select algorithms event.
+*
+* This function is called when the user selects a new image processing algorithm from the main menu. It retrieves the selected algorithm and applies it to the current frame. If the selected algorithm requires a grayscale image, it converts the frame to grayscale.
+*
+* @note This function assumes that the "frame" variable is a valid OpenCV image.
+*
+* @note This function assumes that the "menu" variable is a valid pointer to a main menu widget.
+*
+* @note This function assumes that the "isGrayscale" variable is a valid boolean value that indicates whether the current frame is in grayscale or not.
+*
+* @param None.
+*
+* @return None.
+*/
 void MainWindow::selectAlgorithmsEvent()
 {
 	setOptions();
