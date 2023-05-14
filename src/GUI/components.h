@@ -26,14 +26,14 @@ signals:
 
 class SceneImageViewer : public QGraphicsView {
 private:
-    QGraphicsScene m_scene;
-    QGraphicsPixmapItem m_item;
-    int zoomCount;
+	QGraphicsScene m_scene;
+	QGraphicsPixmapItem m_item;
+	int zoomCount;
 public:
-    SceneImageViewer();
-    void setPixmap(const QPixmap& pixmap);
-    void zoomIn(int times = 1);
-    void zoomOut(int times = 1);
-    void zoomReset();
+	SceneImageViewer();
+	void setPixmap(const QPixmap& pixmap);
+	void zoomIn(int times = 1);
+	void zoomOut(int times = 1);
+	void zoomReset();
 	int getZoomCount();
 };

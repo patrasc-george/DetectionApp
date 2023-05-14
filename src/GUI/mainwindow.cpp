@@ -59,10 +59,42 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 
 	connect(menu->confControl, &LabeledSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
 	connect(menu->thresholdControl, &LabeledSlider::valueChanged, this, &MainWindow::changeThresholdEvent);
-	
-	for (QPushButton* btn : menu->imageAlgorithms->findChildren<QPushButton*>())
-		connect(btn, &QPushButton::clicked, this, &MainWindow::processImage);
-		
+
+	connect(menu->histogramEqualizationButton, &QPushButton::clicked, this, [&] {
+		history.add(HISTOGRAM_EQUALIZATION, menu->histogramEqualizationButton->isChecked());
+		processImage();
+		});
+
+	connect(menu->binaryThresholdingButton, &QPushButton::clicked, this, [&] {
+		if (menu->binaryThresholdingButton->isChecked())
+			history.add(BINARY_THRESHOLDING, menu->thresholdControl->value());
+		else
+			history.add(BINARY_THRESHOLDING, 0);
+		processImage();
+		});
+
+	connect(menu->adaptiveThresholdingButton, &QPushButton::clicked, this, [&] {
+		if (menu->adaptiveThresholdingButton->isChecked())
+			history.add(ADAPTIVE_THRESHOLDING, menu->thresholdControl->value());
+		else
+			history.add(ADAPTIVE_THRESHOLDING, 0);
+		processImage();
+		});
+
+	connect(menu->zeroThresholdingButton, &QPushButton::clicked, this, [&] {
+		if (menu->zeroThresholdingButton->isChecked())
+			history.add(ZERO_THRESHOLDING, menu->thresholdControl->value());
+		else
+			history.add(ZERO_THRESHOLDING, 0);
+		processImage();
+		});
+
+	connect(menu->detectEdgesButton, &QPushButton::clicked, this, [&] {
+		history.add(DETECT_EDGES, menu->detectEdgesButton->isChecked());
+		processImage();
+		});
+
+
 	connect(menu->flipHorizontal, &QCheckBox::clicked, this, [&] {
 		history.add(FLIP_HORIZONTAL, menu->flipHorizontal->isChecked());
 		statusBar->showMessage("Flipped horizontally");
@@ -155,6 +187,11 @@ void MainWindow::setOptions()
 	menu->toggleFaceFeatures->setChecked(history.get()->getShowFeatures());
 	menu->flipHorizontal->setChecked(history.get()->getFlipH());
 	menu->flipVertical->setChecked(history.get()->getFlipV());
+	menu->binaryThresholdingButton->setChecked(history.get()->getBinaryThresholdingValue());
+	menu->zeroThresholdingButton->setChecked(history.get()->getZeroThresholdingValue());
+	menu->adaptiveThresholdingButton->setChecked(history.get()->getAdaptiveThresholdingValue());
+	menu->histogramEqualizationButton->setChecked(history.get()->getHistogramEqualization());
+	menu->detectEdgesButton->setChecked(history.get()->getDetectEdges());
 
 	menu->binaryThresholdingButton->setEnabled(
 		!menu->zeroThresholdingButton->isChecked() &&
@@ -168,6 +205,7 @@ void MainWindow::setOptions()
 		!menu->binaryThresholdingButton->isChecked() &&
 		!menu->zeroThresholdingButton->isChecked()
 	);
+
 	menu->imageAlgorithms->setVisible(cameraIsOn || imageIsUpload);
 }
 
@@ -252,7 +290,7 @@ void MainWindow::selectDetectorEvent() {
 	currDet = nullptr;
 	if (menu->detectorsList->currentIndex() == 0)
 		return;
-	
+
 	QString currText = menu->detectorsList->currentText();
 	int index = menu->detectorsList->findText(currText);
 	int loadState = ModelLoader::getFromFileByName(currDet, currText, modelsJSON);

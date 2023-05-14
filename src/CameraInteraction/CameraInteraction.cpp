@@ -68,6 +68,45 @@ bool FrameOptions::getShowConfidence() const {
 	return showConfidence;
 }
 
+void FrameOptions::setBinaryThresholdingValue(const short& val) {
+	binaryThresholdingValue = val;
+}
+
+short FrameOptions::getBinaryThresholdingValue() const {
+	return binaryThresholdingValue;
+}
+
+void FrameOptions::setZeroThresholdingValue(const short& val) {
+	zeroThresholdingValue = val;
+}
+
+short FrameOptions::getZeroThresholdingValue() const {
+	return zeroThresholdingValue;
+}
+
+void FrameOptions::setAdaptiveThresholdingValue(const short& val) {
+	adaptiveThresholdingValue = val;
+}
+
+short FrameOptions::getAdaptiveThresholdingValue() const {
+	return adaptiveThresholdingValue;
+}
+
+void FrameOptions::setHistogramEqualization(const bool& val) {
+	histogramEqualization = val;
+}
+
+bool FrameOptions::getHistogramEqualization() const {
+	return histogramEqualization;
+}
+
+void FrameOptions::setDetectEdges(const bool& val) {
+	detectEdges = val;
+}
+
+bool FrameOptions::getDetectEdges() const {
+	return detectEdges;
+}
 void OptionsHistory::add(revertable_options prop, short value) {
 	if (undoStack.size() >= 10)
 		undoStack.pop_front();
@@ -92,6 +131,21 @@ void OptionsHistory::add(revertable_options prop, short value) {
 	case THRESHOLD:
 		// not implemented
 		currentStatus.setThreshold(value);
+		break;
+	case BINARY_THRESHOLDING:
+		currentStatus.setBinaryThresholdingValue(value);
+		break;
+	case ZERO_THRESHOLDING:
+		currentStatus.setZeroThresholdingValue(value);
+		break;
+	case ADAPTIVE_THRESHOLDING:
+		currentStatus.setAdaptiveThresholdingValue(value);
+		break;
+	case HISTOGRAM_EQUALIZATION:
+		currentStatus.setHistogramEqualization(value);
+		break;
+	case DETECT_EDGES:
+		currentStatus.setDetectEdges(value);
 		break;
 	default:
 		return;
@@ -145,6 +199,16 @@ std::string OptionsHistory::lastChange() {
 		return "minimum threshold change";
 	case CONFIDENCE:
 		return "minimum confidence change";
+	case BINARY_THRESHOLDING:
+		return "binary thresholding";
+	case ZERO_THRESHOLDING:
+		return "zero thresholding";
+	case ADAPTIVE_THRESHOLDING:
+		return "adaptive thresholding";
+	case HISTOGRAM_EQUALIZATION:
+		return "histogram equalization";
+	case DETECT_EDGES:
+		return "detect edges";
 	default:
 		return "last action";
 	}
