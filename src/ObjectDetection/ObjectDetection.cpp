@@ -4,15 +4,28 @@
 #include <fstream>
 #include <opencv2/opencv.hpp>
 
-void drawLabel(cv::Mat & image, std::string label, int left, int top) {
+/**
+ * @brief Draws a label on an image.
+ * @param[in,out] image The image to draw the label on.
+ * @param[in] label The text of the label to draw.
+ * @param[in] left The x-coordinate of the left side of the label.
+ * @param[in] top The y-coordinate of the top side of the label.
+ */
+void drawLabel(cv::Mat& image, std::string label, int left, int top) {
     int baseLine;
     cv::Size label_size = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.7, 1.5, &baseLine);
 
     top = std::max(top, label_size.height);
-    cv::Point tlc = cv::Point(left + 4, top  + label_size.height +6);
+    cv::Point tlc = cv::Point(left + 4, top + label_size.height + 6);
     putText(image, label, tlc, cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(147, 167, 255), 2);
 }
 
+/**
+ * @brief Constructs a FaceDetector object.
+ * @param[in] props A detectorProperties object containing properties for the face detector.
+ * @param[in] eyeClassifierPath A string representing the path to the eye classifier file.
+ * @param[in] smileClassifierPath A string representing the path to the smile classifier file.
+ */
 FaceDetector::FaceDetector(detectorProperties& props, std::string eyeClassifierPath, std::string smileClassifierPath) {
     currentClassName = "face";
     modelPath = props.modelPath;
@@ -21,6 +34,11 @@ FaceDetector::FaceDetector(detectorProperties& props, std::string eyeClassifierP
     this->smileClassifierPath = smileClassifierPath;
     type = cascade;
 }
+
+/**
+ * @brief Initializes the FaceDetector object.
+ * @return An integer representing the success or failure of initialization.
+ */
 int FaceDetector::init() {
     if (modelPath == "\0")
         return -2;
@@ -34,6 +52,11 @@ int FaceDetector::init() {
     return 1;
 }
 
+/**
+ * @brief Detects faces in an image and optionally draws features on the image.
+ * @param[in,out] image The image to detect faces in.
+ * @param[in] showFeatures A boolean indicating whether or not to draw features on the image.
+ */
 void FaceDetector::detect(cv::Mat& image, bool showFeatures) {
     cv::Mat gray;
     if (image.type() != CV_8UC1)
@@ -50,13 +73,13 @@ void FaceDetector::detect(cv::Mat& image, bool showFeatures) {
         // find eyes on face
         if (eyesClassifierLoaded) {
             cv::Mat faceROI = gray(face);
-            faceROI = faceROI(cv::Range(0, face.height/2), cv::Range(0, face.width));
+            faceROI = faceROI(cv::Range(0, face.height / 2), cv::Range(0, face.width));
             eyeClassifier.detectMultiScale(faceROI, eyes);
         }
         // find smile on face
         if (smileClassifierLoaded) {
             cv::Mat faceROI = gray(face);
-            faceROI = faceROI(cv::Range(face.height/2, face.height), cv::Range(0, face.width));
+            faceROI = faceROI(cv::Range(face.height / 2, face.height), cv::Range(0, face.width));
             smileClassifier.detectMultiScale(faceROI, smiles, 1.2, 6);
         }
     }
@@ -78,13 +101,26 @@ void FaceDetector::detect(cv::Mat& image, bool showFeatures) {
     }
 }
 
+/**
+ * @brief Returns the last detected face rectangle.
+ * @return A cv::Rect representing the last detected face rectangle.
+ */
 cv::Rect FaceDetector::getLastRect() {
     return facesInFrame.empty() ? cv::Rect() : facesInFrame.back();
 }
+
+/**
+ * @brief Returns the last detected object rectangle.
+ * @return A cv::Rect representing the last detected object rectangle.
+ */
 cv::Rect ObjectDetector::getLastRect() {
     return lastRect;
 }
 
+/**
+ * @brief Constructs an ObjectDetector object.
+ * @param[in] props A detectorProperties object containing properties for the object detector.
+ */
 ObjectDetector::ObjectDetector(detectorProperties props) {
     modelPath = props.modelPath;
     classNamesPath = props.classNamesPath;
@@ -93,7 +129,12 @@ ObjectDetector::ObjectDetector(detectorProperties props) {
     shouldSwapRB = props.shouldSwapRB;
     meanValues = props.meanValues;
     type = network;
-} 
+}
+
+/**
+ * @brief Initializes the ObjectDetector object.
+ * @return An integer representing the success or failure of initialization.
+ */
 int ObjectDetector::init() {
     if (modelPath == "\0")
         return -2;
@@ -112,22 +153,27 @@ int ObjectDetector::init() {
     return 1;
 }
 
+/**
+ * @brief Detects objects in an image and optionally draws confidence values on the image.
+ * @param[in,out] image The image to detect objects in.
+ * @param[in] showConf A boolean indicating whether or not to draw confidence values on the image.
+ */
 void ObjectDetector::detect(cv::Mat& image, bool showConf) {
-    cv::Mat blob = cv::dnn::blobFromImage(image, 1.0, cv::Size(320,320), meanValues, shouldSwapRB, false);
+    cv::Mat blob = cv::dnn::blobFromImage(image, 1.0, cv::Size(320, 320), meanValues, shouldSwapRB, false);
     std::vector<std::string> layers = model.getLayerNames();
 
     model.setInput(blob);
     try {
-        /* 
+        /*
         In Debug mode, the forward method requires a string argument representing the layer,
         otherwise it throws a fatal exception and the whole app crashes.
         In Release mode, it automatically chooses the right layer
         */
-        #ifdef NDEBUG
-            blob = model.forward();
-        #else
-            blob = model.forward("layer");
-        #endif
+#ifdef NDEBUG
+        blob = model.forward();
+#else
+        blob = model.forward("layer");
+#endif
     }
     catch (const std::exception& e) {
         std::exception ex("No valid layer was provided to model.forward(). This would happen if the application is run in Debug mode.");
@@ -160,6 +206,10 @@ void ObjectDetector::detect(cv::Mat& image, bool showConf) {
     }
 }
 
+/**
+ * @brief Sets the minimum confidence value for object detection.
+ * @param[in] c The minimum confidence value to set.
+ */
 void ObjectDetector::setMinConfidence(float c) {
     if (c > 0 && c < 1)
         minConfidence = c;

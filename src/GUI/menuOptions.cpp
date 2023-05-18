@@ -6,6 +6,10 @@
 #include <QLabel>
 #include "menuOptions.h"
 
+/**
+ * @brief Constructs a Menu object.
+ * @param[in] parent The parent widget of the Menu object.
+ */
 Menu::Menu(QWidget* parent)
 	: QWidget(parent) {
 
@@ -93,7 +97,6 @@ Menu::Menu(QWidget* parent)
 	vbox->addLayout(miniButtons);
 	vbox->addWidget(new QLabel("Select a detector"));
 	vbox->addWidget(detectorsList);
-	//vbox->addWidget(new QLabel("Image processing"));
 	vbox->addWidget(imageAlgorithms);
 
 	vbox->addWidget(toggleFaceFeatures);

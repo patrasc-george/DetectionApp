@@ -17,7 +17,7 @@ find_package(Qt6 REQUIRED COMPONENTS Gui Core Widgets)
 
 # Add the subdirectories for the different parts of the application
 add_subdirectory(src/Application)
-add_subdirectory(src/CameraInteraction)
+add_subdirectory(src/ImageProcessingUtils)
 add_subdirectory(src/ObjectDetection)
 
 add_subdirectory(src/GUI)

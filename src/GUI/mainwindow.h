@@ -2,6 +2,7 @@
 
 #include <opencv2/opencv.hpp>
 #include "ObjectDetection.h"
+#include "ImageProcessingUtils.h"
 
 #include <QWidget>
 #include <QApplication>
@@ -12,6 +13,7 @@
 #include <QListWidget>
 #include <QMainWindow>
 #include <QPushButton>
+#include <stack>
 
 #include "menuOptions.h"
 
@@ -47,6 +49,7 @@ public:
 	cv::Mat frame;
 	QString fileName;
 	Detector* currDet;
+	OptionsHistory history;
 	bool cameraIsOn = false;
 	bool imageIsUpload = false;
 	bool isGrayscale = false;

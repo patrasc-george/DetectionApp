@@ -15,8 +15,7 @@
 #include <QStandardPaths>
 #include <QJsonObject>
 
-#include "ObjectDetection.h"
-#include "CameraInteraction.h"
+#include "ImageProcessingUtils.h"
 #include "../Application/ModelLoader.h"
 
 #define modelsJSON "../data/detectors.json"
@@ -46,18 +45,77 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	connect(menu->detectorsList, &QComboBox::currentIndexChanged, this, &MainWindow::selectDetectorEvent);
 	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
 
-	connect(menu->toggleFaceFeatures, &QCheckBox::toggled, this, &MainWindow::processImage);
-	connect(menu->showConfidence, &QCheckBox::toggled, this, &MainWindow::processImage);
+	connect(menu->toggleFaceFeatures, &QCheckBox::clicked, this, [&] {
+		history.add(SHOW_FEATURES, menu->toggleFaceFeatures->isChecked());
+		statusBar->showMessage(QString("Toggled face features %1").arg(menu->toggleFaceFeatures->isChecked() ? "on" : "off"));
+		processImage();
+		});
+	connect(menu->showConfidence, &QCheckBox::clicked, this, [&] {
+		history.add(SHOW_CONFIDENCE, menu->showConfidence->isChecked());
+		statusBar->showMessage(QString("Toggled show confidences %1").arg(menu->toggleFaceFeatures->isChecked() ? "on" : "off"));
+		processImage();
+		});
 
 	connect(menu->confControl, &LabeledSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
 	connect(menu->thresholdControl, &LabeledSlider::valueChanged, this, &MainWindow::changeThresholdEvent);
 
-	for (QPushButton* btn : menu->imageAlgorithms->findChildren<QPushButton*>())
-		connect(btn, &QPushButton::clicked, this, &MainWindow::processImage);
+	connect(menu->histogramEqualizationButton, &QPushButton::clicked, this, [&] {
+		history.add(HISTOGRAM_EQUALIZATION, menu->histogramEqualizationButton->isChecked());
+		processImage();
+		});
 
-	connect(menu->flipHorizontal, &QCheckBox::clicked, this, &MainWindow::processImage);
-	connect(menu->flipVertical, &QCheckBox::clicked, this, &MainWindow::processImage);
-	connect(menu->flipVertical, &QCheckBox::clicked, this, &MainWindow::processImage);	
+	connect(menu->binaryThresholdingButton, &QPushButton::clicked, this, [&] {
+		if (menu->binaryThresholdingButton->isChecked())
+			history.add(BINARY_THRESHOLDING, menu->thresholdControl->value());
+		else
+			history.add(BINARY_THRESHOLDING, 0);
+		processImage();
+		});
+
+	connect(menu->adaptiveThresholdingButton, &QPushButton::clicked, this, [&] {
+		if (menu->adaptiveThresholdingButton->isChecked())
+			history.add(ADAPTIVE_THRESHOLDING, menu->thresholdControl->value());
+		else
+			history.add(ADAPTIVE_THRESHOLDING, 0);
+		processImage();
+		});
+
+	connect(menu->zeroThresholdingButton, &QPushButton::clicked, this, [&] {
+		if (menu->zeroThresholdingButton->isChecked())
+			history.add(ZERO_THRESHOLDING, menu->thresholdControl->value());
+		else
+			history.add(ZERO_THRESHOLDING, 0);
+		processImage();
+		});
+
+	connect(menu->detectEdgesButton, &QPushButton::clicked, this, [&] {
+		history.add(DETECT_EDGES, menu->detectEdgesButton->isChecked());
+		processImage();
+		});
+
+
+	connect(menu->flipHorizontal, &QCheckBox::clicked, this, [&] {
+		history.add(FLIP_HORIZONTAL, menu->flipHorizontal->isChecked());
+		statusBar->showMessage("Flipped horizontally");
+		processImage();
+		});
+	connect(menu->flipVertical, &QCheckBox::clicked, this, [&] {
+		history.add(FLIP_VERTICAL, menu->flipVertical->isChecked());
+		statusBar->showMessage("Flipped vertically");
+		processImage();
+		});
+	connect(menu->undoBtn, &QPushButton::clicked, this, [&] {
+		history.undo();
+		statusBar->showMessage(QString("Undone %1").arg(history.lastChange().c_str()));
+		processImage();
+		setOptions();
+		});
+	connect(menu->redoBtn, &QPushButton::clicked, this, [&] {
+		history.redo();
+		statusBar->showMessage(QString("Redone %1").arg(history.lastChange().c_str()));
+		processImage();
+		setOptions();
+		});
 
 	connect(menu->zoomIn, &QPushButton::clicked, [&] {
 		imageContainer->zoomIn();
@@ -107,11 +165,8 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 }
 
 /**
- * @brief Set the menu options based on the camera and image upload state.
- *
- * @details This function performs several checks to determine which menu items should be enabled and visible based on the current state of the application.
- *
- * @post The menu will be updated accordingly to reflect the current state of the application.
+ * @brief Sets the options for the menu based on the current state of the application.
+ * @details This function enables or disables various menu options and sets their text or checked state based on the current state of the application. For example, if the camera is turned on, the "Turn Camera On" button will be changed to "Turn Camera Off". Similarly, if an image has been uploaded, certain options such as zooming in and out will be enabled.
  */
 void MainWindow::setOptions()
 {
@@ -128,6 +183,19 @@ void MainWindow::setOptions()
 	menu->zoomOut->setEnabled(imageIsUpload && (imageContainer->getZoomCount() > 0));
 	menu->zoomReset->setEnabled(menu->zoomOut->isEnabled());
 
+	menu->undoBtn->setEnabled(history.canUndo());
+	menu->redoBtn->setEnabled(history.canRedo());
+
+	menu->showConfidence->setChecked(history.get()->getShowConfidence());
+	menu->toggleFaceFeatures->setChecked(history.get()->getShowFeatures());
+	menu->flipHorizontal->setChecked(history.get()->getFlipH());
+	menu->flipVertical->setChecked(history.get()->getFlipV());
+	menu->binaryThresholdingButton->setChecked(history.get()->getBinaryThresholdingValue());
+	menu->zeroThresholdingButton->setChecked(history.get()->getZeroThresholdingValue());
+	menu->adaptiveThresholdingButton->setChecked(history.get()->getAdaptiveThresholdingValue());
+	menu->histogramEqualizationButton->setChecked(history.get()->getHistogramEqualization());
+	menu->detectEdgesButton->setChecked(history.get()->getDetectEdges());
+
 	menu->binaryThresholdingButton->setEnabled(
 		!menu->zeroThresholdingButton->isChecked() &&
 		!menu->adaptiveThresholdingButton->isChecked()
@@ -140,17 +208,13 @@ void MainWindow::setOptions()
 		!menu->binaryThresholdingButton->isChecked() &&
 		!menu->zeroThresholdingButton->isChecked()
 	);
+
 	menu->imageAlgorithms->setVisible(cameraIsOn || imageIsUpload);
-	menu->undoBtn->setEnabled(false); // temporary
-	menu->redoBtn->setEnabled(false); // temporary
 }
 
 /**
- * @brief Toggle the state of the camera.
- *
- * @details This function updates the state of the camera by checking if it is turned on or off. If the camera is turned on, this function sets the appropriate menu options and starts capturing video. If the camera is turned off, a placeholder image is displayed on the screen and the video capture is stopped. Additionally, the current detector is deleted when the camera is turned off.
- *
- * @post The state of the camera will be toggled and the menu options will be updated accordingly. If the camera is turned off, the current detector will be deleted and a placeholder image will be displayed on the screen.
+ * @brief Toggles the camera on or off.
+ * @details This function is called when the "Turn Camera On/Off" button is clicked. It checks the state of the button and sets the cameraIsOn and imageIsUpload variables accordingly. It then calls the setOptions() function to update the menu options based on the new state. If the camera is turned on, it starts video capture and selects a detector. If the camera is turned off, it displays an image indicating that the camera is turned off.
  */
 void MainWindow::toggleCameraEvent() {
 	cameraIsOn = menu->toggleCamera->isChecked();
@@ -158,11 +222,15 @@ void MainWindow::toggleCameraEvent() {
 	imageIsUpload = menu->uploadButton->isChecked();
 	setOptions();
 	menu->toggleCamera->clearFocus();
+	history.reset();
 	imageContainer->zoomReset();
 
 	if (cameraIsOn) {
 		menu->flipHorizontal->setChecked(true);
+		history.get()->setFlipH(menu->flipHorizontal->isChecked());
 		menu->flipVertical->setChecked(false);
+		history.get()->setFlipV(menu->flipVertical->isChecked());
+
 		startVideoCapture();
 		selectDetectorEvent();
 	}
@@ -189,12 +257,10 @@ void MainWindow::toggleCameraEvent() {
 }
 
 /**
-* @brief Returns the full path of a selected image file using a file dialog.
-* The function opens a file dialog for the user to select an image file from their computer,
-* restricted to the PNG, JPG, and BMP file formats. It returns the full path of the selected file.
-* 
-* @return The full path of the selected image file as a QString.
-*/
+ * @brief Returns the file name of an image selected by the user.
+ * @details This function opens a file dialog and allows the user to select an image file. It returns the file name of the selected image.
+ * @return A QString representing the file name of the selected image.
+ */
 
 QString MainWindow::getImageFileName()
 {
@@ -202,10 +268,8 @@ QString MainWindow::getImageFileName()
 }
 
 /**
- * @brief Displays a file dialog to select an image file to upload and sets it as the current image.
- *
- * If the selected file is a valid image file, it is read into a cv::Mat and set as the current frame.
- * If not, an error message is displayed.
+ * @brief Uploads an image selected by the user.
+ * @details This function is called when the "Upload Image" button is clicked. It calls the getImageFileName() function to get the file name of the selected image. If a valid image file is selected, it reads the image data and sets the frame variable to the image data. It then updates the menu options and displays the uploaded image.
  */
 void MainWindow::uploadImageEvent() {
 	fileName = getImageFileName();
@@ -225,6 +289,11 @@ void MainWindow::uploadImageEvent() {
 	menu->toggleCamera->setChecked(false);
 	menu->flipHorizontal->setChecked(false);
 	menu->flipVertical->setChecked(false);
+
+	history.reset();
+	history.get()->setFlipH(menu->flipHorizontal->isChecked());
+	history.get()->setFlipV(menu->flipVertical->isChecked());
+
 	imageIsUpload = true;
 	imageContainer->zoomReset();
 	setOptions();
@@ -233,12 +302,16 @@ void MainWindow::uploadImageEvent() {
 	displayImage();
 }
 
+/**
+ * @brief Selects a detector from the list of available detectors.
+ * @details This function is called when a detector is selected from the list of available detectors. It deletes the current detector object and sets it to nullptr. If a valid detector is selected, it attempts to load the detector from the modelsJSON file. If the detector is successfully loaded, it sets the currDet variable to the loaded detector object. If an image has been uploaded, it processes the image using the selected detector. It then calls the setOptions() function to update the menu options based on the new state.
+ */
 void MainWindow::selectDetectorEvent() {
 	delete currDet;
 	currDet = nullptr;
 	if (menu->detectorsList->currentIndex() == 0)
 		return;
-	
+
 	QString currText = menu->detectorsList->currentText();
 	int index = menu->detectorsList->findText(currText);
 	int loadState = ModelLoader::getFromFileByName(currDet, currText, modelsJSON);
@@ -317,12 +390,20 @@ void MainWindow::selectDetectorEvent() {
 	setOptions();
 }
 
+/**
+ * @brief Changes the minimum confidence value for object detection.
+ * @details This function is called when the minimum confidence value is changed using the slider in the menu. It sets the minimum confidence value of the current detector to the value of the slider. If an image has been uploaded, it processes the image using the new minimum confidence value.
+ */
 void MainWindow::changeMinConfEvent() {
 	currDet->setMinConfidence(menu->confControl->value() / static_cast<float>(100));
 	if (imageIsUpload)
 		processImage();
 }
 
+/**
+ * @brief Saves a screenshot of the current image.
+ * @details This function is called when the "Save Screenshot" button is clicked. It opens a file dialog and allows the user to select a file name and location to save the screenshot. If a valid file name is selected, it saves a screenshot of the current image to the specified file.
+ */
 void MainWindow::screenshotEvent() {
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Image File"),
 		QString(),
@@ -342,6 +423,10 @@ void MainWindow::screenshotEvent() {
 	}
 }
 
+/**
+ * @brief Sets the detector for object detection.
+ * @details This function is called when a detector is selected from the list of available detectors. If a valid detector is selected, it attempts to detect objects in the current frame using the selected detector. If objects are detected, it updates the status bar with information about the detected objects.
+ */
 void MainWindow::setDetector() {
 	if (currDet == nullptr) return;
 	try {
@@ -374,8 +459,11 @@ void MainWindow::setDetector() {
 	}
 }
 
-void MainWindow::flipImage()
-{
+/**
+ * @brief Flips the current image horizontally or vertically.
+ * @details This function is called when the "Flip Horizontally" or "Flip Vertically" buttons are clicked. It checks the state of the buttons and flips the current frame horizontally or vertically accordingly.
+ */
+void MainWindow::flipImage() {
 	if (menu->flipHorizontal->isChecked()) {
 		cv::flip(frame, frame, 1);
 	}
@@ -384,6 +472,10 @@ void MainWindow::flipImage()
 	}
 }
 
+/**
+ * @brief Displays the current image in the image container.
+ * @details This function converts the current frame to a QImage and sets the pixmap of the image item in the scene to the QImage. It then updates the scene rect to fit the size of the image and updates the resolution label with the resolution of the current frame.
+ */
 void MainWindow::displayImage() {
 	QImage qimg;
 	if (isGrayscale)
@@ -410,6 +502,10 @@ void MainWindow::displayImage() {
 
 }
 
+/**
+ * @brief Starts video capture from the camera.
+ * @details This function is called when the camera is turned on. It opens a video capture object and reads frames from the camera. It processes each frame using the selected detector and displays it in the image container. It also updates the FPS label with the current FPS value.
+ */
 void MainWindow::startVideoCapture() {
 	int fps = 0, avgFps = 0;
 	std::deque<int> fpsArray;
@@ -443,6 +539,10 @@ void MainWindow::startVideoCapture() {
 	QCoreApplication::processEvents();
 }
 
+/**
+ * @brief Processes the current image using the selected algorithms and detector.
+ * @details This function is called when an image is uploaded or when an algorithm or detector is selected. If an image has been uploaded, it reads the image data from the file. It then calls the selectAlgorithmsEvent() function to apply any selected image processing algorithms to the current frame. It flips the current frame horizontally or vertically if the corresponding buttons are clicked. It then calls the setDetector() function to detect objects in the current frame using the selected detector. If an image has been uploaded, it displays the processed image in the image container.
+ */
 void MainWindow::processImage() {
 	isGrayscale = false;
 
@@ -459,12 +559,20 @@ void MainWindow::processImage() {
 	if (imageIsUpload) displayImage();
 }
 
+/**
+ * @brief Changes the threshold value for binary thresholding.
+ * @details This function is called when the threshold value is changed using the slider in the menu. If an image has been uploaded, it processes the image using the new threshold value and updates the status bar with information about the applied threshold value.
+ */
 void MainWindow::changeThresholdEvent() {
 	if (imageIsUpload)
 		processImage();
 	statusBar->showMessage(QString("Applied binary thresholding: %1").arg(menu->thresholdControl->value()));
 }
 
+/**
+ * @brief Prevents the zoom level from being reset when other actions are applied to the image.
+ * @details This function is called when other actions are applied to the image or when the window is resized. It fits the image in view and maintains the current zoom level.
+ */
 void MainWindow::preventReset() {
 	// prevent the container from losing the zoom applying other actions on the image (e.g. flip) or on resize
 	imageContainer->fitInView(&pixmap, Qt::KeepAspectRatio);
@@ -476,20 +584,9 @@ void MainWindow::preventReset() {
 }
 
 /**
-* @brief Handles the select algorithms event.
-*
-* This function is called when the user selects a new image processing algorithm from the main menu. It retrieves the selected algorithm and applies it to the current frame. If the selected algorithm requires a grayscale image, it converts the frame to grayscale.
-*
-* @note This function assumes that the "frame" variable is a valid OpenCV image.
-*
-* @note This function assumes that the "menu" variable is a valid pointer to a main menu widget.
-*
-* @note This function assumes that the "isGrayscale" variable is a valid boolean value that indicates whether the current frame is in grayscale or not.
-*
-* @param None.
-*
-* @return None.
-*/
+ * @brief Applies selected image processing algorithms to the current frame.
+ * @details This function is called when an image processing algorithm is selected from the list of available algorithms. It checks the state of the algorithm buttons and applies the selected algorithms to the current frame in the order in which they are listed in the menu. For example, if the "Histogram Equalization" and "Binary Thresholding" buttons are both checked, it will first apply histogram equalization to the current frame and then apply binary thresholding to the result.
+ */
 void MainWindow::selectAlgorithmsEvent()
 {
 	setOptions();
