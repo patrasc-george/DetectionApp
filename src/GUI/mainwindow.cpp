@@ -21,7 +21,11 @@
 #define modelsJSON "../data/detectors.json"
 QVector<QString> names = ModelLoader::getNames(modelsJSON);
 
-
+/**
+ * @brief Constructs a MainWindow object.
+ * @param[in] parent The parent widget of the MainWindow object.
+ * @details This constructor initializes a MainWindow object with the provided parent widget. It creates and initializes various components such as a menu, image container, and status bar. These components are used to interact with the application and control its behavior. The constructor also connects signals emitted by the menu controls to slots in the MainWindow object that handle those signals. The components are arranged in a layout and added to the MainWindow widget.
+ */
 MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	// instantiate the list of detectors
 	this->currDet = nullptr;

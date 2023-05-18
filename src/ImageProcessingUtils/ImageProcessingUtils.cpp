@@ -6,6 +6,7 @@
  * @brief Applies binary thresholding to an image.
  * @param[in,out] image The image to be processed.
  * @param[in] threshold The threshold value.
+ * @details This function applies binary thresholding to an image using OpenCV's threshold function. It sets all pixel values below the specified threshold to 0 and all pixel values above the threshold to 255. The resulting image is a binary image where all pixels are either black or white.
  */
 void binaryThresholding(cv::Mat& image, short threshold) {
 	cv::threshold(image, image, threshold, 255, cv::THRESH_BINARY);
@@ -15,6 +16,7 @@ void binaryThresholding(cv::Mat& image, short threshold) {
  * @brief Applies zero thresholding to an image.
  * @param[in,out] image The image to be processed.
  * @param[in] threshold The threshold value.
+ * @details This function applies zero thresholding to an image using OpenCV's threshold function. It sets all pixel values below the specified threshold to 0 and leaves all pixel values above the threshold unchanged. The resulting image is a grayscale image where all pixels below the threshold are black and all pixels above the threshold retain their original values.
  */
 void zeroThresholding(cv::Mat& image, short threshold) {
 	cv::threshold(image, image, threshold, 255, cv::THRESH_TOZERO);
@@ -24,6 +26,7 @@ void zeroThresholding(cv::Mat& image, short threshold) {
  * @brief Applies adaptive thresholding to an image.
  * @param[in,out] image The image to be processed.
  * @param[in] threshold The threshold value.
+ * @details This function applies adaptive thresholding to an image using OpenCV's adaptiveThreshold function. It calculates a different threshold for each pixel based on its local neighborhood and then applies binary thresholding using that calculated threshold. The resulting image is a binary image where all pixels are either black or white. The size of the local neighborhood and the method used to calculate the thresholds can be adjusted by changing the parameters of the adaptiveThreshold function call.
  */
 void adaptiveThresholding(cv::Mat& image, short threshold) {
 	cv::adaptiveThreshold(image, image, threshold, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 11, 2);
@@ -32,6 +35,7 @@ void adaptiveThresholding(cv::Mat& image, short threshold) {
 /**
  * @brief Equalizes the histogram of an image.
  * @param[in,out] image The image to be processed.
+ * @details This function equalizes the histogram of an image using OpenCV's equalizeHist function. It redistributes the pixel values in such a way that their histogram is approximately flat. This can improve the contrast of an image by stretching out its intensity range. The resulting image is a grayscale image with improved contrast.
  */
 void histogramEqualization(cv::Mat& image) {
 	cv::equalizeHist(image, image);
@@ -40,6 +44,7 @@ void histogramEqualization(cv::Mat& image) {
 /**
  * @brief Detects edges in an image using the Laplacian operator.
  * @param[in,out] image The image to be processed.
+ * @details This function detects edges in an image using OpenCV's Laplacian function. It applies the Laplacian operator to the image, which calculates the second derivative of its intensity values. This highlights regions of rapid intensity change, which correspond to edges in the original image. The resulting edge map is then normalized and scaled to fit within the 0-255 range so that it can be displayed as a grayscale image.
  */
 void detectEdges(cv::Mat& image) {
 	cv::Laplacian(image, image, CV_8U);
@@ -226,6 +231,7 @@ bool FrameOptions::getDetectEdges() const {
  * @brief Adds a new option to the history.
  * @param[in] prop The option to be added.
  * @param[in] value The value of the option to be added.
+ * @details This function adds a new option to the history of options. It first checks if the undo stack is full (i.e., has reached its maximum size of 10). If it is, it removes the oldest option from the stack. It then adds the current status to the undo stack and updates the current status with the provided option and value. If there are any options in the redo stack, it clears them. This function can be called whenever an option is changed by the user to keep track of its previous values and allow for undo/redo functionality.
  */
 void OptionsHistory::add(revertable_options prop, short value) {
 	if (undoStack.size() >= 10)
@@ -279,6 +285,7 @@ void OptionsHistory::add(revertable_options prop, short value) {
 /**
  * @brief Checks if redo is possible.
  * @return Returns true if redo is possible, otherwise returns false.
+ * @details This function checks if redo is possible by checking if the redo stack is not empty. If it is not empty, it means that there are options that can be redone and it returns true. Otherwise, it returns false to indicate that redo is not possible.
  */
 bool OptionsHistory::canRedo() {
 	return !redoStack.empty();
@@ -287,6 +294,7 @@ bool OptionsHistory::canRedo() {
 /**
  * @brief Checks if undo is possible.
  * @return Returns true if undo is possible, otherwise returns false.
+ * @details This function checks if undo is possible by checking if the undo stack is not empty. If it is not empty, it means that there are options that can be undone and it returns true. Otherwise, it returns false to indicate that undo is not possible.
  */
 bool OptionsHistory::canUndo() {
 	return !undoStack.empty();
@@ -294,6 +302,7 @@ bool OptionsHistory::canUndo() {
 
 /**
  * @brief Resets the history.
+ * @details This function resets the history by clearing both the undo and redo stacks. It can be called whenever the history needs to be reset (e.g., when loading a new image).
  */
 void OptionsHistory::reset() {
 	undoStack.clear();
@@ -302,6 +311,7 @@ void OptionsHistory::reset() {
 
 /**
  * @brief Undoes the last change.
+ * @details This function undoes the last change by moving the current status from the undo stack to the redo stack and setting the current status to the previous status stored in the undo stack. It can be called whenever an undo operation is requested by the user (e.g., when they click on an undo button).
  */
 void OptionsHistory::undo() {
 	if (!undoStack.empty()) {
@@ -314,6 +324,7 @@ void OptionsHistory::undo() {
 
 /**
  * @brief Redoes the last change.
+ * @details This function redoes the last change by moving the current status from the redo stack to the undo stack and setting the current status to the previous status stored in the redo stack. It can be called whenever a redo operation is requested by the user (e.g., when they click on a redo button).
  */
 void OptionsHistory::redo() {
 	if (!redoStack.empty()) {
@@ -327,6 +338,7 @@ void OptionsHistory::redo() {
 /**
  * @brief Gets the current status.
  * @return Returns a pointer to the current status.
+ * @details This function returns a pointer to the current status. It can be called at any time to get a reference to the current status and access its properties or methods.
  */
 FrameOptions* OptionsHistory::get() {
 	return &currentStatus;
@@ -335,6 +347,7 @@ FrameOptions* OptionsHistory::get() {
 /**
  * @brief Returns a string describing the last changed option.
  * @return A string describing the last changed option.
+ * @details This function returns a string describing the last changed option. It can be called at any time to get a human-readable description of the last option that was changed by the user.
  */
 std::string OptionsHistory::lastChange() {
 	switch (lastChangedOption) {
@@ -368,6 +381,7 @@ std::string OptionsHistory::lastChange() {
 /**
  * @brief Constructs a Timer object and starts the timer.
  * @param[out] c An integer reference to be used as a counter. (output)
+ * @details This constructor initializes a Timer object and starts its internal timer. It also stores a reference to an integer counter that will be updated with the elapsed time when the Timer object is destroyed. This constructor can be called at any time to start timing an operation (e.g., when processing an image).
  */
 Timer::Timer(int& c) {
 	start = std::chrono::steady_clock::now();
@@ -377,6 +391,7 @@ Timer::Timer(int& c) {
 
 /**
  * @brief Destroys the Timer object and stops the timer.
+ * @details This destructor stops the internal timer of a Timer object and calculates its duration. It then updates the integer counter that was provided when constructing the Timer object with the elapsed time (in seconds). This destructor is called automatically when a Timer object goes out of scope or is deleted (e.g., when an image processing operation completes).
  */
 Timer::~Timer() {
 	end = std::chrono::steady_clock::now();
