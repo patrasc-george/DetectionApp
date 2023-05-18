@@ -2,7 +2,7 @@
 
 #include <opencv2/opencv.hpp>
 #include "ObjectDetection.h"
-#include "CameraInteraction.h"
+#include "ImageProcessingUtils.h"
 
 #include <QWidget>
 #include <QApplication>

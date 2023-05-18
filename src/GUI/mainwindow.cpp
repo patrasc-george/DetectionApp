@@ -15,8 +15,7 @@
 #include <QStandardPaths>
 #include <QJsonObject>
 
-//#include "ObjectDetection.h"
-#include "CameraInteraction.h"
+#include "ImageProcessingUtils.h"
 #include "../Application/ModelLoader.h"
 
 #define modelsJSON "../data/detectors.json"

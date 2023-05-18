@@ -17,7 +17,7 @@ add_dependencies(${PROJECT_NAME}
 
 # Allow the headers to be included in main.cpp
 target_include_directories(${PROJECT_NAME} PUBLIC
-                          "${CMAKE_SOURCE_DIR}/src/CameraInteraction"
+                          "${CMAKE_SOURCE_DIR}/src/ImageProcessingUtils"
 						  "${CMAKE_SOURCE_DIR}/src/ObjectDetection"
 						  "${CMAKE_SOURCE_DIR}/src/GUI"
 						   ${OpenCV_INCLUDE_DIRS}
@@ -29,7 +29,7 @@ target_link_directories(${PROJECT_NAME} PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME}
-	CameraInteraction
+	ImageProcessingUtils
 	ObjectDetection
 	UserInterface
 	Qt6::Core
@@ -38,6 +38,6 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    WIN32_EXECUTABLE OFF
+    WIN32_EXECUTABLE ON
     MACOSX_BUNDLE ON
 )

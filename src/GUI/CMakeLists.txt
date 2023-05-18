@@ -14,7 +14,7 @@ file(GLOB SOURCE_FILES "*.cpp")
 add_library(${PROJECT_NAME} STATIC ${HEADER_FILES} ${SOURCE_FILES})
 
 target_link_libraries(${PROJECT_NAME} 
-	CameraInteraction
+	ImageProcessingUtils
 	ObjectDetection
 	Qt6::Widgets 
 	Qt6::Core
@@ -22,13 +22,13 @@ target_link_libraries(${PROJECT_NAME}
 	)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-	"${CMAKE_SOURCE_DIR}/src/CameraInteraction"
+	"${CMAKE_SOURCE_DIR}/src/ImageProcessingUtils"
 	"${CMAKE_SOURCE_DIR}/src/ObjectDetection"
 	${OpenCV_INCLUDE_DIRS}
 	)
  
 add_dependencies(${PROJECT_NAME}
-	CameraInteraction
+	ImageProcessingUtils
 	ObjectDetection
 	)
 

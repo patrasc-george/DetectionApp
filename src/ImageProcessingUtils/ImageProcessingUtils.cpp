@@ -1,4 +1,4 @@
-#include "CameraInteraction.h"
+#include "ImageProcessingUtils.h"
 
 #include <opencv2/opencv.hpp>
 
@@ -109,6 +109,23 @@ void FrameOptions::setFlipH(const bool& val) {
 bool FrameOptions::getFlipH() const {
 	return flipH;
 }
+
+/**
+ * @brief Sets whether to flip the image vertically or not.
+ * @param[in] val The boolean value to be set.
+ */
+void FrameOptions::setFlipV(const bool& val) {
+	flipV = val;
+}
+
+/**
+ * @brief Gets whether to flip the image vertically or not.
+ * @return Returns true if the image is to be flipped horizontally, otherwise returns false.
+ */
+bool FrameOptions::getFlipV() const {
+	return flipV;
+}
+
 /**
  * @brief Sets whether to show confidence values or not.
  * @param[in] val The boolean value to be set.
@@ -342,7 +359,7 @@ std::string OptionsHistory::lastChange() {
 	case HISTOGRAM_EQUALIZATION:
 		return "histogram equalization";
 	case DETECT_EDGES:
-		return "detect edges";
+		return "edges detection";
 	default:
 		return "last action";
 	}

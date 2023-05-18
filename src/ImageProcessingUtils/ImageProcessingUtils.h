@@ -2,13 +2,13 @@
 #include <opencv2/opencv.hpp>
 #include <stack>
 
-#ifdef CAMERAINTERACTION_EXPORTS
-#define CAMERAINTERACTION_API __declspec(dllexport)
+#ifdef IMAGEPROCESSINGUTILS_EXPORTS
+#define IMAGEPROCESSINGUTILS_API __declspec(dllexport)
 #else
-#define CAMERAINTERACTION_API __declspec(dllimport)
+#define IMAGEPROCESSINGUTILS_API __declspec(dllimport)
 #endif
 
-static enum CAMERAINTERACTION_API revertable_options {
+static enum IMAGEPROCESSINGUTILS_API revertable_options {
 	CONFIDENCE,
 	THRESHOLD,
 	SHOW_FEATURES,
@@ -21,7 +21,7 @@ static enum CAMERAINTERACTION_API revertable_options {
 	HISTOGRAM_EQUALIZATION,
 	DETECT_EDGES
 };
-class CAMERAINTERACTION_API FrameOptions {
+class IMAGEPROCESSINGUTILS_API FrameOptions {
 private:
 	short confidence = 0;
 	short threshold = 0;
@@ -71,7 +71,7 @@ public:
 	bool getDetectEdges() const;
 };
 
-class CAMERAINTERACTION_API OptionsHistory {
+class IMAGEPROCESSINGUTILS_API OptionsHistory {
 private:
 	std::deque<FrameOptions> undoStack;
 	std::deque<FrameOptions> redoStack;
@@ -89,15 +89,15 @@ public:
 	std::string lastChange();
 };
 
-void CAMERAINTERACTION_API binaryThresholding(cv::Mat& image, short threshold);
-void CAMERAINTERACTION_API zeroThresholding(cv::Mat& image, short threshold);
-void CAMERAINTERACTION_API adaptiveThresholding(cv::Mat& image, short threshold);
+void IMAGEPROCESSINGUTILS_API binaryThresholding(cv::Mat& image, short threshold);
+void IMAGEPROCESSINGUTILS_API zeroThresholding(cv::Mat& image, short threshold);
+void IMAGEPROCESSINGUTILS_API adaptiveThresholding(cv::Mat& image, short threshold);
 
-void CAMERAINTERACTION_API histogramEqualization(cv::Mat& image);
+void IMAGEPROCESSINGUTILS_API histogramEqualization(cv::Mat& image);
 
-void CAMERAINTERACTION_API detectEdges(cv::Mat& image);
+void IMAGEPROCESSINGUTILS_API detectEdges(cv::Mat& image);
 
-class CAMERAINTERACTION_API Timer {
+class IMAGEPROCESSINGUTILS_API Timer {
 private:
 	std::chrono::time_point<std::chrono::steady_clock> start, end;
 	std::chrono::duration<float> duration;
