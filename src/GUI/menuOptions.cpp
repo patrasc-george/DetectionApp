@@ -6,6 +6,10 @@
 #include <QLabel>
 #include "menuOptions.h"
 
+/**
+ * @brief Constructs a Menu object.
+ * @param[in] parent The parent widget of the Menu object.
+ */
 Menu::Menu(QWidget* parent)
 	: QWidget(parent) {
 
