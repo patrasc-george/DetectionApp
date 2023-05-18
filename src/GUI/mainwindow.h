@@ -46,13 +46,12 @@ public slots:
 
 public:
 	QGraphicsPixmapItem pixmap;
-	cv::Mat frame;
+	QImage frame;
 	QString fileName;
 	Detector* currDet;
 	OptionsHistory history;
 	bool cameraIsOn = false;
 	bool imageIsUpload = false;
-	bool isGrayscale = false;
 	void setOptions();
 	void setDetector();
 	void flipImage();

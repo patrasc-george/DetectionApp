@@ -62,6 +62,8 @@ int FaceDetector::init() {
  * @details This function detects faces in an image using a face classifier. If the showFeatures parameter is true, it also attempts to detect eyes and smiles within each detected face using eye and smile classifiers. If any faces are detected, it draws rectangles around them on the image and labels them with the current class name. If showFeatures is true and any eyes or smiles are detected, it also draws circles around the eyes and rectangles around the smiles on the image.
  */
 void FaceDetector::detect(cv::Mat& image, bool showFeatures) {
+    if (image.type() == CV_8UC4)
+        cv::cvtColor(image, image, cv::COLOR_BGRA2BGR);
     cv::Mat gray;
     if (image.type() != CV_8UC1)
         cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
@@ -168,6 +170,8 @@ int ObjectDetector::init() {
  * @details This function detects objects in an image using a neural network model. It preprocesses the image by creating a blob from it and then feeds it into the model. The model outputs a matrix of detections, each row representing a detected object. For each detection, it checks if the confidence value is above a minimum threshold. If it is, it draws a rectangle around the detected object on the image and labels it with the class name and optionally the confidence value.
  */
 void ObjectDetector::detect(cv::Mat& image, bool showConf) {
+    if (image.type() == CV_8UC4)
+        cv::cvtColor(image, image, cv::COLOR_BGRA2BGR);
     cv::Mat blob = cv::dnn::blobFromImage(image, 1.0, cv::Size(320, 320), meanValues, shouldSwapRB, false);
     std::vector<std::string> layers = model.getLayerNames();
 
@@ -185,6 +189,7 @@ void ObjectDetector::detect(cv::Mat& image, bool showConf) {
 #endif
     }
     catch (const std::exception& e) {
+        std::cout << e.what()<<std::endl;
         std::exception ex("No valid layer was provided to model.forward(). This would happen if the application is run in Debug mode.");
         throw ex;
         return;

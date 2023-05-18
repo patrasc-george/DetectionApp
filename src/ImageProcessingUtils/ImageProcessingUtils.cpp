@@ -1,6 +1,7 @@
 #include "ImageProcessingUtils.h"
 
 #include <opencv2/opencv.hpp>
+#include <QImage>
 
 /**
  * @brief Applies binary thresholding to an image.
@@ -9,7 +10,10 @@
  * @details This function applies binary thresholding to an image using OpenCV's threshold function. It sets all pixel values below the specified threshold to 0 and all pixel values above the threshold to 255. The resulting image is a binary image where all pixels are either black or white.
  */
 void binaryThresholding(cv::Mat& image, short threshold) {
+	if (image.type() != CV_8UC1)
+		cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
 	cv::threshold(image, image, threshold, 255, cv::THRESH_BINARY);
+	cv::cvtColor(image, image, cv::COLOR_GRAY2BGR);
 }
 
 /**
@@ -19,6 +23,10 @@ void binaryThresholding(cv::Mat& image, short threshold) {
  * @details This function applies zero thresholding to an image using OpenCV's threshold function. It sets all pixel values below the specified threshold to 0 and leaves all pixel values above the threshold unchanged. The resulting image is a grayscale image where all pixels below the threshold are black and all pixels above the threshold retain their original values.
  */
 void zeroThresholding(cv::Mat& image, short threshold) {
+	if (image.type() == CV_8UC1)
+		cv::cvtColor(image, image, cv::COLOR_GRAY2BGR);
+	if (image.type() == CV_8UC4)
+		cv::cvtColor(image, image, cv::COLOR_BGRA2BGR);
 	cv::threshold(image, image, threshold, 255, cv::THRESH_TOZERO);
 }
 
@@ -29,7 +37,10 @@ void zeroThresholding(cv::Mat& image, short threshold) {
  * @details This function applies adaptive thresholding to an image using OpenCV's adaptiveThreshold function. It calculates a different threshold for each pixel based on its local neighborhood and then applies binary thresholding using that calculated threshold. The resulting image is a binary image where all pixels are either black or white. The size of the local neighborhood and the method used to calculate the thresholds can be adjusted by changing the parameters of the adaptiveThreshold function call.
  */
 void adaptiveThresholding(cv::Mat& image, short threshold) {
+	if (image.type() != CV_8UC1)
+		cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
 	cv::adaptiveThreshold(image, image, threshold, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 11, 2);
+	cv::cvtColor(image, image, cv::COLOR_GRAY2BGR);
 }
 
 /**
@@ -38,7 +49,10 @@ void adaptiveThresholding(cv::Mat& image, short threshold) {
  * @details This function equalizes the histogram of an image using OpenCV's equalizeHist function. It redistributes the pixel values in such a way that their histogram is approximately flat. This can improve the contrast of an image by stretching out its intensity range. The resulting image is a grayscale image with improved contrast.
  */
 void histogramEqualization(cv::Mat& image) {
+	if (image.type() != CV_8UC1)
+		cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
 	cv::equalizeHist(image, image);
+	cv::cvtColor(image, image, cv::COLOR_GRAY2BGR);
 }
 
 /**
@@ -47,6 +61,8 @@ void histogramEqualization(cv::Mat& image) {
  * @details This function detects edges in an image using OpenCV's Laplacian function. It applies the Laplacian operator to the image, which calculates the second derivative of its intensity values. This highlights regions of rapid intensity change, which correspond to edges in the original image. The resulting edge map is then normalized and scaled to fit within the 0-255 range so that it can be displayed as a grayscale image.
  */
 void detectEdges(cv::Mat& image) {
+	if (image.type() == CV_8UC4)
+		cv::cvtColor(image, image, cv::COLOR_BGRA2BGR);
 	cv::Laplacian(image, image, CV_8U);
 	cv::normalize(image, image, 0, 255, cv::NORM_MINMAX);
 }
@@ -397,4 +413,58 @@ Timer::~Timer() {
 	end = std::chrono::steady_clock::now();
 	duration = end - start;
 	*counter = 1 / duration.count();
+}
+
+bool ConvertMat2QImage(const cv::Mat& src, QImage& dest) {
+	switch (src.type()) {
+	// 8-bit, 4 channel
+	case CV_8UC4:
+		dest = QImage(src.data, src.cols, src.rows, static_cast<int>(src.step), QImage::Format_ARGB32);
+		return true;
+
+	// 8-bit, 3 channel
+	case CV_8UC3:
+		dest = QImage(src.data, src.cols, src.rows, static_cast<int>(src.step), QImage::Format_RGB888).rgbSwapped();
+		return true;
+
+	// 8-bit, 1 channel
+	case CV_8UC1:
+		dest =QImage(src.data, src.cols, src.rows, static_cast<int>(src.step), QImage::Format_Grayscale8);
+		return true;
+	default:
+		std::cout << "ConvertMat2QImage() - cv::Mat image type not handled in switch:" << src.type() << std::endl;
+		return false;
+	}
+}
+
+bool ConvertQImage2Mat(const QImage& src, cv::Mat& dest) {
+	switch (src.format()) {
+	// 8-bit, 4 channel
+	case QImage::Format_ARGB32:
+	case QImage::Format_ARGB32_Premultiplied:
+		dest = cv::Mat(src.height(), src.width(), CV_8UC4, const_cast<uchar*>(src.bits()), static_cast<size_t>(src.bytesPerLine()));
+		return true;
+
+	// 8-bit, 3 channel
+	case QImage::Format_RGB32:
+		dest = cv::Mat (src.height(), src.width(), CV_8UC4, const_cast<uchar*>(src.bits()), static_cast<size_t>(src.bytesPerLine()));
+
+		cv::cvtColor(dest, dest, cv::COLOR_BGRA2BGR);   // drop the all-white alpha channel
+		return true;
+
+	// 8-bit, 3 channel
+	case QImage::Format_RGB888:
+
+		dest = cv::Mat(src.height(), src.width(), CV_8UC3, const_cast<uchar*>(src.bits()), static_cast<size_t>(src.bytesPerLine())).clone();
+		return true;
+
+	// 8-bit, 1 channel
+	case QImage::Format_Indexed8:
+		dest = cv::Mat (src.height(), src.width(), CV_8UC1, const_cast<uchar*>(src.bits()), static_cast<size_t>(src.bytesPerLine()));
+		return true;
+
+	default:
+		std::cout << "ConvertQImage2Mat() - QImage format not handled in switch:" << src.format() << std::endl;
+		return false;
+	}
 }

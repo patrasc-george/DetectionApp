@@ -249,10 +249,8 @@ void MainWindow::toggleCameraEvent() {
 		p.drawImage(imageContainer->size().width() / 2.0 - logo.size().width() / 2.0, imageContainer->size().height() / 2.0 - logo.size().height() / 2.0, logo);
 		p.drawText(0, imageContainer->size().height() / 2.0 + logo.size().height() / 2.0 + 20, imageContainer->size().width(), 10, Qt::AlignCenter, "Camera is turned off");
 		p.end();
-		cv::Mat  mat(img.height(), img.width(), CV_8UC4, const_cast<uchar*>(img.bits()), static_cast<size_t>(img.bytesPerLine()));
-
-		cv::cvtColor(mat, mat, cv::COLOR_BGRA2BGR);
-		frame = mat;
+		
+		frame = img;
 
 		displayImage();
 		delete currDet;
@@ -278,16 +276,16 @@ QString MainWindow::getImageFileName()
 void MainWindow::uploadImageEvent() {
 	fileName = getImageFileName();
 
-	if (fileName.isEmpty()) {
+	if (fileName.isEmpty())
 		return;
-	}
-	cv::Mat image = cv::imread(fileName.toStdString());
-	if (image.data != NULL)
-		frame = image;
-	else {
+
+	QImage img(fileName);
+	if (img.isNull()) {
 		QMessageBox::critical(this, "Error", QString("Couldnt't read image from %1. The file may be corrupted or not a valid image file.").arg(fileName));
 		return;
 	}
+	frame = img;
+
 	statusBar->showMessage(QString("Uploaded file: %1").arg(fileName));
 
 	menu->toggleCamera->setChecked(false);
@@ -432,18 +430,21 @@ void MainWindow::screenshotEvent() {
  * @details This function is called when a detector is selected from the list of available detectors. If a valid detector is selected, it attempts to detect objects in the current frame using the selected detector. If objects are detected, it updates the status bar with information about the detected objects.
  */
 void MainWindow::setDetector() {
-	if (currDet == nullptr) return;
+	if (currDet == nullptr) 
+		return;
 	try {
+		cv::Mat mat;
+		ConvertQImage2Mat(frame, mat);
 		if (currDet->getType() == cascade) {
-			currDet->detect(frame, menu->toggleFaceFeatures->isChecked());
+			currDet->detect(mat, menu->toggleFaceFeatures->isChecked());
 		}
 		else if (currDet->getType() == network) {
-			if (frame.type() == CV_8UC1) {
+			if (mat.type() == CV_8UC1) {
 				QMessageBox::critical(this, "Error", "This detector does not work on 1-channel images");
 				menu->detectorsList->setCurrentIndex(0);
 				return;
 			}
-			currDet->detect(frame, menu->showConfidence->isChecked());
+			currDet->detect(mat, menu->showConfidence->isChecked());
 		}
 
 		if (currDet->getLastRect().empty() == false) {
@@ -456,6 +457,7 @@ void MainWindow::setDetector() {
 				.arg(QString::fromStdString(currDet->currentClassName)));
 		}
 		else statusBar->clearMessage();
+		ConvertMat2QImage(mat, frame);
 	}
 	catch (const std::exception& e) {
 		QMessageBox::critical(this, "Error", e.what());
@@ -468,12 +470,7 @@ void MainWindow::setDetector() {
  * @details This function is called when the "Flip Horizontally" or "Flip Vertically" buttons are clicked. It checks the state of the buttons and flips the current frame horizontally or vertically accordingly.
  */
 void MainWindow::flipImage() {
-	if (menu->flipHorizontal->isChecked()) {
-		cv::flip(frame, frame, 1);
-	}
-	if (menu->flipVertical->isChecked()) {
-		cv::flip(frame, frame, 0);
-	}
+	frame = frame.mirrored(menu->flipHorizontal->isChecked(), menu->flipVertical->isChecked());
 }
 
 /**
@@ -481,20 +478,17 @@ void MainWindow::flipImage() {
  * @details This function converts the current frame to a QImage and sets the pixmap of the image item in the scene to the QImage. It then updates the scene rect to fit the size of the image and updates the resolution label with the resolution of the current frame.
  */
 void MainWindow::displayImage() {
-	QImage qimg;
-	if (isGrayscale)
-		qimg = QImage(frame.data, frame.cols, frame.rows, static_cast<int>(frame.step), QImage::Format_Grayscale8);
-	else
-		qimg = QImage(frame.data, frame.cols, frame.rows, static_cast<int>(frame.step), QImage::Format_BGR888);
-
-	pixmap.setPixmap(QPixmap::fromImage(qimg));
+	//QImage temp;
+	//if (ConvertMat2QImage(frame, temp))
+	//	qimg = temp;
+	pixmap.setPixmap(QPixmap::fromImage(frame));
 	imageContainer->scene()->setSceneRect(imageContainer->scene()->itemsBoundingRect());
 
 	preventReset();
 
 	QString res = QString("Resolution: %1 x %2  ")
-		.arg(QString::number(frame.size().width))
-		.arg(QString::number(frame.size().height));
+		.arg(QString::number(frame.size().width()))
+		.arg(QString::number(frame.size().height()));
 	if (!cameraIsOn && !imageIsUpload) {
 		resLabel->setText("");
 		fpsLabel->setText("");
@@ -515,13 +509,11 @@ void MainWindow::startVideoCapture() {
 	std::deque<int> fpsArray;
 	cv::VideoCapture cap(0);
 
-	isGrayscale = false;
-
 	if (!cap.isOpened()) {
 		qDebug() << "Could not open video camera.";
 		return;
 	}
-
+	cv::Mat mat;
 	while (cameraIsOn && imageContainer->isVisible()) {
 		// measure live fps, create a queue of 60 measurements and find the average value
 		Timer timer(fps);
@@ -532,9 +524,9 @@ void MainWindow::startVideoCapture() {
 			avgFps += f;
 		avgFps /= fpsArray.size();
 
-		if (!cap.read(frame))
+		if (!cap.read(mat))
 			break;
-
+		ConvertMat2QImage(mat, frame);
 		processImage();
 		fpsLabel->setText(QString("FPS: %1   (avg: %2)  ").arg(QString::number(fps)).arg(QString::number(avgFps)));
 		displayImage();
@@ -548,19 +540,18 @@ void MainWindow::startVideoCapture() {
  * @details This function is called when an image is uploaded or when an algorithm or detector is selected. If an image has been uploaded, it reads the image data from the file. It then calls the selectAlgorithmsEvent() function to apply any selected image processing algorithms to the current frame. It flips the current frame horizontally or vertically if the corresponding buttons are clicked. It then calls the setDetector() function to detect objects in the current frame using the selected detector. If an image has been uploaded, it displays the processed image in the image container.
  */
 void MainWindow::processImage() {
-	isGrayscale = false;
-
 	if (imageIsUpload)
-		frame = cv::imread(fileName.toStdString());
+		frame = QImage(fileName);
 
 	selectAlgorithmsEvent();
 	flipImage();
 	setDetector();
 
-	if (frame.empty())
+	if (frame.isNull())
 		return;
 
-	if (imageIsUpload) displayImage();
+	if (imageIsUpload) 
+		displayImage();
 }
 
 /**
@@ -591,40 +582,29 @@ void MainWindow::preventReset() {
  * @brief Applies selected image processing algorithms to the current frame.
  * @details This function is called when an image processing algorithm is selected from the list of available algorithms. It checks the state of the algorithm buttons and applies the selected algorithms to the current frame in the order in which they are listed in the menu. For example, if the "Histogram Equalization" and "Binary Thresholding" buttons are both checked, it will first apply histogram equalization to the current frame and then apply binary thresholding to the result.
  */
-void MainWindow::selectAlgorithmsEvent()
-{
+void MainWindow::selectAlgorithmsEvent() {
 	setOptions();
+
+	bool algActive = false;
 	for (QPushButton* btn : menu->imageAlgorithms->findChildren<QPushButton*>())
 		if (btn->isChecked()) {
+			algActive = true;
 			break;
 		}
+	if (!algActive)
+		return;
 
-	if (!isGrayscale && (menu->binaryThresholdingButton->isChecked() || menu->histogramEqualizationButton->isChecked() || menu->adaptiveThresholdingButton->isChecked())) {
-		isGrayscale = true;
-		cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
-	}
-
+	cv::Mat mat;
+	ConvertQImage2Mat(frame, mat);
 	if (menu->histogramEqualizationButton->isChecked())
-		histogramEqualization(frame);
+		histogramEqualization(mat);
 	if (menu->binaryThresholdingButton->isChecked())
-		binaryThresholding(frame, menu->thresholdControl->value());
+		binaryThresholding(mat, menu->thresholdControl->value());
 	if (menu->adaptiveThresholdingButton->isChecked())
-		adaptiveThresholding(frame, menu->thresholdControl->value());
-
-	if (menu->zeroThresholdingButton->isChecked()) {
-		if (isGrayscale) {
-			cv::cvtColor(frame, frame, cv::COLOR_GRAY2BGR);
-			isGrayscale = false;
-
-		}
-		zeroThresholding(frame, menu->thresholdControl->value());
-	}
-	if (menu->detectEdgesButton->isChecked()) {
-		if (isGrayscale) {
-			cv::cvtColor(frame, frame, cv::COLOR_GRAY2BGR);
-
-			isGrayscale = false;
-		}
-		detectEdges(frame);
-	}
+		adaptiveThresholding(mat, menu->thresholdControl->value());
+	if (menu->zeroThresholdingButton->isChecked())
+		zeroThresholding(mat, menu->thresholdControl->value());
+	if (menu->detectEdgesButton->isChecked())
+		detectEdges(mat);
+	ConvertMat2QImage(mat, frame);
 }

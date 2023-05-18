@@ -1,6 +1,6 @@
 #pragma once
 #include <opencv2/opencv.hpp>
-#include <stack>
+#include <Qimage>
 
 #ifdef IMAGEPROCESSINGUTILS_EXPORTS
 #define IMAGEPROCESSINGUTILS_API __declspec(dllexport)
@@ -8,7 +8,7 @@
 #define IMAGEPROCESSINGUTILS_API __declspec(dllimport)
 #endif
 
-static enum IMAGEPROCESSINGUTILS_API revertable_options {
+enum IMAGEPROCESSINGUTILS_API revertable_options {
 	CONFIDENCE,
 	THRESHOLD,
 	SHOW_FEATURES,
@@ -106,3 +106,7 @@ public:
 	Timer(int& c);
 	~Timer();
 };
+
+bool IMAGEPROCESSINGUTILS_API ConvertMat2QImage(const cv::Mat& src, QImage& dest);
+
+bool IMAGEPROCESSINGUTILS_API ConvertQImage2Mat(const QImage& src, cv::Mat& dest);
