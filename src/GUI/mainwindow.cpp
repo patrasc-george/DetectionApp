@@ -21,11 +21,6 @@
 #define modelsJSON "../data/detectors.json"
 QVector<QString> names = ModelLoader::getNames(modelsJSON);
 
-/**
- * @brief Constructs a MainWindow object.
- * @param[in] parent The parent widget of the MainWindow object.
- * @details This constructor initializes a MainWindow object with the provided parent widget. It creates and initializes various components such as a menu, image container, and status bar. These components are used to interact with the application and control its behavior. The constructor also connects signals emitted by the menu controls to slots in the MainWindow object that handle those signals. The components are arranged in a layout and added to the MainWindow widget.
- */
 MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	// instantiate the list of detectors
 	this->currDet = nullptr;
@@ -168,10 +163,6 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	}
 }
 
-/**
- * @brief Sets the options for the menu based on the current state of the application.
- * @details This function enables or disables various menu options and sets their text or checked state based on the current state of the application. For example, if the camera is turned on, the "Turn Camera On" button will be changed to "Turn Camera Off". Similarly, if an image has been uploaded, certain options such as zooming in and out will be enabled.
- */
 void MainWindow::setOptions()
 {
 	menu->detectorsList->setEnabled(cameraIsOn || imageIsUpload);
@@ -216,10 +207,6 @@ void MainWindow::setOptions()
 	menu->imageAlgorithms->setVisible(cameraIsOn || imageIsUpload);
 }
 
-/**
- * @brief Toggles the camera on or off.
- * @details This function is called when the "Turn Camera On/Off" button is clicked. It checks the state of the button and sets the cameraIsOn and imageIsUpload variables accordingly. It then calls the setOptions() function to update the menu options based on the new state. If the camera is turned on, it starts video capture and selects a detector. If the camera is turned off, it displays an image indicating that the camera is turned off.
- */
 void MainWindow::toggleCameraEvent() {
 	cameraIsOn = menu->toggleCamera->isChecked();
 	menu->uploadButton->setChecked(false);
@@ -249,7 +236,7 @@ void MainWindow::toggleCameraEvent() {
 		p.drawImage(imageContainer->size().width() / 2.0 - logo.size().width() / 2.0, imageContainer->size().height() / 2.0 - logo.size().height() / 2.0, logo);
 		p.drawText(0, imageContainer->size().height() / 2.0 + logo.size().height() / 2.0 + 20, imageContainer->size().width(), 10, Qt::AlignCenter, "Camera is turned off");
 		p.end();
-		
+
 		frame = img;
 
 		displayImage();
@@ -258,21 +245,11 @@ void MainWindow::toggleCameraEvent() {
 	}
 }
 
-/**
- * @brief Returns the file name of an image selected by the user.
- * @details This function opens a file dialog and allows the user to select an image file. It returns the file name of the selected image.
- * @return A QString representing the file name of the selected image.
- */
-
 QString MainWindow::getImageFileName()
 {
 	return QFileDialog::getOpenFileName(this, tr("Open Image"), QStandardPaths::standardLocations(QStandardPaths::PicturesLocation).first(), tr("Image Files (*.png *.jpg *.bmp)"));
 }
 
-/**
- * @brief Uploads an image selected by the user.
- * @details This function is called when the "Upload Image" button is clicked. It calls the getImageFileName() function to get the file name of the selected image. If a valid image file is selected, it reads the image data and sets the frame variable to the image data. It then updates the menu options and displays the uploaded image.
- */
 void MainWindow::uploadImageEvent() {
 	fileName = getImageFileName();
 
@@ -304,10 +281,6 @@ void MainWindow::uploadImageEvent() {
 	displayImage();
 }
 
-/**
- * @brief Selects a detector from the list of available detectors.
- * @details This function is called when a detector is selected from the list of available detectors. It deletes the current detector object and sets it to nullptr. If a valid detector is selected, it attempts to load the detector from the modelsJSON file. If the detector is successfully loaded, it sets the currDet variable to the loaded detector object. If an image has been uploaded, it processes the image using the selected detector. It then calls the setOptions() function to update the menu options based on the new state.
- */
 void MainWindow::selectDetectorEvent() {
 	delete currDet;
 	currDet = nullptr;
@@ -392,20 +365,12 @@ void MainWindow::selectDetectorEvent() {
 	setOptions();
 }
 
-/**
- * @brief Changes the minimum confidence value for object detection.
- * @details This function is called when the minimum confidence value is changed using the slider in the menu. It sets the minimum confidence value of the current detector to the value of the slider. If an image has been uploaded, it processes the image using the new minimum confidence value.
- */
 void MainWindow::changeMinConfEvent() {
 	currDet->setMinConfidence(menu->confControl->value() / static_cast<float>(100));
 	if (imageIsUpload)
 		processImage();
 }
 
-/**
- * @brief Saves a screenshot of the current image.
- * @details This function is called when the "Save Screenshot" button is clicked. It opens a file dialog and allows the user to select a file name and location to save the screenshot. If a valid file name is selected, it saves a screenshot of the current image to the specified file.
- */
 void MainWindow::screenshotEvent() {
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Save Image File"),
 		QString(),
@@ -425,12 +390,8 @@ void MainWindow::screenshotEvent() {
 	}
 }
 
-/**
- * @brief Sets the detector for object detection.
- * @details This function is called when a detector is selected from the list of available detectors. If a valid detector is selected, it attempts to detect objects in the current frame using the selected detector. If objects are detected, it updates the status bar with information about the detected objects.
- */
 void MainWindow::setDetector() {
-	if (currDet == nullptr) 
+	if (currDet == nullptr)
 		return;
 	try {
 		cv::Mat mat;
@@ -465,18 +426,10 @@ void MainWindow::setDetector() {
 	}
 }
 
-/**
- * @brief Flips the current image horizontally or vertically.
- * @details This function is called when the "Flip Horizontally" or "Flip Vertically" buttons are clicked. It checks the state of the buttons and flips the current frame horizontally or vertically accordingly.
- */
 void MainWindow::flipImage() {
 	frame = frame.mirrored(menu->flipHorizontal->isChecked(), menu->flipVertical->isChecked());
 }
 
-/**
- * @brief Displays the current image in the image container.
- * @details This function converts the current frame to a QImage and sets the pixmap of the image item in the scene to the QImage. It then updates the scene rect to fit the size of the image and updates the resolution label with the resolution of the current frame.
- */
 void MainWindow::displayImage() {
 	//QImage temp;
 	//if (ConvertMat2QImage(frame, temp))
@@ -500,10 +453,6 @@ void MainWindow::displayImage() {
 
 }
 
-/**
- * @brief Starts video capture from the camera.
- * @details This function is called when the camera is turned on. It opens a video capture object and reads frames from the camera. It processes each frame using the selected detector and displays it in the image container. It also updates the FPS label with the current FPS value.
- */
 void MainWindow::startVideoCapture() {
 	int fps = 0, avgFps = 0;
 	std::deque<int> fpsArray;
@@ -535,10 +484,6 @@ void MainWindow::startVideoCapture() {
 	QCoreApplication::processEvents();
 }
 
-/**
- * @brief Processes the current image using the selected algorithms and detector.
- * @details This function is called when an image is uploaded or when an algorithm or detector is selected. If an image has been uploaded, it reads the image data from the file. It then calls the selectAlgorithmsEvent() function to apply any selected image processing algorithms to the current frame. It flips the current frame horizontally or vertically if the corresponding buttons are clicked. It then calls the setDetector() function to detect objects in the current frame using the selected detector. If an image has been uploaded, it displays the processed image in the image container.
- */
 void MainWindow::processImage() {
 	if (imageIsUpload)
 		frame = QImage(fileName);
@@ -550,24 +495,16 @@ void MainWindow::processImage() {
 	if (frame.isNull())
 		return;
 
-	if (imageIsUpload) 
+	if (imageIsUpload)
 		displayImage();
 }
 
-/**
- * @brief Changes the threshold value for binary thresholding.
- * @details This function is called when the threshold value is changed using the slider in the menu. If an image has been uploaded, it processes the image using the new threshold value and updates the status bar with information about the applied threshold value.
- */
 void MainWindow::changeThresholdEvent() {
 	if (imageIsUpload)
 		processImage();
 	statusBar->showMessage(QString("Applied binary thresholding: %1").arg(menu->thresholdControl->value()));
 }
 
-/**
- * @brief Prevents the zoom level from being reset when other actions are applied to the image.
- * @details This function is called when other actions are applied to the image or when the window is resized. It fits the image in view and maintains the current zoom level.
- */
 void MainWindow::preventReset() {
 	// prevent the container from losing the zoom applying other actions on the image (e.g. flip) or on resize
 	imageContainer->fitInView(&pixmap, Qt::KeepAspectRatio);
@@ -578,10 +515,6 @@ void MainWindow::preventReset() {
 	}
 }
 
-/**
- * @brief Applies selected image processing algorithms to the current frame.
- * @details This function is called when an image processing algorithm is selected from the list of available algorithms. It checks the state of the algorithm buttons and applies the selected algorithms to the current frame in the order in which they are listed in the menu. For example, if the "Histogram Equalization" and "Binary Thresholding" buttons are both checked, it will first apply histogram equalization to the current frame and then apply binary thresholding to the result.
- */
 void MainWindow::selectAlgorithmsEvent() {
 	setOptions();
 

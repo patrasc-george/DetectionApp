@@ -4,14 +4,6 @@
 #include <fstream>
 #include <opencv2/opencv.hpp>
 
-/**
- * @brief Draws a label on an image.
- * @param[in,out] image The image to draw the label on.
- * @param[in] label The text of the label to draw.
- * @param[in] left The x-coordinate of the left side of the label.
- * @param[in] top The y-coordinate of the top side of the label.
- * @details This function draws a text label on an image using OpenCV's putText function. The label is drawn with a specific font, size, color and thickness. The position of the label is determined by the provided left and top coordinates. If the top coordinate is less than the height of the label, it is adjusted to ensure that the label is fully visible on the image.
- */
 void drawLabel(cv::Mat& image, std::string label, int left, int top) {
     int baseLine;
     cv::Size label_size = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.7, 1.5, &baseLine);
@@ -21,13 +13,6 @@ void drawLabel(cv::Mat& image, std::string label, int left, int top) {
     putText(image, label, tlc, cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(147, 167, 255), 2);
 }
 
-/**
- * @brief Constructs a FaceDetector object.
- * @param[in] props A detectorProperties object containing properties for the face detector.
- * @param[in] eyeClassifierPath A string representing the path to the eye classifier file.
- * @param[in] smileClassifierPath A string representing the path to the smile classifier file.
- * @details This constructor initializes a FaceDetector object with the provided properties. It sets the current class name to "face" and sets the model path, whether or not to swap red and blue channels, and the type of detector (cascade). It also stores the paths to the eye and smile classifier files for later use during initialization.
- */
 FaceDetector::FaceDetector(detectorProperties& props, std::string eyeClassifierPath, std::string smileClassifierPath) {
     currentClassName = "face";
     modelPath = props.modelPath;
@@ -37,11 +22,6 @@ FaceDetector::FaceDetector(detectorProperties& props, std::string eyeClassifierP
     type = cascade;
 }
 
-/**
- * @brief Initializes the FaceDetector object.
- * @return An integer representing the success or failure of initialization.
- * @details This function initializes a FaceDetector object by loading its classifiers. It checks if the model path is valid and then attempts to load the face classifier from that path. If successful, it also attempts to load the eye and smile classifiers if their paths were provided. If any of these steps fail, it returns an error code indicating what went wrong. If all steps are successful, it returns 1 to indicate success.
- */
 int FaceDetector::init() {
     if (modelPath == "\0")
         return -2;
@@ -55,12 +35,6 @@ int FaceDetector::init() {
     return 1;
 }
 
-/**
- * @brief Detects faces in an image and optionally draws features on the image.
- * @param[in,out] image The image to detect faces in.
- * @param[in] showFeatures A boolean indicating whether or not to draw features on the image.
- * @details This function detects faces in an image using a face classifier. If the showFeatures parameter is true, it also attempts to detect eyes and smiles within each detected face using eye and smile classifiers. If any faces are detected, it draws rectangles around them on the image and labels them with the current class name. If showFeatures is true and any eyes or smiles are detected, it also draws circles around the eyes and rectangles around the smiles on the image.
- */
 void FaceDetector::detect(cv::Mat& image, bool showFeatures) {
     if (image.type() == CV_8UC4)
         cv::cvtColor(image, image, cv::COLOR_BGRA2BGR);
@@ -107,29 +81,14 @@ void FaceDetector::detect(cv::Mat& image, bool showFeatures) {
     }
 }
 
-/**
- * @brief Returns the last detected face rectangle.
- * @return A cv::Rect representing the last detected face rectangle.
- * @details This function returns the last face rectangle that was detected by the detect function. If no faces were detected in the last call to detect, it returns an empty cv::Rect.
- */
 cv::Rect FaceDetector::getLastRect() {
     return facesInFrame.empty() ? cv::Rect() : facesInFrame.back();
 }
 
-/**
- * @brief Returns the last detected object rectangle.
- * @return A cv::Rect representing the last detected object rectangle.
- * @details This function returns the last object rectangle that was detected by an ObjectDetector. The specific behavior of this function depends on how it is implemented in a derived class of ObjectDetector.
- */
 cv::Rect ObjectDetector::getLastRect() {
     return lastRect;
 }
 
-/**
- * @brief Constructs an ObjectDetector object.
- * @param[in] props A detectorProperties object containing properties for the object detector.
- * @details This constructor initializes an ObjectDetector object with the provided properties. It sets the model path, class names path, inference graph path, framework, whether or not to swap red and blue channels, mean values for normalization, and the type of detector (network).
- */
 ObjectDetector::ObjectDetector(detectorProperties props) {
     modelPath = props.modelPath;
     classNamesPath = props.classNamesPath;
@@ -140,11 +99,6 @@ ObjectDetector::ObjectDetector(detectorProperties props) {
     type = network;
 }
 
-/**
- * @brief Initializes the ObjectDetector object.
- * @return An integer representing the success or failure of initialization.
- * @details This function initializes an ObjectDetector object by loading its model and class names. It checks if the model path and inference graph path are valid and then attempts to load the model from those paths using the specified framework. If successful, it also reads the class names from the class names file and stores them in a vector. If any of these steps fail, it returns an error code indicating what went wrong. If all steps are successful, it returns 1 to indicate success.
- */
 int ObjectDetector::init() {
     if (modelPath == "\0")
         return -2;
@@ -163,12 +117,6 @@ int ObjectDetector::init() {
     return 1;
 }
 
-/**
- * @brief Detects objects in an image and optionally draws confidence values on the image.
- * @param[in,out] image The image to detect objects in.
- * @param[in] showConf A boolean indicating whether or not to draw confidence values on the image.
- * @details This function detects objects in an image using a neural network model. It preprocesses the image by creating a blob from it and then feeds it into the model. The model outputs a matrix of detections, each row representing a detected object. For each detection, it checks if the confidence value is above a minimum threshold. If it is, it draws a rectangle around the detected object on the image and labels it with the class name and optionally the confidence value.
- */
 void ObjectDetector::detect(cv::Mat& image, bool showConf) {
     if (image.type() == CV_8UC4)
         cv::cvtColor(image, image, cv::COLOR_BGRA2BGR);
@@ -220,11 +168,6 @@ void ObjectDetector::detect(cv::Mat& image, bool showConf) {
     }
 }
 
-/**
- * @brief Sets the minimum confidence value for object detection.
- * @param[in] c The minimum confidence value to set.
- * @details This function sets the minimum confidence value for object detection. Only detections with a confidence value above this threshold will be considered valid and drawn on the image by the detect function. The provided value must be between 0 and 1 (exclusive).
- */
 void ObjectDetector::setMinConfidence(float c) {
     if (c > 0 && c < 1)
         minConfidence = c;
