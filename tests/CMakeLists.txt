@@ -34,8 +34,3 @@ add_test(
     COMMAND vstest.console.exe Tests.dll
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin/$<CONFIGURATION>
     )
-
-install(TARGETS ${PROJECT_NAME}
-        RUNTIME DESTINATION "${CMAKE_BINARY_DIR}/DeliveryPackage/bin"
-        LIBRARY DESTINATION "${CMAKE_BINARY_DIR}/DeliveryPackage/lib"
-		)

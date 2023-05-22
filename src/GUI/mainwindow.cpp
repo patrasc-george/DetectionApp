@@ -16,7 +16,7 @@
 #include <QJsonObject>
 
 #include "ImageProcessingUtils.h"
-#include "../Application/ModelLoader.h"
+#include "ModelLoader.h"
 
 #define modelsJSON "../data/detectors.json"
 QVector<QString> names = ModelLoader::getNames(modelsJSON);
@@ -247,7 +247,7 @@ void MainWindow::toggleCameraEvent() {
 
 QString MainWindow::getImageFileName()
 {
-	return QFileDialog::getOpenFileName(this, tr("Open Image"), QStandardPaths::standardLocations(QStandardPaths::PicturesLocation).first(), tr("Image Files (*.png *.jpg *.bmp)"));
+	return QFileDialog::getOpenFileName(this, tr("Open Image"), QStandardPaths::standardLocations(QStandardPaths::PicturesLocation).first(), tr("Image Files (*.png *.jpg *.jpeg *.bmp)"));
 }
 
 void MainWindow::uploadImageEvent() {
@@ -284,8 +284,12 @@ void MainWindow::uploadImageEvent() {
 void MainWindow::selectDetectorEvent() {
 	delete currDet;
 	currDet = nullptr;
-	if (menu->detectorsList->currentIndex() == 0)
+	if (menu->detectorsList->currentIndex() == 0) {
+		setOptions();
+		if (imageIsUpload)
+			processImage();
 		return;
+	}
 
 	QString currText = menu->detectorsList->currentText();
 	int index = menu->detectorsList->findText(currText);
@@ -431,9 +435,6 @@ void MainWindow::flipImage() {
 }
 
 void MainWindow::displayImage() {
-	//QImage temp;
-	//if (ConvertMat2QImage(frame, temp))
-	//	qimg = temp;
 	pixmap.setPixmap(QPixmap::fromImage(frame));
 	imageContainer->scene()->setSceneRect(imageContainer->scene()->itemsBoundingRect());
 
@@ -450,7 +451,6 @@ void MainWindow::displayImage() {
 		resLabel->setText(res);
 
 	QCoreApplication::processEvents();
-
 }
 
 void MainWindow::startVideoCapture() {

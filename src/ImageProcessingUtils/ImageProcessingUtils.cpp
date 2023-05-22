@@ -21,7 +21,7 @@ void zeroThresholding(cv::Mat& image, short threshold) {
 void adaptiveThresholding(cv::Mat& image, short threshold) {
 	if (image.type() != CV_8UC1)
 		cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
-	cv::adaptiveThreshold(image, image, threshold, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 11, 2);
+	cv::adaptiveThreshold(image, image, threshold, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 11, 2);
 	cv::cvtColor(image, image, cv::COLOR_GRAY2BGR);
 }
 
@@ -292,7 +292,7 @@ bool ConvertQImage2Mat(const QImage& src, cv::Mat& dest) {
 	// 8-bit, 3 channel
 	case QImage::Format_RGB888:
 
-		dest = cv::Mat(src.height(), src.width(), CV_8UC3, const_cast<uchar*>(src.bits()), static_cast<size_t>(src.bytesPerLine())).clone();
+		dest = cv::Mat(src.height(), src.width(), CV_8UC3, const_cast<uchar*>(src.rgbSwapped().bits()), static_cast<size_t>(src.rgbSwapped().bytesPerLine())).clone();
 		return true;
 
 	// 8-bit, 1 channel

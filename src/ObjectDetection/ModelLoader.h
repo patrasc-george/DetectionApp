@@ -1,6 +1,12 @@
 #include <ObjectDetection.h>
 
-static enum ModelErrors {
+#ifdef OBJECTDETECTION_EXPORTS
+#define OBJECTDETECTION_API __declspec(dllexport)
+#else
+#define OBJECTDETECTION_API __declspec(dllimport)
+#endif
+
+enum ModelErrors {
 	NAME_NOT_FOUND = 0,
 	TYPE_NOT_PROVIDED = -1,
 	MODEL_PATH_EMPTY = -2,
@@ -9,7 +15,7 @@ static enum ModelErrors {
 	CANNOT_READ_NETWORK = -5
 };
 
-class ModelLoader {
+class OBJECTDETECTION_API ModelLoader {
 public:
     /**
      * @brief Loads all detectors from a JSON file.

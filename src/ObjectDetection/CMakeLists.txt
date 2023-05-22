@@ -10,5 +10,11 @@ file(GLOB SOURCE_FILES "*.cpp")
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
 
 # Link against OpenCV
-target_include_directories(${PROJECT_NAME} PUBLIC ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS})
+target_include_directories(${PROJECT_NAME} PUBLIC 
+	${OpenCV_INCLUDE_DIRS}
+	"${CMAKE_SOURCE_DIR}/src/ObjectDetection"
+	)
+target_link_libraries(${PROJECT_NAME} PUBLIC 
+	${OpenCV_LIBS}
+	Qt6::Widgets
+	)

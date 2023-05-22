@@ -10,7 +10,7 @@ void drawLabel(cv::Mat& image, std::string label, int left, int top) {
 
     top = std::max(top, label_size.height);
     cv::Point tlc = cv::Point(left + 4, top + label_size.height + 6);
-    putText(image, label, tlc, cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(147, 167, 255), 2);
+    putText(image, label, tlc, cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(143, 237, 76), 2);
 }
 
 FaceDetector::FaceDetector(detectorProperties& props, std::string eyeClassifierPath, std::string smileClassifierPath) {
@@ -65,7 +65,7 @@ void FaceDetector::detect(cv::Mat& image, bool showFeatures) {
     }
     for (auto&& face : facesInFrame) {
         if (face.size().width > 10 || face.size().height > 10) {
-            rectangle(image, face, cv::Scalar(147, 167, 255), 2);
+            rectangle(image, face, cv::Scalar(143, 237, 76), 2);
             drawLabel(image, currentClassName, face.x, face.y);
         }
         if (showFeatures == false)
