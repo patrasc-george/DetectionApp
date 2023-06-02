@@ -1,6 +1,6 @@
 project(Tests)
 
-set(LibrarySources DetectionAppTests.cpp)
+set(LibrarySources DetectorTests.cpp OptionsHistoryTests.cpp ProcessingAlgorithmsTests.cpp Qt_and_CV_image_conversion_Tests.cpp)
 add_library(${PROJECT_NAME} SHARED ${LibrarySources})
 qt_add_resources(${PROJECT_NAME} "images"
     PREFIX "/images"
