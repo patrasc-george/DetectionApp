@@ -32,7 +32,12 @@ add_dependencies(${PROJECT_NAME}
 	ObjectDetection
 	)
 
-#Link this project with the runtime output dir. Algo and Utils are also linked to this 
 target_link_directories(${PROJECT_NAME} PUBLIC
 	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
 )
+
+
+install(
+  TARGETS ${PROJECT_NAME}
+  DESTINATION bin
+  )

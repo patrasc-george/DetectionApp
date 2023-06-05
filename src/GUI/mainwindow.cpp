@@ -21,7 +21,14 @@
 #define modelsJSON "../data/detectors.json"
 QVector<QString> names = ModelLoader::getNames(modelsJSON);
 
-MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
+void MainWindow::closeEvent(QCloseEvent* event) {
+	// close the entire application
+	qApp->closeAllWindows();
+	qApp->exit(0);
+	exit(0);
+}
+
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 	// instantiate the list of detectors
 	this->currDet = nullptr;
 
@@ -141,7 +148,7 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	vbox->addLayout(hbox);
 	vbox->addWidget(statusBar);
 	hbox->setContentsMargins(20, 0, 20, 0);
-	setLayout(vbox);
+	//setLayout(vbox);
 	layout()->setContentsMargins(0, 20, 0, 0);
 
 	// set the initial values of the menu controls
@@ -161,6 +168,11 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
 	for (QString name : names) {
 		menu->detectorsList->addItem(name);
 	}
+
+	QWidget* centralWidget = new QWidget;
+	centralWidget->setLayout(vbox);
+	setCentralWidget(centralWidget);
+
 }
 
 void MainWindow::setOptions()
@@ -256,12 +268,13 @@ void MainWindow::uploadImageEvent() {
 	if (fileName.isEmpty())
 		return;
 
-	QImage img(fileName);
-	if (img.isNull()) {
+	QImage backup_frame = frame;
+	frame = QImage(fileName);
+	if (frame.isNull()) {
 		QMessageBox::critical(this, "Error", QString("Couldnt't read image from %1. The file may be corrupted or not a valid image file.").arg(fileName));
+		frame = backup_frame;
 		return;
 	}
-	frame = img;
 
 	statusBar->showMessage(QString("Uploaded file: %1").arg(fileName));
 
@@ -481,7 +494,6 @@ void MainWindow::startVideoCapture() {
 		displayImage();
 	}
 	cap.release();
-	QCoreApplication::processEvents();
 }
 
 void MainWindow::processImage() {

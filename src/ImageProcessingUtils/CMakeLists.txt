@@ -16,3 +16,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 	Qt6::Core
 	${OpenCV_LIBS}
 	)
+	
+
+install(
+  TARGETS ${PROJECT_NAME}
+  DESTINATION bin
+  )

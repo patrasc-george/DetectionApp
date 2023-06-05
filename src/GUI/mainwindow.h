@@ -18,7 +18,7 @@
 #include "menuOptions.h"
 
 
-class MainWindow : public QWidget {
+class MainWindow : public QMainWindow {
 	Q_OBJECT
 
 public:
@@ -28,6 +28,10 @@ public:
 	QStatusBar* statusBar;
 	QLabel* resLabel;
 	QLabel* fpsLabel;
+
+protected:
+	void closeEvent(QCloseEvent* event) override;
+
 
 public:
 	/**
@@ -52,7 +56,7 @@ public:
 	 */
 	void startVideoCapture();
 
-public slots:
+private slots:
 	/**
 	 * @brief Toggles the camera on or off.
 	 * @details This function is called when the "Turn Camera On/Off" button is clicked.

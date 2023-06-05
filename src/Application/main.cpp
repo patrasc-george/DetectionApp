@@ -24,7 +24,5 @@ int main(int argc, char* argv[]) {
 	window.show();
 	window.setWindowIcon(QIcon(":/assets/camera_dark.png"));
 	window.menu->toggleCamera->setChecked(true); // camera is on
-
-	QCoreApplication::exit(0);
 	return app.exec();
 }

@@ -9,6 +9,10 @@ set(CMAME_AUTORCC ON)
 qt6_add_resources(RES "../../resources.qrc")
 add_executable(${PROJECT_NAME} ${RES} ${HEADER_FILES} ${SOURCE_FILES})
 
+set_target_properties(${PROJECT_NAME}
+                      PROPERTIES OUTPUT_NAME "Detection App"
+					  )
+
 # Add the libraries
 add_dependencies(${PROJECT_NAME}
 	ObjectDetection
@@ -41,3 +45,11 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     WIN32_EXECUTABLE ON
     MACOSX_BUNDLE ON
 )
+
+#put all images into the resource directory
+	install(DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/../src/data" DESTINATION .)
+
+install(
+  TARGETS ${PROJECT_NAME}
+  DESTINATION bin
+  )

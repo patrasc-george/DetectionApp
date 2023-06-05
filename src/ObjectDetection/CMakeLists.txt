@@ -18,3 +18,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 	${OpenCV_LIBS}
 	Qt6::Widgets
 	)
+	
+
+install(
+  TARGETS ${PROJECT_NAME}
+  DESTINATION bin
+  )
