@@ -1,8 +1,11 @@
 #include "CppUnitTest.h"
 #include "../src/ImageProcessingUtils/ImageProcessingUtils.h"
+#include <filesystem>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
-#define TEST_IMAGE "C:/Siemens/detectionapp/tests/test_image.png"
+
+const std::string BUILD_PATH = std::filesystem::current_path().parent_path().parent_path().string();
+const std::string TEST_IMAGE = BUILD_PATH + "/../tests/test_image.png";
 
 namespace DetectionAppTests
 {
@@ -18,7 +21,7 @@ public:
 
 	TEST_METHOD(Read_qimg)
 	{
-		const QImage qimg(TEST_IMAGE);
+		const QImage qimg(TEST_IMAGE.c_str());
 		Assert::IsFalse(qimg.isNull());
 	}
 
@@ -32,7 +35,7 @@ public:
 
 	TEST_METHOD(ConvertQImage2Mat_test)
 	{
-		const QImage qimgIn(TEST_IMAGE);
+		const QImage qimgIn(TEST_IMAGE.c_str());
 		cv::Mat matOut;
 		Assert::IsTrue(ConvertQImage2Mat(qimgIn, matOut));
 	}

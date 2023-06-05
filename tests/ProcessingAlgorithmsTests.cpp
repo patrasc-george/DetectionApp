@@ -1,8 +1,11 @@
 #include "CppUnitTest.h"
 #include "../src/ImageProcessingUtils/ImageProcessingUtils.h"
+#include <filesystem>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
-#define TEST_IMAGE "C:/Siemens/detectionapp/tests/test_image.png"
+
+const std::string BUILD_PATH = std::filesystem::current_path().parent_path().parent_path().string();
+const std::string TEST_IMAGE = BUILD_PATH + "/../tests/test_image.png";
 
 namespace DetectionAppTests
 {
@@ -11,7 +14,7 @@ public:
 
 	TEST_METHOD(BinaryThreshold_test)
 	{
-		QImage qimg(TEST_IMAGE);
+		QImage qimg(TEST_IMAGE.c_str());
 		cv::Mat mat;
 		ConvertQImage2Mat(qimg, mat);
 		binaryThresholding(mat, 100);
@@ -21,7 +24,7 @@ public:
 
 	TEST_METHOD(HistogramEqualization_test)
 	{
-		QImage qimg(TEST_IMAGE);
+		QImage qimg(TEST_IMAGE.c_str());
 		cv::Mat mat;
 		ConvertQImage2Mat(qimg, mat);
 		histogramEqualization(mat);
@@ -31,7 +34,7 @@ public:
 
 	TEST_METHOD(AdaptiveThreshold_test)
 	{
-		QImage qimg(TEST_IMAGE);
+		QImage qimg(TEST_IMAGE.c_str());
 		cv::Mat mat;
 		ConvertQImage2Mat(qimg, mat);
 		adaptiveThresholding(mat, 100);
@@ -41,7 +44,7 @@ public:
 
 	TEST_METHOD(ZeroThreshold_test)
 	{
-		QImage qimg(TEST_IMAGE);
+		QImage qimg(TEST_IMAGE.c_str());
 		cv::Mat mat;
 		ConvertQImage2Mat(qimg, mat);
 		zeroThresholding(mat, 100);
@@ -51,7 +54,7 @@ public:
 
 	TEST_METHOD(EdgeDetection_test)
 	{
-		QImage qimg(TEST_IMAGE);
+		QImage qimg(TEST_IMAGE.c_str());
 		cv::Mat mat;
 		ConvertQImage2Mat(qimg, mat);
 		detectEdges(mat);
