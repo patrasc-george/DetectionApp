@@ -35,6 +35,8 @@ Menu::Menu(QWidget* parent)
 	detectEdgesButton = new QPushButton("Detect Edges", imageAlgorithms);
 	detectEdgesButton->setCheckable(true);
 
+	editDetectorsBtn = new QPushButton("Edit detectors");
+
 	QVBoxLayout* algVbox = new QVBoxLayout;
 	algVbox->addWidget(binaryThresholdingButton);
 	algVbox->addWidget(zeroThresholdingButton);
@@ -77,7 +79,7 @@ Menu::Menu(QWidget* parent)
 	toggleCamera->setCheckable(true);
 	toggleCamera->setObjectName("CameraToggle");
 
-	detectorsList->addItem("No detection");
+	detectorsList->addItem("None");
 
 	// we add the controls in our vertical box
 	QGridLayout* miniButtons = new QGridLayout;
@@ -103,6 +105,7 @@ Menu::Menu(QWidget* parent)
 	vbox->addStretch(1); // add spacing so the next controls will appear at the bottom of the menu
 	vbox->addWidget(uploadButton);
 	vbox->addWidget(screenshot);
+	vbox->addWidget(editDetectorsBtn);
 
 	vbox->setContentsMargins(10, 0, 10, 0); // add some whitespace
 	setLayout(vbox); // our menu will show the vertical box

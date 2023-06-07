@@ -17,6 +17,7 @@
 
 #include "ImageProcessingUtils.h"
 #include "ModelLoader.h"
+#include "ModelLoader_GUI.h"
 
 #define modelsJSON "../data/detectors.json"
 QVector<QString> names = ModelLoader::getNames(modelsJSON);
@@ -138,6 +139,14 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 		imageContainer->fitInView(&pixmap, Qt::KeepAspectRatio);
 		setOptions();
 		});
+	connect(menu->editDetectorsBtn, &QPushButton::clicked, [&] {
+		// open the detectors editor
+		DetectorsList* editor = new DetectorsList(modelsJSON);
+		editor->show();
+		connect(editor, &DetectorsList::detectorRemoved, this, &MainWindow::detectorEditEvent);
+		connect(editor, &DetectorsList::detectorAdded, this, &MainWindow::detectorEditEvent);
+		connect(editor, &DetectorsList::detectorEdited, this, &MainWindow::detectorEditEvent);
+	});
 
 	imageContainer->setMinimumSize(640, 480);
 
@@ -552,4 +561,21 @@ void MainWindow::selectAlgorithmsEvent() {
 	if (menu->detectEdgesButton->isChecked())
 		detectEdges(mat);
 	ConvertMat2QImage(mat, frame);
+}
+
+void MainWindow::detectorEditEvent() {
+	// refresh the detector list
+	
+	// delete every detector except the first one (None)
+	menu->detectorsList->setCurrentIndex(0);
+	for (int i = menu->detectorsList->count() - 1; i > 0; i--)
+		menu->detectorsList->removeItem(i);
+	QStringList names = ModelLoader::getNames(modelsJSON);
+
+	for (auto&& name : names)
+		menu->detectorsList->addItem(name);
+
+	// if the current detector is not in the list, set it to None
+	if (names.contains(menu->detectorsList->currentText()) == false)
+		menu->detectorsList->setCurrentIndex(0);
 }

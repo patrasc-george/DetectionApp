@@ -1,31 +1,30 @@
 [
   {
     "name": "Frontal Face",
-    "type": "cascade",
     "paths": {
-      "face": "../data/lbpcascades/lbpcascade_frontalface_improved.xml",
       "eyes": "../data/haarcascades/haarcascade_eye_tree_eyeglasses.xml",
+      "face": "../data/lbpcascades/lbpcascade_frontalface_improved.xml",
       "smile": "../data/haarcascades/haarcascade_smile.xml"
-    }
-  },
-  {
-    "name": "Profile Face",
-    "type": "cascade",
-    "paths": {
-    }
+    },
+    "properties": null,
+    "type": "cascade"
   },
   {
     "name": "Mobile Net v2",
-    "type": "network",
+    "paths": {
+      "classes": "../data/models/mobilenet_v2/object_detection_classes_coco.txt",
+      "inf": "../data/models/mobilenet_v2/frozen_inference_graph.pb",
+      "model": "../data/models/mobilenet_v2/ssd_mobilenet_v2_coco_2018_03_29.pbtxt.txt"
+    },
     "properties": {
       "framework": "TensorFlow",
-      "swapRB": false,
-      "meanValues": [ 127.5, 127.5, 127.5 ]
+      "meanValues": [
+        127,
+        127,
+        127
+      ],
+      "swapRB": false
     },
-    "paths": {
-      "inf": "../data/models/mobilenet_v2/frozen_inference_graph.pb",
-      "classes": "../data/models/mobilenet_v2/object_detection_classes_coco.txt",
-      "model": "../data/models/mobilenet_v2/ssd_mobilenet_v2_coco_2018_03_29.pbtxt.txt"
-    }
+    "type": "network"
   }
 ]

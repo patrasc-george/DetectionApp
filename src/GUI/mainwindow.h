@@ -131,6 +131,11 @@ private slots:
 	 */
 	void selectAlgorithmsEvent();
 
+	/**
+	* @brief Refreshes the list of detectors after a new detector is added, edited, or deleted.
+	*/
+	void detectorEditEvent();
+
 public:
 	QGraphicsPixmapItem pixmap;
 	QImage frame;

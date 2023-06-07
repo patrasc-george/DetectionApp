@@ -1,3 +1,5 @@
+#pragma once
+
 #include <ObjectDetection.h>
 
 #ifdef OBJECTDETECTION_EXPORTS

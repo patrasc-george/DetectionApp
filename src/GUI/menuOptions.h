@@ -34,6 +34,8 @@ public:
 	QPushButton* histogramEqualizationButton;
 	QPushButton* detectEdgesButton;
 
+	QPushButton* editDetectorsBtn;
+
 
 public:
 	/**

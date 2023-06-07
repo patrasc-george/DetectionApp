@@ -30,7 +30,7 @@ struct detectorProperties {
 	detectorProperties()
 		: modelPath("\0"), classNamesPath("\0"), infGraphPath("\0"), framework("\0"), shouldSwapRB(true), meanValues(cv::Scalar(0,0,0)) {}
 };
-enum type {
+enum DetectorType {
 	cascade, network
 };
 
@@ -38,7 +38,7 @@ class Detector {
 protected:
 	std::string modelPath;
 	bool shouldSwapRB = false;
-	type type;
+	DetectorType type;
 
 public:
 	virtual void detect(cv::Mat& image, bool = false) = 0;
