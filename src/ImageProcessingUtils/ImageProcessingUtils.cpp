@@ -3,14 +3,14 @@
 #include <opencv2/opencv.hpp>
 #include <QImage>
 
-void binaryThresholding(cv::Mat& image, short threshold) {
+void ProcessingAlgorithms::binaryThresholding(cv::Mat& image, short threshold) {
 	if (image.type() != CV_8UC1)
 		cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
 	cv::threshold(image, image, threshold, 255, cv::THRESH_BINARY);
 	cv::cvtColor(image, image, cv::COLOR_GRAY2BGR);
 }
 
-void zeroThresholding(cv::Mat& image, short threshold) {
+void ProcessingAlgorithms::zeroThresholding(cv::Mat& image, short threshold) {
 	if (image.type() == CV_8UC1)
 		cv::cvtColor(image, image, cv::COLOR_GRAY2BGR);
 	if (image.type() == CV_8UC4)
@@ -18,26 +18,41 @@ void zeroThresholding(cv::Mat& image, short threshold) {
 	cv::threshold(image, image, threshold, 255, cv::THRESH_TOZERO);
 }
 
-void adaptiveThresholding(cv::Mat& image, short threshold) {
+void ProcessingAlgorithms::adaptiveThresholding(cv::Mat& image, short threshold) {
 	if (image.type() != CV_8UC1)
 		cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
 	cv::adaptiveThreshold(image, image, threshold, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 11, 2);
 	cv::cvtColor(image, image, cv::COLOR_GRAY2BGR);
 }
 
-void histogramEqualization(cv::Mat& image) {
+void ProcessingAlgorithms::histogramEqualization(cv::Mat& image) {
 	if (image.type() != CV_8UC1)
 		cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
 	cv::equalizeHist(image, image);
 	cv::cvtColor(image, image, cv::COLOR_GRAY2BGR);
 }
 
-void detectEdges(cv::Mat& image) {
+void ProcessingAlgorithms::detectEdges(cv::Mat& image) {
 	if (image.type() == CV_8UC4)
 		cv::cvtColor(image, image, cv::COLOR_BGRA2BGR);
 	cv::Laplacian(image, image, CV_8U);
 	cv::normalize(image, image, 0, 255, cv::NORM_MINMAX);
 }
+
+void ProcessingAlgorithms::applyingAlgorithms(cv::Mat& image, FrameOptions* options, const short& value)
+{
+	if (options->getHistogramEqualization())
+		histogramEqualization(image);
+	if (options->getBinaryThresholdingValue())
+		binaryThresholding(image, value);
+	if (options->getAdaptiveThresholdingValue())
+		adaptiveThresholding(image, value);
+	if (options->getZeroThresholdingValue())
+		zeroThresholding(image, value);
+	if (options->getDetectEdges())
+		detectEdges(image);
+}
+
 
 void FrameOptions::setConfidence(const short& val) {
 	confidence = val;

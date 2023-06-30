@@ -240,60 +240,66 @@ public:
 	std::string lastChange();
 };
 
-/**
- * @brief Applies binary thresholding to an image.
- * @details This function applies binary thresholding to an image using OpenCV's threshold function.
- It sets all pixel values below the specified threshold to 0 and all pixel values above the threshold to 255.
- The resulting image is a binary image where all pixels are either black or white.
- * @param[in,out] image The image to be processed.
- * @param[in] threshold The threshold value.
- */
-void IMAGEPROCESSINGUTILS_API binaryThresholding(cv::Mat& image, short threshold);
 
-/**
- * @brief Applies zero thresholding to an image.
- * @details This function applies zero thresholding to an image using OpenCV's threshold function.
- It sets all pixel values below the specified threshold to 0 and leaves all pixel values above the threshold unchanged.
- The resulting image is a grayscale image where all pixels below the threshold are black
- and all pixels above the threshold retain their original values.
- * @param[in,out] image The image to be processed.
- * @param[in] threshold The threshold value.
- */
-void IMAGEPROCESSINGUTILS_API zeroThresholding(cv::Mat& image, short threshold);
+class IMAGEPROCESSINGUTILS_API ProcessingAlgorithms
+{
+public:
+	/**
+	 * @brief Applies binary thresholding to an image.
+	 * @details This function applies binary thresholding to an image using OpenCV's threshold function.
+	 It sets all pixel values below the specified threshold to 0 and all pixel values above the threshold to 255.
+	 The resulting image is a binary image where all pixels are either black or white.
+	 * @param[in,out] image The image to be processed.
+	 * @param[in] threshold The threshold value.
+	 */
+	static void binaryThresholding(cv::Mat& image, short threshold);
 
-/**
- * @brief Applies adaptive thresholding to an image.
- * @details This function applies adaptive thresholding to an image using OpenCV's adaptiveThreshold function.
- It calculates a different threshold for each pixel based on its local neighborhood
- and then applies binary thresholding using that calculated threshold.
- The resulting image is a binary image where all pixels are either black or white.
- The size of the local neighborhood and the method used to calculate the thresholds can be adjusted
- by changing the parameters of the adaptiveThreshold function call.
- * @param[in,out] image The image to be processed.
- * @param[in] threshold The threshold value.
- */
-void IMAGEPROCESSINGUTILS_API adaptiveThresholding(cv::Mat& image, short threshold);
+	/**
+	 * @brief Applies zero thresholding to an image.
+	 * @details This function applies zero thresholding to an image using OpenCV's threshold function.
+	 It sets all pixel values below the specified threshold to 0 and leaves all pixel values above the threshold unchanged.
+	 The resulting image is a grayscale image where all pixels below the threshold are black
+	 and all pixels above the threshold retain their original values.
+	 * @param[in,out] image The image to be processed.
+	 * @param[in] threshold The threshold value.
+	 */
+	static void zeroThresholding(cv::Mat& image, short threshold);
 
-/**
- * @brief Equalizes the histogram of an image.
- * @details This function equalizes the histogram of an image using OpenCV's equalizeHist function.
- It redistributes the pixel values in such a way that their histogram is approximately flat.
- This can improve the contrast of an image by stretching out its intensity range.
- The resulting image is a grayscale image with improved contrast.
- * @param[in,out] image The image to be processed.
- */
-void IMAGEPROCESSINGUTILS_API histogramEqualization(cv::Mat& image);
+	/**
+	 * @brief Applies adaptive thresholding to an image.
+	 * @details This function applies adaptive thresholding to an image using OpenCV's adaptiveThreshold function.
+	 It calculates a different threshold for each pixel based on its local neighborhood
+	 and then applies binary thresholding using that calculated threshold.
+	 The resulting image is a binary image where all pixels are either black or white.
+	 The size of the local neighborhood and the method used to calculate the thresholds can be adjusted
+	 by changing the parameters of the adaptiveThreshold function call.
+	 * @param[in,out] image The image to be processed.
+	 * @param[in] threshold The threshold value.
+	 */
+	static void adaptiveThresholding(cv::Mat& image, short threshold);
 
-/**
- * @brief Detects edges in an image using the Laplacian operator.
- * @details This function detects edges in an image using OpenCV's Laplacian function.
- It applies the Laplacian operator to the image, which calculates the second derivative of its intensity values.
- This highlights regions of rapid intensity change, which correspond to edges in the original image.
- The resulting edge map is then normalized and scaled to fit within the 0-255 range so that it can be displayed as a grayscale image.
- * @param[in,out] image The image to be processed.
- */
-void IMAGEPROCESSINGUTILS_API detectEdges(cv::Mat& image);
+	/**
+	 * @brief Equalizes the histogram of an image.
+	 * @details This function equalizes the histogram of an image using OpenCV's equalizeHist function.
+	 It redistributes the pixel values in such a way that their histogram is approximately flat.
+	 This can improve the contrast of an image by stretching out its intensity range.
+	 The resulting image is a grayscale image with improved contrast.
+	 * @param[in,out] image The image to be processed.
+	 */
+	static void histogramEqualization(cv::Mat& image);
 
+	/**
+	 * @brief Detects edges in an image using the Laplacian operator.
+	 * @details This function detects edges in an image using OpenCV's Laplacian function.
+	 It applies the Laplacian operator to the image, which calculates the second derivative of its intensity values.
+	 This highlights regions of rapid intensity change, which correspond to edges in the original image.
+	 The resulting edge map is then normalized and scaled to fit within the 0-255 range so that it can be displayed as a grayscale image.
+	 * @param[in,out] image The image to be processed.
+	 */
+	static void detectEdges(cv::Mat& image);
+
+	static void applyingAlgorithms(cv::Mat& image, FrameOptions* options, const short& value);
+};
 
 class IMAGEPROCESSINGUTILS_API Timer {
 private:

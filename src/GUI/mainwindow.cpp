@@ -550,16 +550,7 @@ void MainWindow::selectAlgorithmsEvent() {
 
 	cv::Mat mat;
 	ConvertQImage2Mat(frame, mat);
-	if (menu->histogramEqualizationButton->isChecked())
-		histogramEqualization(mat);
-	if (menu->binaryThresholdingButton->isChecked())
-		binaryThresholding(mat, menu->thresholdControl->value());
-	if (menu->adaptiveThresholdingButton->isChecked())
-		adaptiveThresholding(mat, menu->thresholdControl->value());
-	if (menu->zeroThresholdingButton->isChecked())
-		zeroThresholding(mat, menu->thresholdControl->value());
-	if (menu->detectEdgesButton->isChecked())
-		detectEdges(mat);
+	ProcessingAlgorithms::applyingAlgorithms(mat, history.get(), menu->thresholdControl->value());
 	ConvertMat2QImage(mat, frame);
 }
 
