@@ -252,7 +252,7 @@ public:
 	 * @param[in,out] image The image to be processed.
 	 * @param[in] threshold The threshold value.
 	 */
-	static void binaryThresholding(cv::Mat& image, short threshold);
+	static void binaryThresholding(cv::Mat src, cv::Mat& dst, short threshold);
 
 	/**
 	 * @brief Applies zero thresholding to an image.
@@ -263,7 +263,7 @@ public:
 	 * @param[in,out] image The image to be processed.
 	 * @param[in] threshold The threshold value.
 	 */
-	static void zeroThresholding(cv::Mat& image, short threshold);
+	static void zeroThresholding(cv::Mat src, cv::Mat& dst, short threshold);
 
 	/**
 	 * @brief Applies adaptive thresholding to an image.
@@ -276,7 +276,7 @@ public:
 	 * @param[in,out] image The image to be processed.
 	 * @param[in] threshold The threshold value.
 	 */
-	static void adaptiveThresholding(cv::Mat& image, short threshold);
+	static void adaptiveThresholding(cv::Mat src, cv::Mat& dst, short threshold);
 
 	/**
 	 * @brief Equalizes the histogram of an image.
@@ -286,7 +286,7 @@ public:
 	 The resulting image is a grayscale image with improved contrast.
 	 * @param[in,out] image The image to be processed.
 	 */
-	static void histogramEqualization(cv::Mat& image);
+	static void histogramEqualization(cv::Mat src, cv::Mat& dst);
 
 	/**
 	 * @brief Detects edges in an image using the Laplacian operator.
@@ -296,7 +296,7 @@ public:
 	 The resulting edge map is then normalized and scaled to fit within the 0-255 range so that it can be displayed as a grayscale image.
 	 * @param[in,out] image The image to be processed.
 	 */
-	static void detectEdges(cv::Mat& image);
+	static void detectEdges(cv::Mat src, cv::Mat& dst);
 
 	static void applyingAlgorithms(cv::Mat& image, FrameOptions* options, const short& value);
 };

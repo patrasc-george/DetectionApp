@@ -1,10 +1,8 @@
 project(Tests)
 
-set(LibrarySources DetectorTests.cpp OptionsHistoryTests.cpp ProcessingAlgorithmsTests.cpp Qt_and_CV_image_conversion_Tests.cpp)
+set(LibrarySources TestUtils.hpp DetectorTests.cpp OptionsHistoryTests.cpp ProcessingAlgorithmsTests.cpp Qt_and_CV_image_conversion_Tests.cpp)
 add_library(${PROJECT_NAME} SHARED ${LibrarySources})
-qt_add_resources(${PROJECT_NAME} "images"
-    PREFIX "/images"
-    FILES test_image.png test_image2.jpg)
+
 #Find OpenCV
 if (NOT OpenCV_FOUND)
 	find_package(OpenCV REQUIRED)

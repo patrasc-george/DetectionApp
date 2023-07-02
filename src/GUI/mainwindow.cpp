@@ -272,18 +272,19 @@ QString MainWindow::getImageFileName()
 }
 
 void MainWindow::uploadImageEvent() {
-	fileName = getImageFileName();
+	QString temp = getImageFileName();
 
-	if (fileName.isEmpty())
+	if (temp.isEmpty())
 		return;
 
 	QImage backup_frame = frame;
-	frame = QImage(fileName);
+	frame = QImage(temp);
 	if (frame.isNull()) {
 		QMessageBox::critical(this, "Error", QString("Couldnt't read image from %1. The file may be corrupted or not a valid image file.").arg(fileName));
 		frame = backup_frame;
 		return;
 	}
+	fileName = temp;
 
 	statusBar->showMessage(QString("Uploaded file: %1").arg(fileName));
 
