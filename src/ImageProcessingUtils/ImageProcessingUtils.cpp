@@ -7,7 +7,8 @@ using cv::Mat;
 
 // WORK IN PROGRESS, does not work correctly
 void applyKernel(Mat src, Mat& dst, Mat kernel) {
-	int rows = src.rows, cols = src.cols;
+	int rows = src.rows;
+	int cols = src.cols;
 	dst = Mat(rows, cols, src.type());
 
 	// size of the border that will bw added to the image
@@ -18,7 +19,8 @@ void applyKernel(Mat src, Mat& dst, Mat kernel) {
 	cv::parallel_for_(cv::Range(0, rows * cols), [&](const cv::Range& range) {
 		for (int r = range.start; r < range.end; r++)
 		{
-			int i = r / cols, j = r % cols;
+			int i = r / cols;
+			int j = r % cols;
 			double value = 0;
 			for (int k = -size; k <= size; k++)
 			{
@@ -33,25 +35,46 @@ void applyKernel(Mat src, Mat& dst, Mat kernel) {
 	});
 }
 
-
+// if the average value of a pixel is lower than the treshold it becomes zero, otherwise it gets the max value
 void ProcessingAlgorithms::binaryThresholding(Mat src, Mat& dst, short threshold) {
-	if (src.type() != CV_8UC1)
-		cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
-
-	cv::threshold(src, dst, threshold, 255, cv::THRESH_BINARY);
-	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
-
-	//float kdata[] = { 0, -1, 0, -1, 4, -1, 0, -1, 0 };
-	//Mat kernel(3, 3, CV_32F, kdata);
-	//applyKernel(image, image, kernel);
-}
-
-void ProcessingAlgorithms::zeroThresholding(Mat src, Mat& dst, short threshold) {
-	if (src.type() == CV_8UC1)
-		cv::cvtColor(src, src, cv::COLOR_GRAY2BGR);
 	if (src.type() == CV_8UC4)
 		cv::cvtColor(src, src, cv::COLOR_BGRA2BGR);
-	cv::threshold(src, dst, threshold, 255, cv::THRESH_TOZERO);
+	if (src.type() == CV_8UC1)
+		cv::cvtColor(src, src, cv::COLOR_GRAY2BGR);
+	dst = cv::Mat(src.rows, src.cols, CV_8UC3);
+
+		for (int i = 0; i < src.rows; i++) {
+			cv::Vec3b* in = src.ptr<cv::Vec3b>(i);
+			for (int j = 0; j < src.cols; j++) {
+				uchar* out = dst.ptr<uchar>(i, j);
+				// compute the lumainance of red, green and blue channels
+				float luminance = 0.2126 * in[j][2] + 0.7152 * in[j][1] + 0.0722 * in[j][0];
+				if (luminance >= threshold) {
+					out[0] = 255; out[1] = 255; out[2] = 255;
+				}
+				else {
+					out[0] = 0; out[1] = 0; out[2] = 0;
+				}
+			}
+		}
+}
+
+// if the value is lower than the threshold it becomes zero, otherwise it stays unchanged
+void ProcessingAlgorithms::zeroThresholding(Mat src, Mat& dst, short threshold) {
+	if (src.type() == CV_8UC4)
+		cv::cvtColor(src, src, cv::COLOR_BGRA2BGR);
+	dst = cv::Mat(src);
+
+		for (int i = 0; i < src.rows; i++) {
+			cv::Vec3b* in = src.ptr<cv::Vec3b>(i);
+			for (int j = 0; j < src.cols; j++) {
+				uchar* out = dst.ptr<uchar>(i, j);
+				// threshold each channel individually
+				for (int k = 0; k < src.channels(); k++)
+					if (in[j][k] < threshold)
+						out[k] = 0;
+			}
+		}
 }
 
 void ProcessingAlgorithms::adaptiveThresholding(Mat src, Mat& dst, short threshold) {
