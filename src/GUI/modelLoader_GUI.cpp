@@ -23,9 +23,9 @@ DetectorEditor::DetectorEditor(QString json, QString detName, QWidget* parent) {
 	meanG->setRange(0, 255);
 	meanB = new QSpinBox(this);
 	meanB->setRange(0, 255);
-	cascade = new QPushButton("Cascade", this);
+	cascade = new QPushButton("Cascade Classifier", this);
 	cascade->setCheckable(true);
-	network = new QPushButton("Network", this);
+	network = new QPushButton("Neural Network", this);
 	network->setCheckable(true);
 	file_1 = new QPushButton("Upload file", this);
 	file_2 = new QPushButton("Upload file", this);
