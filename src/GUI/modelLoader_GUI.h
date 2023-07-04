@@ -66,7 +66,7 @@ signals:
 	* param[in] swapRB Whether to swap the red and blue channels.
 	* @return void
 	*/
-	void detectorCreated(QString json, QString name, QString type, QStringList paths, QVector<double> meanValues = { 0,0,0 }, bool swapRB = false);
+	void detectorCreated(QString json, QString name, QString type, QStringList paths, QVector<int> meanValues = { 0,0,0 }, bool swapRB = false);
 private slots:
 	/**
 	* @brief Opens a file dialog to select the file for the detector.
@@ -87,14 +87,13 @@ public:
 	QString getName() { return name->text(); }
 	QString getType() { return cascade->isChecked() ? "cascade" : "network"; }
 	QVector<QString> getPaths() { return this->paths; };
-	QVector<double> getMeanVals() {
-		QVector<double> meanVals;
+	QVector<int> getMeanVals() {
+		QVector<int> meanVals;
 		meanVals.push_back(meanR->value());
 		meanVals.push_back(meanG->value());
 		meanVals.push_back(meanB->value());
 		return meanVals;
 	}
-	bool getSwapRB() { return swapRB->isChecked(); }
 	QString getJsonPath() { return jsonPath; }
 };
 

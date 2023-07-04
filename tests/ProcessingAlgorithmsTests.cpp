@@ -15,7 +15,7 @@ public:
 		cv::Mat output;
 
 		ProcessingAlgorithms::binaryThresholding(input, output, 100);
-		Assert::IsTrue(RMS_error(output, reference) <= 0.1);
+		Assert::IsTrue(RMS_error(output, reference) <= 0.05);
 	}
 
 	TEST_METHOD(HistogramEqualization_test)
@@ -25,7 +25,7 @@ public:
 		cv::Mat output;
 
 		ProcessingAlgorithms::histogramEqualization(input, output);
-		Assert::IsTrue(RMS_error(output, reference) <= 0.1);
+		Assert::IsTrue(RMS_error(output, reference) <= 0.05);
 	}
 
 	TEST_METHOD(AdaptiveThreshold_test)
@@ -35,7 +35,7 @@ public:
 		cv::Mat output;
 
 		ProcessingAlgorithms::adaptiveThresholding(input, output, 100);
-		Assert::IsTrue(RMS_error(output, reference) <= 0.1);
+		Assert::IsTrue(RMS_error(output, reference) <= 0.05);
 	}
 
 	TEST_METHOD(ZeroThreshold_test)
@@ -45,7 +45,7 @@ public:
 		cv::Mat output;
 
 		ProcessingAlgorithms::zeroThresholding(input, output, 100);
-		Assert::IsTrue(RMS_error(output, reference) <= 0.1);
+		Assert::IsTrue(RMS_error(output, reference) <= 0.05);
 	}
 
 	TEST_METHOD(EdgeDetection_test)
@@ -55,7 +55,7 @@ public:
 		cv::Mat output;
 
 		ProcessingAlgorithms::detectEdges(input, output);
-		Assert::IsTrue(RMS_error(output, reference) <= 0.1);
+		Assert::IsTrue(RMS_error(output, reference) <= 0.05);
 	}
 
 	};

@@ -121,14 +121,8 @@ DetectorEditor::DetectorEditor(QString json, QString detName, QWidget* parent) {
 			return;
 		}
 
-		QVector<double> meanValues;
-		if (meanR->value() != 0 || meanG->value() != 0 || meanB->value() != 0) {
-			meanValues.push_back(meanR->value());
-			meanValues.push_back(meanG->value());
-			meanValues.push_back(meanB->value());
-		}
 		close();
-		emit detectorCreated(getJsonPath(), getName(), getType(), getPaths(), meanValues, getSwapRB());
+		emit detectorCreated(getJsonPath(), getName(), getType(), getPaths(), getMeanVals(), swapRB->isChecked());
 		});
 	connect(cancel, &QPushButton::clicked, this, &DetectorEditor::close);
 	connect(cascade, &QPushButton::toggled, this, &DetectorEditor::typeChanged);
@@ -173,9 +167,9 @@ DetectorEditor::DetectorEditor(QString json, QString detName, QWidget* parent) {
 	QJsonObject props = obj["properties"].toObject();
 	if (props.contains("meanValues")) {
 		QJsonArray meanValues = props["meanValues"].toArray();
-		meanR->setValue(static_cast<int>(meanValues[0].toDouble()));
-		meanG->setValue(static_cast<int>(meanValues[1].toDouble()));
-		meanB->setValue(static_cast<int>(meanValues[2].toDouble()));
+		meanR->setValue(!meanValues.isEmpty() ? meanValues[0].toInt() : 0);
+		meanG->setValue(!meanValues.isEmpty() ? meanValues[1].toInt() : 0);
+		meanB->setValue(!meanValues.isEmpty() ? meanValues[2].toInt() : 0);
 	}
 
 	if (props.contains("swapRB"))
@@ -323,7 +317,7 @@ void DetectorsList::selectionChanged() {
 
 void DetectorsList::addDetector() {
 	DetectorEditor* editor = new DetectorEditor(jsonPath);
-	connect(editor, &DetectorEditor::detectorCreated, this, [&](QString jsonPath, QString name, QString type, QStringList paths, QVector<double> meanValues, bool swapRB) {
+	connect(editor, &DetectorEditor::detectorCreated, this, [&](QString jsonPath, QString name, QString type, QStringList paths, QVector<int> meanValues, bool swapRB) {
 		// add to json
 		QFile file(jsonPath);
 		file.open(QIODevice::ReadOnly | QIODevice::Text);
@@ -348,12 +342,16 @@ void DetectorsList::addDetector() {
 				{"classes", paths.at(1)},
 				{"model", paths.at(2)}
 				});
-			QJsonArray meanV = obj["properties"].toObject()["meanValues"].toArray();
-			meanV.append(meanValues.at(0));
-			meanV.append(meanValues.at(1));
-			meanV.append(meanValues.at(2));
-			obj["properties"].toObject()["meanValues"] = meanV;
-			obj["properties"].toObject()["swapRB"] = swapRB;
+			QJsonObject propertiesObj = obj["properties"].toObject();
+			QJsonArray meanV = propertiesObj["meanValues"].toArray();
+			meanV.push_back(meanValues.at(0));
+			meanV.push_back(meanValues.at(1));
+			meanV.push_back(meanValues.at(2));
+
+			propertiesObj["meanValues"] = meanV;
+			propertiesObj["swapRB"] = swapRB;
+
+			obj["properties"] = propertiesObj;
 		}
 
 		arr.append(obj);
@@ -413,7 +411,7 @@ void DetectorsList::removeDetector() {
 
 void DetectorsList::editDetector() {
 	DetectorEditor* editor = new DetectorEditor(jsonPath, selectedDetector);
-	connect(editor, &DetectorEditor::detectorCreated, this, [&](QString jsonPath, QString name, QString type, QStringList paths, QVector<double> meanValues, bool swapRB) {
+	connect(editor, &DetectorEditor::detectorCreated, this, [&](QString jsonPath, QString name, QString type, QStringList paths, QVector<int> meanValues, bool swapRB) {
 		// add to json
 		QJsonObject obj = ModelLoader::getObjectByName(selectedDetector, jsonPath);
 
@@ -430,10 +428,10 @@ void DetectorsList::editDetector() {
 			pathsObj["classes"] = paths.at(1);
 			pathsObj["model"] = paths.at(2);
 
-			QJsonArray meanV = obj["properties"].toObject()["meanValues"].toArray();
-			meanV[0] = meanValues.at(0);
-			meanV[1] = meanValues.at(1);
-			meanV[2] = meanValues.at(2);
+			QJsonArray meanV = propertiesObj["meanValues"].toArray();
+			meanV.replace(0, meanValues.at(0));
+			meanV.replace(1, meanValues.at(1));
+			meanV.replace(2, meanValues.at(2));
 
 			propertiesObj["meanValues"] = meanV;
 			propertiesObj["swapRB"] = swapRB;
