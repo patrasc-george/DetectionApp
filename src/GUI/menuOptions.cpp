@@ -28,6 +28,8 @@ Menu::Menu(QWidget* parent)
 	binaryThresholdingButton->setCheckable(true);
 	zeroThresholdingButton = new QPushButton("Thresholding to zero", imageAlgorithms);
 	zeroThresholdingButton->setCheckable(true);
+	truncThresholdingButton = new QPushButton("Truncate", imageAlgorithms);
+	truncThresholdingButton->setCheckable(true);
 	adaptiveThresholdingButton = new QPushButton("Adaptive Thresholding", imageAlgorithms);
 	adaptiveThresholdingButton->setCheckable(true);
 	histogramEqualizationButton = new QPushButton("Histogram Equalization", imageAlgorithms);
@@ -40,6 +42,7 @@ Menu::Menu(QWidget* parent)
 	QVBoxLayout* algVbox = new QVBoxLayout;
 	algVbox->addWidget(binaryThresholdingButton);
 	algVbox->addWidget(zeroThresholdingButton);
+	algVbox->addWidget(truncThresholdingButton);
 	algVbox->addWidget(adaptiveThresholdingButton);
 	algVbox->addWidget(histogramEqualizationButton);
 	algVbox->addWidget(detectEdgesButton);

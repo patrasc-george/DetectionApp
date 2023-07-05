@@ -48,6 +48,16 @@ public:
 		Assert::IsTrue(RMS_error(output, reference) <= 0.05);
 	}
 
+	TEST_METHOD(Trunc_test)
+	{
+		cv::Mat reference = cv::imread(test_resource("truncate.png"));
+		cv::Mat input = cv::imread(test_resource("test_image.jpg"));
+		cv::Mat output;
+
+		ProcessingAlgorithms::truncate(input, output, 100);
+		Assert::IsTrue(RMS_error(output, reference) <= 0.05);
+	}
+
 	TEST_METHOD(EdgeDetection_test)
 	{
 		cv::Mat reference = cv::imread(test_resource("edge_detection.png"));

@@ -79,6 +79,14 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 		processImage();
 		});
 
+	connect(menu->truncThresholdingButton, &QPushButton::clicked, this, [&] {
+		if (menu->truncThresholdingButton->isChecked())
+			history.add(TRUNC_THRESHOLDING, menu->thresholdControl->value());
+		else
+			history.add(TRUNC_THRESHOLDING, 0);
+		processImage();
+		});
+
 	connect(menu->adaptiveThresholdingButton, &QPushButton::clicked, this, [&] {
 		if (menu->adaptiveThresholdingButton->isChecked())
 			history.add(ADAPTIVE_THRESHOLDING, menu->thresholdControl->value());
@@ -164,9 +172,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 	menu->flipHorizontal->setChecked(true); // the image is flipped
 	menu->detectorsList->setCurrentIndex(0); // 0 = no detection, 1... = other options
 
-	menu->binaryThresholdingButton->setChecked(false);
-	menu->histogramEqualizationButton->setChecked(false);
-	menu->detectEdgesButton->setChecked(false);
+	//menu->binaryThresholdingButton->setChecked(false);
+	//menu->histogramEqualizationButton->setChecked(false);
+	//menu->detectEdgesButton->setChecked(false);
 
 	// init the PixMap
 	imageContainer->setScene(new QGraphicsScene);
@@ -208,6 +216,7 @@ void MainWindow::setOptions()
 	menu->flipVertical->setChecked(history.get()->getFlipV());
 	menu->binaryThresholdingButton->setChecked(history.get()->getBinaryThresholdingValue());
 	menu->zeroThresholdingButton->setChecked(history.get()->getZeroThresholdingValue());
+	menu->truncThresholdingButton->setChecked(history.get()->getTruncThresholdingValue());
 	menu->adaptiveThresholdingButton->setChecked(history.get()->getAdaptiveThresholdingValue());
 	menu->histogramEqualizationButton->setChecked(history.get()->getHistogramEqualization());
 	menu->detectEdgesButton->setChecked(history.get()->getDetectEdges());
@@ -220,6 +229,10 @@ void MainWindow::setOptions()
 		!menu->binaryThresholdingButton->isChecked() &&
 		!menu->adaptiveThresholdingButton->isChecked()
 	);
+	//menu->truncThresholdingButton->setEnabled(
+	//	!menu->binaryThresholdingButton->isChecked() &&
+	//	!menu->adaptiveThresholdingButton->isChecked()
+	//);
 	menu->adaptiveThresholdingButton->setEnabled(
 		!menu->binaryThresholdingButton->isChecked() &&
 		!menu->zeroThresholdingButton->isChecked()

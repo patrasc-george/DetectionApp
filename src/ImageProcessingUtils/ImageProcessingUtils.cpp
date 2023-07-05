@@ -47,7 +47,7 @@ void ProcessingAlgorithms::binaryThresholding(Mat src, Mat& dst, short threshold
 			cv::Vec3b* in = src.ptr<cv::Vec3b>(i);
 			for (int j = 0; j < src.cols; j++) {
 				uchar* out = dst.ptr<uchar>(i, j);
-				// compute the lumainance of red, green and blue channels
+				// compute the luminance of red, green and blue channels
 				float luminance = 0.2126 * in[j][2] + 0.7152 * in[j][1] + 0.0722 * in[j][0];
 				if (luminance >= threshold) {
 					out[0] = 255; out[1] = 255; out[2] = 255;
@@ -84,6 +84,24 @@ void ProcessingAlgorithms::adaptiveThresholding(Mat src, Mat& dst, short thresho
 	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
 }
 
+void ProcessingAlgorithms::truncate(cv::Mat src, cv::Mat& dst, short threshold) {
+	if (src.type() == CV_8UC4)
+		cv::cvtColor(src, src, cv::COLOR_BGRA2BGR);
+	dst = cv::Mat(src);
+
+	for (int i = 0; i < src.rows; i++) {
+		cv::Vec3b* in = src.ptr<cv::Vec3b>(i);
+		for (int j = 0; j < src.cols; j++) {
+			uchar* out = dst.ptr<uchar>(i, j);
+			// threshold each channel individually
+			float luminance = 0.2126 * in[j][2] + 0.7152 * in[j][1] + 0.0722 * in[j][0];
+			if (luminance >= threshold) {
+				out[0] = threshold; out[1] = threshold; out[2] = threshold;
+			}
+		}
+	}
+}
+
 void ProcessingAlgorithms::histogramEqualization(Mat src, Mat& dst) {
 	if (src.type() != CV_8UC1)
 		cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
@@ -110,6 +128,8 @@ void ProcessingAlgorithms::applyingAlgorithms(Mat& image, FrameOptions* options,
 		zeroThresholding(image, image, value);
 	if (options->getDetectEdges())
 		detectEdges(image, image);
+	if (options->getTruncThresholdingValue())
+		truncate(image, image, value);
 }
 
 
@@ -167,6 +187,14 @@ void FrameOptions::setBinaryThresholdingValue(const short& val) {
 
 short FrameOptions::getBinaryThresholdingValue() const {
 	return binaryThresholdingValue;
+}
+
+void FrameOptions::setTruncThresholdingValue(const short& val) {
+	truncThresholdingValue = val;
+}
+
+short FrameOptions::getTruncThresholdingValue() const {
+	return truncThresholdingValue;
 }
 
 void FrameOptions::setZeroThresholdingValue(const short& val) {
@@ -231,6 +259,9 @@ void OptionsHistory::add(revertable_options prop, short value) {
 		break;
 	case ZERO_THRESHOLDING:
 		currentStatus.setZeroThresholdingValue(value);
+		break;
+	case TRUNC_THRESHOLDING:
+		currentStatus.setTruncThresholdingValue(value);
 		break;
 	case ADAPTIVE_THRESHOLDING:
 		currentStatus.setAdaptiveThresholdingValue(value);
@@ -303,6 +334,8 @@ std::string OptionsHistory::lastChange() {
 		return "binary thresholding";
 	case ZERO_THRESHOLDING:
 		return "zero thresholding";
+	case TRUNC_THRESHOLDING:
+		return "Truncate Thresholding";
 	case ADAPTIVE_THRESHOLDING:
 		return "adaptive thresholding";
 	case HISTOGRAM_EQUALIZATION:

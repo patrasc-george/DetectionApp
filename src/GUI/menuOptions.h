@@ -30,6 +30,7 @@ public:
 	QGroupBox* imageAlgorithms;
 	QPushButton* binaryThresholdingButton;
 	QPushButton* zeroThresholdingButton;
+	QPushButton* truncThresholdingButton;
 	QPushButton* adaptiveThresholdingButton;
 	QPushButton* histogramEqualizationButton;
 	QPushButton* detectEdgesButton;

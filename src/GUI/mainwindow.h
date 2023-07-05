@@ -198,7 +198,8 @@ public:
 		return (
 			menu->binaryThresholdingButton->isChecked() ||
 			menu->zeroThresholdingButton->isChecked() ||
-			menu->adaptiveThresholdingButton->isChecked()
+			menu->adaptiveThresholdingButton->isChecked() ||
+			menu->truncThresholdingButton->isChecked()
 			);
 	}
 };

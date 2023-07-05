@@ -17,6 +17,7 @@ enum IMAGEPROCESSINGUTILS_API revertable_options {
 	SHOW_CONFIDENCE,
 	BINARY_THRESHOLDING,
 	ZERO_THRESHOLDING,
+	TRUNC_THRESHOLDING,
 	ADAPTIVE_THRESHOLDING,
 	HISTOGRAM_EQUALIZATION,
 	DETECT_EDGES
@@ -27,6 +28,7 @@ private:
 	short threshold = 0;
 	short binaryThresholdingValue = 0;
 	short zeroThresholdingValue = 0;
+	short truncThresholdingValue = 0;
 	short adaptiveThresholdingValue = 0;
 	bool histogramEqualization = false;
 	bool detectEdges = false;
@@ -125,6 +127,17 @@ public:
 	 * @return Returns the zero thresholding value.
 	 */
 	short getZeroThresholdingValue() const;
+
+	/**
+	 * @brief Sets the zero thresholding value.
+	 * @param[in] val The zero thresholding value to be set.
+	 */
+	void setTruncThresholdingValue(const short& val);
+	/**
+	 * @brief Gets the zero thresholding value.
+	 * @return Returns the zero thresholding value.
+	 */
+	short getTruncThresholdingValue() const;
 
 	/**
 	 * @brief Sets the adaptive thresholding value.
@@ -246,21 +259,22 @@ class IMAGEPROCESSINGUTILS_API ProcessingAlgorithms
 public:
 	/**
 	 * @brief Applies binary thresholding to an image.
-	 * @details This function applies binary thresholding to an image using OpenCV's threshold function.
-	 It sets all pixel values below the specified threshold to 0 and all pixel values above the threshold to 255.
+	 * @details	It sets all pixel values below the specified threshold to 0 and all pixel values above the threshold to 255.
 	 The resulting image is a binary image where all pixels are either black or white.
-	 * @param[in,out] image The image to be processed.
+	 * @param[in] src The source image
+	 * @param[out] dst The destination image
 	 * @param[in] threshold The threshold value.
 	 */
 	static void binaryThresholding(cv::Mat src, cv::Mat& dst, short threshold);
 
 	/**
 	 * @brief Applies zero thresholding to an image.
-	 * @details This function applies zero thresholding to an image using OpenCV's threshold function.
-	 It sets all pixel values below the specified threshold to 0 and leaves all pixel values above the threshold unchanged.
-	 The resulting image is a grayscale image where all pixels below the threshold are black
+	 * @details It sets all pixel values below the specified threshold to 0 and leaves all pixel values above the threshold unchanged.
+	 The resulting image is an image where all pixels below the threshold are black
 	 and all pixels above the threshold retain their original values.
-	 * @param[in,out] image The image to be processed.
+	 Each color channel is computed separately.
+	 * @param[in] src The source image
+	 * @param[out] dst The destination image 
 	 * @param[in] threshold The threshold value.
 	 */
 	static void zeroThresholding(cv::Mat src, cv::Mat& dst, short threshold);
@@ -273,10 +287,20 @@ public:
 	 The resulting image is a binary image where all pixels are either black or white.
 	 The size of the local neighborhood and the method used to calculate the thresholds can be adjusted
 	 by changing the parameters of the adaptiveThreshold function call.
-	 * @param[in,out] image The image to be processed.
+	 * @param[in] src The source image
+	 * @param[out] dst The destination image
 	 * @param[in] threshold The threshold value.
 	 */
 	static void adaptiveThresholding(cv::Mat src, cv::Mat& dst, short threshold);
+
+	/**
+	* * @brief Applies truncate thresholding to an image.
+	* @details It sets all pixels above a specified threshold to that threshold value and leaves the pixels with a luminance
+	below the threshold unchanged.
+	* @param [in] src The source image
+	* @param[out] dst The destination image
+	*/
+	static void truncate(cv::Mat src, cv::Mat& dst, short threshold);
 
 	/**
 	 * @brief Equalizes the histogram of an image.
