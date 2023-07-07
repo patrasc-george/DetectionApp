@@ -2,6 +2,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <QImage>
+#include <QPainter>
 
 using cv::Mat;
 
@@ -411,4 +412,19 @@ bool ConvertQImage2Mat(const QImage& src, Mat& dest) {
 		std::cout << "ConvertQImage2Mat() - QImage format not handled in switch:" << src.format() << std::endl;
 		return false;
 	}
+}
+
+QImage putLogo(const short& width, const short& height)
+{
+	QImage img(width, height, QImage::Format::Format_RGB32);
+	QImage logo(":/assets/camera_dark.png");
+	logo = logo.scaled(100, 100, Qt::KeepAspectRatio);
+
+	QPainter p;
+	img.fill(Qt::white);
+	p.begin(&img);
+	p.drawImage(width / 2.0 - logo.size().width() / 2.0, height / 2.0 - logo.size().height() / 2.0, logo);
+	p.drawText(0, height / 2.0 + logo.size().height() / 2.0 + 20, width, 10, Qt::AlignCenter, "Camera is turned off");
+	p.end();
+	return img;
 }

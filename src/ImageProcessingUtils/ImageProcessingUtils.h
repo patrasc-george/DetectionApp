@@ -372,3 +372,5 @@ bool IMAGEPROCESSINGUTILS_API ConvertMat2QImage(const cv::Mat& src, QImage& dest
  * @return Returns true if the conversion was successful, otherwise returns false.
  */
 bool IMAGEPROCESSINGUTILS_API ConvertQImage2Mat(const QImage& src, cv::Mat& dest);
+
+QImage IMAGEPROCESSINGUTILS_API putLogo(const short& width, const short& height);

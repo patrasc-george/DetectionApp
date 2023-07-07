@@ -260,19 +260,7 @@ void MainWindow::toggleCameraEvent() {
 		selectDetectorEvent();
 	}
 	else {
-		QImage img(imageContainer->size().width(), imageContainer->size().height(), QImage::Format::Format_RGB32);
-		QImage logo(":/assets/camera_dark.png");
-		logo = logo.scaled(100, 100, Qt::KeepAspectRatio);
-
-		QPainter p;
-		img.fill(Qt::white);
-		p.begin(&img);
-		p.drawImage(imageContainer->size().width() / 2.0 - logo.size().width() / 2.0, imageContainer->size().height() / 2.0 - logo.size().height() / 2.0, logo);
-		p.drawText(0, imageContainer->size().height() / 2.0 + logo.size().height() / 2.0 + 20, imageContainer->size().width(), 10, Qt::AlignCenter, "Camera is turned off");
-		p.end();
-
-		frame = img;
-
+		frame = putLogo(imageContainer->size().width(), imageContainer->size().height());
 		displayImage();
 		delete currDet;
 		currDet = nullptr;
