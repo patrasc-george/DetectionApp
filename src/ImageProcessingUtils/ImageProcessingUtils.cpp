@@ -106,7 +106,37 @@ void ProcessingAlgorithms::truncate(cv::Mat src, cv::Mat& dst, short threshold) 
 void ProcessingAlgorithms::histogramEqualization(Mat src, Mat& dst) {
 	if (src.type() != CV_8UC1)
 		cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
-	cv::equalizeHist(src, dst);
+
+	// Compute the histogram
+	int hist[256] = { 0 };
+	for (int i = 0; i < src.rows; i++) {
+		for (int j = 0; j < src.cols; j++) {
+			hist[src.at<uchar>(i, j)]++;
+		}
+	}
+
+	// Compute the cumulative distribution function
+	int cdf[256] = { 0 };
+	cdf[0] = hist[0];
+	for (int i = 1; i < 256; i++) {
+		cdf[i] = cdf[i - 1] + hist[i];
+	}
+
+	// Normalize the cdf to [0, 255]
+	int cdf_min = *std::min_element(cdf, cdf + 256);
+	int cdf_max = *std::max_element(cdf, cdf + 256);
+	for (int i = 0; i < 256; i++) {
+		cdf[i] = round(255.0 * (cdf[i] - cdf_min) / (cdf_max - cdf_min));
+	}
+
+	// Apply the equalization
+	dst = src.clone();
+	for (int i = 0; i < dst.rows; i++) {
+		for (int j = 0; j < dst.cols; j++) {
+			dst.at<uchar>(i, j) = cdf[dst.at<uchar>(i, j)];
+		}
+	}
+
 	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
 }
 
@@ -132,7 +162,6 @@ void ProcessingAlgorithms::applyingAlgorithms(Mat& image, FrameOptions* options,
 	if (options->getTruncThresholdingValue())
 		truncate(image, image, value);
 }
-
 
 void FrameOptions::setConfidence(const short& val) {
 	confidence = val;
