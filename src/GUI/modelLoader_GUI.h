@@ -13,6 +13,7 @@
 
 class DetectorEditor : public QDialog {
 	Q_OBJECT
+
 private:
 	QLineEdit* name;
 	QPushButton* cascade;
@@ -38,6 +39,7 @@ private:
 	QStringList paths = { 0,0,0 };
 	QWidget* meanValuesWidget;
 	QString jsonPath;
+
 public:
 	/**
 	* @brief Constructs a DetectorEditor object.
@@ -56,6 +58,7 @@ public:
 	* 	 *
 	*/
 	DetectorEditor(QString json, QString detName = "", QWidget* parent = nullptr);
+
 signals:
 	/**
 	* @brief Emits a signal when a detector is created (or edited).
@@ -68,6 +71,7 @@ signals:
 	* @return void
 	*/
 	void detectorCreated(QString json, QString name, QString type, QStringList paths, QVector<int> meanValues = { 0,0,0 }, bool swapRB = false);
+
 private slots:
 	/**
 	* @brief Opens a file dialog to select the file for the detector.
@@ -76,6 +80,7 @@ private slots:
 	* @return void
 	*/
 	void openFile();
+
 	/**
 	* @brief Changes the type of the detector.
 	* The mean values widget is shown or hidden depending on the type.
@@ -83,11 +88,13 @@ private slots:
 	* @return void
 	*/
 	void typeChanged();
+
 public:
 	// Getters
 	QString getName() { return name->text(); }
 	QString getType() { return cascade->isChecked() ? "cascade" : "network"; }
 	QVector<QString> getPaths() { return this->paths; };
+	QString getJsonPath() { return jsonPath; }
 	QVector<int> getMeanVals() {
 		QVector<int> meanVals;
 		meanVals.push_back(meanR->value());
@@ -95,12 +102,11 @@ public:
 		meanVals.push_back(meanB->value());
 		return meanVals;
 	}
-	QString getJsonPath() { return jsonPath; }
 };
-
 
 class DetectorsList : public QDialog {
 	Q_OBJECT
+
 private:
 	QPushButton* add;
 	QPushButton* remove;
@@ -109,7 +115,6 @@ private:
 	QPushButton* addDet;
 	QPushButton* removeDet;
 	QPushButton* editDet;
-
 	QString selectedDetector;
 
 public:
@@ -124,6 +129,7 @@ public:
 	* * @param[in] parent The parent widget.
 	*/
 	DetectorsList(QString json, QWidget* parent = nullptr);
+
 signals:
 	/**
 	* @brief Emits a signal when a detector is added.
@@ -131,17 +137,20 @@ signals:
 	*
 	*/
 	void detectorAdded();
+
 	/**
 	* @brief Emits a signal when a detector is removed.
 	* @return void
 	*
 	*/
 	void detectorRemoved();
+
 	/**
 	* @brief Emits a signal when a detector is edited.
 	* @return void
 	*/
 	void detectorEdited();
+
 private slots:
 	/**
 	* @brief Opens a DetectorEditor to add a detector.
@@ -149,18 +158,21 @@ private slots:
 	* When the addition is accepted, the deetector will be added to the json file and the list widget, and the detectorAdded() signal will be emitted.
 	*/
 	void addDetector();
+
 	/**
 	* @brief Opens a dialog box to remoeve a detector.
 	* It also connects the dialog box to the detectorAdded() signal.
 	* When the dialog is accepted, the deetector will be removed from the json file and the list widget, and the detectorRemoved() signal will be emitted.
 	* 	*/
 	void removeDetector();
+
 	/**
 	* @brief Opens a DetectorEditor to edit a detector.
 	* It also connects the dialog box to the detectorAdded() signal.
 	* When the edit is accepted, the deetector will be edited in the json file and the list widget, and the detectorEdited() signal will be emitted.
 	*/
 	void editDetector();
+
 	/**
 	* @brief Updates the enabled state of the remove and edit buttons.
 	*/

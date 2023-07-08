@@ -185,15 +185,7 @@ public:
 	 */
 	void preventReset();
 
-	void resizeEvent(QResizeEvent* event) override {
-		preventReset();
-	}
-	bool thresholdActive() {
-		return (
-			menu->binaryThresholdingButton->isChecked() ||
-			menu->zeroThresholdingButton->isChecked() ||
-			menu->adaptiveThresholdingButton->isChecked() ||
-			menu->truncThresholdingButton->isChecked()
-			);
-	}
+	void resizeEvent(QResizeEvent* event) override;
+
+	bool thresholdActive();
 };

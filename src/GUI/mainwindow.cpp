@@ -553,3 +553,16 @@ void MainWindow::detectorEditEvent() {
 	if (names.contains(menu->detectorsList->currentText()) == false)
 		menu->detectorsList->setCurrentIndex(0);
 }
+
+void MainWindow::resizeEvent(QResizeEvent* event) {
+	preventReset();
+}
+
+bool MainWindow::thresholdActive() {
+	return (
+		menu->binaryThresholdingButton->isChecked() ||
+		menu->zeroThresholdingButton->isChecked() ||
+		menu->adaptiveThresholdingButton->isChecked() ||
+		menu->truncThresholdingButton->isChecked()
+		);
+}

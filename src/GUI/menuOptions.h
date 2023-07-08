@@ -38,7 +38,6 @@ public:
 
 	QPushButton* editDetectorsBtn;
 
-
 public:
 	/**
 	 * @brief Constructs a Menu object.
