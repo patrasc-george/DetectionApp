@@ -1,6 +1,4 @@
 #include "modelLoader_GUI.h"
-#include "ModelLoader.h"
-
 
 DetectorEditor::DetectorEditor(QString json, QString detName, QWidget* parent) {
 	this->setModal(true);

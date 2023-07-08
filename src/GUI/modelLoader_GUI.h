@@ -11,6 +11,8 @@
 #include <QMessageBox>
 #include <QFileDialog>
 
+#include "ModelLoader.h"
+
 class DetectorEditor : public QDialog {
 	Q_OBJECT
 

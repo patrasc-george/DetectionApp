@@ -135,7 +135,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 		connect(editor, &DetectorsList::detectorRemoved, this, &MainWindow::detectorEditEvent);
 		connect(editor, &DetectorsList::detectorAdded, this, &MainWindow::detectorEditEvent);
 		connect(editor, &DetectorsList::detectorEdited, this, &MainWindow::detectorEditEvent);
-	});
+		});
 
 	imageContainer->setMinimumSize(640, 480);
 
@@ -539,7 +539,7 @@ void MainWindow::selectAlgorithmsEvent() {
 
 void MainWindow::detectorEditEvent() {
 	// refresh the detector list
-	
+
 	// delete every detector except the first one (None)
 	menu->detectorsList->setCurrentIndex(0);
 	for (int i = menu->detectorsList->count() - 1; i > 0; i--)

@@ -20,12 +20,12 @@ struct detectorProperties {
 	bool shouldSwapRB;
 
 	detectorProperties()
-		: modelPath("\0"), 
-		classNamesPath("\0"), 
-		infGraphPath("\0"), 
-		framework("\0"), 
-		shouldSwapRB(true), 
-		meanValues(cv::Scalar(0,0,0)) {}
+		: modelPath("\0"),
+		classNamesPath("\0"),
+		infGraphPath("\0"),
+		framework("\0"),
+		shouldSwapRB(true),
+		meanValues(cv::Scalar(0, 0, 0)) {}
 };
 
 class Detector {
@@ -60,4 +60,4 @@ public:
  * @param[in] left The x-coordinate of the left side of the label.
  * @param[in] top The y-coordinate of the top side of the label.
  */
-void drawLabel(cv::Mat & image, std::string label, int left, int top);
+void drawLabel(cv::Mat& image, std::string label, int left, int top);

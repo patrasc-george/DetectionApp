@@ -25,7 +25,7 @@ public:
 	 and all pixels above the threshold retain their original values.
 	 Each color channel is computed separately.
 	 * @param[in] src The source image
-	 * @param[out] dst The destination image 
+	 * @param[out] dst The destination image
 	 * @param[in] threshold The threshold value.
 	 */
 	static void zeroThresholding(cv::Mat src, cv::Mat& dst, short threshold);
