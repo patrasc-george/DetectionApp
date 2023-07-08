@@ -1,23 +1,4 @@
 ﻿#include "mainwindow.h"
-#include "menuOptions.h"
-
-#include <opencv2/opencv.hpp>
-
-#include <QGraphicsScene>
-#include <QGraphicsPixmapItem>
-#include <QThread>
-#include <QListWidget>
-#include <QMessageBox>
-#include <QCoreApplication>
-#include <QVBoxLayout>
-#include <QFileDialog>
-#include <QStatusBar>
-#include <QStandardPaths>
-#include <QJsonObject>
-
-#include "ImageProcessingUtils.h"
-#include "ModelLoader.h"
-#include "ModelLoader_GUI.h"
 
 #define modelsJSON "../data/detectors.json"
 QVector<QString> names = ModelLoader::getNames(modelsJSON);

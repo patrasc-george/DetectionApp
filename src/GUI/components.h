@@ -1,15 +1,14 @@
 #pragma once
 
-#include <QWidget>
 #include <QLabel>
 #include <QSlider>
 #include <QGraphicsView>
-#include <QGraphicsScene>
 #include <QGraphicsItem>
-#include <QWidget>
+#include <QGridLayout>
 
 class LabeledSlider : public QWidget {
 	Q_OBJECT
+
 private:
 	QSlider* slider;
 	QLabel* label;
@@ -46,6 +45,7 @@ public:
 	 * @return An integer representing the current value of the slider.
 	 */
 	int value();
+
 protected:
 	/**
 	 * @brief Updates the label text to reflect the current value of the slider.
@@ -66,7 +66,6 @@ private:
 	int zoomCount;
 
 public:
-
 	/**
 	 * @brief Constructs a SceneImageViewer object.
 	 * @details This constructor initializes a SceneImageViewer object.

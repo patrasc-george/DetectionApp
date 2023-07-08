@@ -1,14 +1,15 @@
 #pragma once
 
-#include <QWidget>
 #include <QLabel>
-#include <QDialog>
 #include <QSpinBox>
 #include <QPushButton>
 #include <QCheckBox>
 #include <QLineEdit>
+#include <QHBoxLayout>
 #include <QButtonGroup>
-#include <QGridLayout>
+#include <QListWidget>
+#include <QMessageBox>
+#include <QFileDialog>
 
 class DetectorEditor : public QDialog {
 	Q_OBJECT

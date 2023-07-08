@@ -1,5 +1,4 @@
 #include "components.h"
-#include <QGridLayout>
 
 LabeledSlider::LabeledSlider(QString name, short min, short max, short step, bool isPercent) {
 	label = new QLabel();

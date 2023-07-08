@@ -1,9 +1,3 @@
-#include <QVBoxLayout>
-#include <QPushButton>
-#include <QCheckbox>
-#include <QComboBox>
-#include <QSlider>
-#include <QLabel>
 #include "menuOptions.h"
 
 Menu::Menu(QWidget* parent)

@@ -1,21 +1,13 @@
 #pragma once
 
-#include <ObjectDetection.h>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QFile>
 
-#ifdef OBJECTDETECTION_EXPORTS
-#define OBJECTDETECTION_API __declspec(dllexport)
-#else
-#define OBJECTDETECTION_API __declspec(dllimport)
-#endif
-
-enum ModelErrors {
-	NAME_NOT_FOUND = 0,
-	TYPE_NOT_PROVIDED = -1,
-	MODEL_PATH_EMPTY = -2,
-	INVALID_CASCADE = -3,
-	INF_GRAPH_PATH_EMPTY = -4,
-	CANNOT_READ_NETWORK = -5
-};
+#include "ModelErrors.h"
+#include <FaceDetector.h>
+#include <ObjectDetector.h>
 
 class OBJECTDETECTION_API ModelLoader {
 public:

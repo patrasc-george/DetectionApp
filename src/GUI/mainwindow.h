@@ -1,21 +1,16 @@
 #pragma once
 
-#include <opencv2/opencv.hpp>
-#include "ObjectDetection.h"
-#include "ImageProcessingUtils.h"
-
-#include <QWidget>
 #include <QApplication>
-#include <QCheckBox>
-#include <QComboBox>
-#include <QGraphicsView>
-#include <QGraphicsPixmapItem>
-#include <QListWidget>
 #include <QMainWindow>
-#include <QPushButton>
-#include <stack>
+#include <QMessageBox>
+#include <QCoreApplication>
+#include <QStatusBar>
+#include <QStandardPaths>
 
 #include "menuOptions.h"
+#include "ModelLoader_GUI.h"
+#include "ImageProcessingUtils.h"
+#include "ModelLoader.h"
 
 
 class MainWindow : public QMainWindow {
@@ -32,7 +27,6 @@ public:
 protected:
 	void closeEvent(QCloseEvent* event) override;
 
-
 public:
 	/**
 	 * @brief Constructs a MainWindow object.
@@ -45,8 +39,6 @@ public:
 	 */
 	MainWindow(QWidget* parent = nullptr);
 
-	~MainWindow() {};
-
 	/**
 	 * @brief Starts video capture from the camera.
 	 * @details This function is called when the camera is turned on.
@@ -55,6 +47,8 @@ public:
 	 It also updates the FPS label with the current FPS value.
 	 */
 	void startVideoCapture();
+
+	~MainWindow() {};
 
 private slots:
 	/**

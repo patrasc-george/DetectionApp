@@ -1,5 +1,6 @@
 #include "CppUnitTest.h"
-#include "../src/ObjectDetection/ObjectDetection.h"
+#include "../src/ObjectDetection/FaceDetector.h"
+#include "../src/ObjectDetection/ObjectDetector.h"
 #include "TestUtils.hpp"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;

@@ -1,12 +1,3 @@
-#include <QJsonDocument>
-#include <QJsonParseError>
-#include <QJsonObject>
-#include <QJsonValue>
-#include <QJsonArray>
-#include <QFile>
-#include <QMessageBox>
-
-#include <ObjectDetection.h>
 #include "ModelLoader.h"
 
 void ModelLoader::loadAll(const QString& path, QVector<Detector*>& vector) {

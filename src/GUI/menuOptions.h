@@ -1,8 +1,9 @@
 #pragma once
 
-#include <QWidget>
 #include <QComboBox>
 #include <QGroupBox>
+#include <QPushButton>
+#include <QCheckbox>
 
 #include "components.h"
 

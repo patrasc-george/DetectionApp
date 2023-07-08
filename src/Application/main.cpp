@@ -1,13 +1,6 @@
-#include <iostream>
-#include <opencv2/opencv.hpp>
-
-#include <QApplication>
-
-#include "ObjectDetection.h"
-#include "mainwindow.h"
-#include "ModelLoader.h"
 #include <QFile>
-#include <QTimer>
+
+#include "mainwindow.h"
 
 int main(int argc, char* argv[]) {
 	QApplication app(argc, argv);

@@ -1,4 +1,5 @@
 #include <string>
+
 #include "RevertableOptions.h"
 
 class IMAGEPROCESSINGUTILS_API FrameOptions {

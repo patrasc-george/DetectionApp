@@ -1,4 +1,5 @@
 #include <deque>
+
 #include "FrameOptions.h"
 
 class IMAGEPROCESSINGUTILS_API OptionsHistory {

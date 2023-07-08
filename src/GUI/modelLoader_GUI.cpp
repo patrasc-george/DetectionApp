@@ -1,12 +1,4 @@
-#include <QListWidget>
-#include <QMessageBox>
-#include <QFileDialog>
-#include <QJsonArray>
-#include <QJsonObject>
-#include <QJsonDocument>
-
 #include "modelLoader_GUI.h"
-
 #include "ModelLoader.h"
 
 
