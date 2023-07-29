@@ -1,7 +1,8 @@
 import datetime
+import tkinter
 from enum import Enum
 from tkinter import *
-from tkinter import filedialog
+from tkinter import filedialog, ttk
 
 import numpy as np
 from PIL import Image, ImageTk
@@ -10,6 +11,7 @@ import detection
 
 
 # HELPERS ==============================================================================================================
+
 class ViewType(Enum):
     OFF = 0
     IMAGE = 1
@@ -32,21 +34,25 @@ class Window(metaclass=Singleton):
         self.view_state = ViewType.OFF
         self.image = None
         self.action_just_happened = True  # used so we only update the view on camera
+        self.current_detector_name = ''  # see detectors list in detection.py
 
 # BUTTON EVENTS ========================================================================================================
     def screenshot(self):
-        self.image = Image.fromarray(img1)
+        image = Image.fromarray(self.image[:, :, ::-1])
         time = str(datetime.datetime.now().today()).replace(':', "_") + '.jpg'
         f_types = [('PNG image', '*.png'), ('JPG image', '*.jpg'), ('JPEG image', '*.jpeg')]
         filename = filedialog.asksaveasfile(filetypes=f_types, initialfile=time)
-        self.image.save(filename)
+        image.save(filename)
 
     def upload_file(self, ):
         self.action_just_happened = True
         self.view_state = ViewType.IMAGE
         f_types = [('Image Files', '*.png *.jpg *.jpeg')]
         filename = filedialog.askopenfilename(filetypes=f_types)
-        self.image = cv.imread(filename)
+        image = cv.imread(filename)
+        if image is not None:
+            self.image = image
+            self.view_state = ViewType.IMAGE
 
     def toggle_camera(self):
         self.action_just_happened = True
@@ -70,17 +76,27 @@ root.minsize(640, 580)
 root.configure(bg='#fff')
 
 frame_label = LabelFrame(root)
-frame_label.grid(row=1, column=1, columnspan=3)
+frame_label.grid(row=1, column=1, columnspan=4)
 image_box = Label(frame_label)
+
 image_box.pack()
 
 camera_button = Button(root, text="Toggle Camera", command=w.toggle_camera)
 screenshot_button = Button(root, text='Screenshot', command=w.screenshot)
 upload_button = Button(root, text='Upload Image', command=w.upload_file)
 
+w.current_detector_name = tkinter.StringVar()
+detector_dropdown = ttk.Combobox(root,
+                                 textvariable=w.current_detector_name,
+                                 state='readonly',
+                                 values=[name for name in detection.nets.keys()])
+detector_dropdown.bind("<<ComboboxSelected>>", lambda event: setattr(w, 'action_just_happened', True))
+detector_dropdown.set(detector_dropdown['values'][0])
+
 camera_button.grid(row=2, column=1)
 screenshot_button.grid(row=2, column=2)
 upload_button.grid(row=2, column=3)
+detector_dropdown.grid(row=2, column=4)
 
 # APP LOOP =============================================================================================================
 while True:
@@ -91,12 +107,12 @@ while True:
         case ViewType.CAMERA:
             w.image = w.cap.read()[1]
             w.image = cv.flip(w.image, 1)
-            detection.detect(w.image)
+            detection.detect(w.image, w.current_detector_name.get())
             img1 = cv.cvtColor(w.image, cv.COLOR_BGR2RGB)
             img = ImageTk.PhotoImage(Image.fromarray(img1))
             image_box['image'] = img
         case ViewType.IMAGE:
-            detection.detect(w.image, False)  # don't show fps on image
+            detection.detect(w.image, w.current_detector_name.get(), False)  # don't show fps on image
             img1 = cv.cvtColor(w.image, cv.COLOR_BGR2RGB)
             img = ImageTk.PhotoImage(Image.fromarray(img1))
             image_box['image'] = img

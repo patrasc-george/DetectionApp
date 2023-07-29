@@ -2,12 +2,6 @@ import cv2
 import datetime
 
 # INITIALIZATION =======================================================================================================
-weights = "model/frozen_inference_graph.pb"
-model = "model/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt"
-net = cv2.dnn.readNetFromTensorflow(weights, model)
-
-with open("model/coco_names.txt", "r") as f:
-    class_names = f.read().strip().split("\n")
 
 """
     Detection matrix components:
@@ -19,9 +13,29 @@ with open("model/coco_names.txt", "r") as f:
     [6]: Bounding Box Height
 """
 
+detectors = {
+    'MobileNet v3 large': {
+        'weights': "models/MobileNet v3 large/frozen_inference_graph.pb",
+        'model': "models/MobileNet v3 large/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt",
+        'classes': "models/MobileNet v3 large/coco_names.txt",
+        'framework': 'tensorflow'
+    },
+    2: {
+        # pune modelul aici, George
+    }
+}
+
+nets = {}
+for name in detectors:
+    if isinstance(name, str):
+        nets[name] = cv2.dnn.readNet(detectors[name]['model'], detectors[name]['weights'], detectors[name]['framework'])
+
 
 # DETECTION ============================================================================================================
-def detect(frame: cv2.Mat, show_fps: bool = True):
+def detect(frame: cv2.Mat, net_name, show_fps: bool = True):
+    with open(detectors[net_name]['classes'], "r") as f:
+        class_names = f.read().strip().split("\n")
+
     # starter time to computer the fps
     start = datetime.datetime.now()
     h = frame.shape[0]
@@ -35,8 +49,8 @@ def detect(frame: cv2.Mat, show_fps: bool = True):
         mean=[127.5, 127.5, 127.5]
     )
     # pass the blob through the network and get the output predictions
-    net.setInput(blob)
-    output = net.forward()  # shape: (1, 1, 100, 7)
+    nets[net_name].setInput(blob)
+    output = nets[net_name].forward()  # shape: (1, 1, 100, 7)
 
     # loop over the number of detected objects
     for detection in output[0, 0, :, :]:  # output[0, 0, :, :] has a shape of: (100, 7)
