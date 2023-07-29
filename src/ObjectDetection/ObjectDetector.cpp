@@ -71,14 +71,12 @@ void ObjectDetector::detect(cv::Mat& image, bool showConf) {
 			int box_height = (int)(detectionMat.at<float>(i, 6) * image.rows - box_y);
 			lastRect = cv::Rect(box_x, box_y, box_width, box_height);
 
-			cv::rectangle(image, lastRect, cv::Scalar(147, 167, 255), 2);
-
 			currentClassName = classNames[classId - 1].c_str();
 			std::stringstream ss;
 			ss << currentClassName;
 			if (showConf)
 				ss << ": confidence = " + std::to_string((int)(confidence * 100)) + "%";
-			drawLabel(image, ss.str(), box_x, box_y);
+			drawLabel(image, ss.str(), lastRect);
 		}
 	}
 }

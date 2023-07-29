@@ -56,8 +56,8 @@ public:
  The position of the label is determined by the provided left and top coordinates.
  If the top coordinate is less than the height of the label, it is adjusted to ensure that the label is fully visible on the image.
  * @param[in,out] image The image to draw the label on.
- * @param[in] label The text of the label to draw.
- * @param[in] left The x-coordinate of the left side of the label.
- * @param[in] top The y-coordinate of the top side of the label.
+ * @param[in] text The text of the label to draw.
+ * @param[in] rect The rectangle surrounding the object. The function will write the text in the top-left corner.
+ * @param[in] color (optional) The color for the text and rectangle. If not provided, one will be generated using the given text.
  */
-void drawLabel(cv::Mat& image, std::string label, int left, int top);
+void drawLabel(cv::Mat& image, std::string text, cv::Rect rect, cv::Scalar color = cv::Scalar());

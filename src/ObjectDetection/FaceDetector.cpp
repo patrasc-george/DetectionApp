@@ -52,8 +52,7 @@ void FaceDetector::detect(cv::Mat& image, bool showFeatures) {
 	}
 	for (auto&& face : facesInFrame) {
 		if (face.size().width > 10 || face.size().height > 10) {
-			rectangle(image, face, cv::Scalar(143, 237, 76), 2);
-			drawLabel(image, currentClassName, face.x, face.y);
+			drawLabel(image, currentClassName, face);
 		}
 		if (showFeatures == false)
 			break;
