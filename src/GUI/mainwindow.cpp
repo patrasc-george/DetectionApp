@@ -89,6 +89,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 		processImage();
 		});
 
+	for (QPushButton* button : menu->classButtons) {
+		connect(button, &QPushButton::clicked, this, &MainWindow::processImage);
+	}
 
 	connect(menu->flipHorizontal, &QCheckBox::clicked, this, [&] {
 		history.add(FLIP_HORIZONTAL, menu->flipHorizontal->isChecked());
@@ -220,6 +223,8 @@ void MainWindow::setOptions()
 	);
 
 	menu->imageAlgorithms->setVisible(cameraIsOn || imageIsUpload);
+
+	menu->classesScroll->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
 }
 
 void MainWindow::toggleCameraEvent() {
@@ -414,6 +419,7 @@ void MainWindow::setDetector() {
 				menu->detectorsList->setCurrentIndex(0);
 				return;
 			}
+			currDet->setClassNamesValues(menu->classButtons);
 			currDet->detect(mat, menu->showConfidence->isChecked());
 		}
 

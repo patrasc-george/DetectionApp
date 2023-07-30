@@ -1,4 +1,5 @@
 #include "menuOptions.h"
+#include <fstream>
 
 Menu::Menu(QWidget* parent)
 	: QWidget(parent) {
@@ -41,6 +42,29 @@ Menu::Menu(QWidget* parent)
 	algVbox->addWidget(histogramEqualizationButton);
 	algVbox->addWidget(detectEdgesButton);
 	imageAlgorithms->setLayout(algVbox);
+
+	classesScroll = new QScrollArea;
+
+	QGroupBox* classes = new QGroupBox("Classes");
+	QVBoxLayout* classesVbox = new QVBoxLayout;
+	std::ifstream classesFile("../data/models/mobilenet_v2/object_detection_classes_coco.txt");
+	std::string line;
+	int i = 0;
+	while (std::getline(classesFile, line))
+	{
+		classButtons.push_back(new QPushButton(QString::fromStdString(line), classes));
+		classButtons[i]->setCheckable(true);
+		classButtons[i]->setChecked(true);
+		classesVbox->addWidget(classButtons[i]);
+		i++;
+	}
+
+	classes->setLayout(classesVbox);
+
+	classesScroll->setWidget(classes);
+	classesScroll->setWidgetResizable(true);
+
+	classesScroll->setFixedSize(230, 150);
 
 	zoomIn = new QPushButton();
 	zoomIn->setIcon(QIcon(":/assets/zoom-in_dark.png"));
@@ -93,6 +117,7 @@ Menu::Menu(QWidget* parent)
 	vbox->addWidget(new QLabel("Select a detector"));
 	vbox->addWidget(detectorsList);
 	vbox->addWidget(imageAlgorithms);
+	vbox->addWidget(classesScroll);
 
 	vbox->addWidget(toggleFaceFeatures);
 	vbox->addWidget(showConfidence);

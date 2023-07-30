@@ -22,7 +22,7 @@ int ObjectDetector::init() {
 	std::ifstream ifs(classNamesPath);
 	std::string line;
 	while (getline(ifs, line))
-		classNames.push_back(line);
+		classNames.push_back(std::make_pair(line, false));
 	try {
 		model = cv::dnn::readNet(infGraphPath, modelPath, framework);
 	}
@@ -30,6 +30,12 @@ int ObjectDetector::init() {
 		return -5;
 	}
 	return 1;
+}
+
+void ObjectDetector::setClassNamesValues(const std::vector<QPushButton*>& classButtons)
+{
+	for (int i = 0; i < classNames.size(); i++)
+		classNames[i].second = classButtons[i]->isChecked();
 }
 
 void ObjectDetector::detect(cv::Mat& image, bool showConf) {
@@ -64,14 +70,14 @@ void ObjectDetector::detect(cv::Mat& image, bool showConf) {
 		int classId = detectionMat.at<float>(i, 1);
 		float confidence = detectionMat.at<float>(i, 2);
 
-		if (confidence > minConfidence) {
+		if (confidence > minConfidence && classNames[classId - 1].second) {
 			int box_x = (int)(detectionMat.at<float>(i, 3) * image.cols);
 			int box_y = (int)(detectionMat.at<float>(i, 4) * image.rows);
 			int box_width = (int)(detectionMat.at<float>(i, 5) * image.cols - box_x);
 			int box_height = (int)(detectionMat.at<float>(i, 6) * image.rows - box_y);
 			lastRect = cv::Rect(box_x, box_y, box_width, box_height);
 
-			currentClassName = classNames[classId - 1].c_str();
+			currentClassName = classNames[classId - 1].first.c_str();
 			std::stringstream ss;
 			ss << currentClassName;
 			if (showConf)

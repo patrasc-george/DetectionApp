@@ -1,11 +1,12 @@
 #include <iostream>
 #include <fstream>
+#include<QPushButton>
 
 #include <ObjectDetection.h>
 
 class OBJECTDETECTION_API ObjectDetector : public Detector {
 private:
-	std::vector<std::string> classNames;
+	std::vector<std::pair<std::string, bool>> classNames;
 	std::string classNamesPath;
 	std::string infGraphPath;
 	std::string framework;
@@ -65,6 +66,8 @@ public:
 	 * @return An integer representing the success or failure of initialization.
 	 */
 	int init();
+
+	void setClassNamesValues(const std::vector<QPushButton*>& classButtons);
 
 	int getType() { return type; };
 };

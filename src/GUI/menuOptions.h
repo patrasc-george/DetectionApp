@@ -28,6 +28,9 @@ public:
 	QPushButton* undoBtn;
 	QPushButton* redoBtn;
 
+	QScrollArea* classesScroll = new QScrollArea;
+	std::vector<QPushButton*> classButtons;
+
 	QGroupBox* imageAlgorithms;
 	QPushButton* binaryThresholdingButton;
 	QPushButton* zeroThresholdingButton;

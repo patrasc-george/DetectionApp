@@ -1,5 +1,6 @@
 #pragma once
 #include <opencv2/opencv.hpp>
+#include <QPushButton>
 
 #ifdef OBJECTDETECTION_EXPORTS
 #define OBJECTDETECTION_API __declspec(dllexport)
@@ -47,6 +48,7 @@ public:
 	virtual bool canDetectSmiles() { return false; };
 	virtual int getType() { return 0; };
 	virtual ~Detector() { std::cout << "detector destroyed" << std::endl; }
+	virtual void setClassNamesValues(const std::vector<QPushButton*>& classButtons) {};
 };
 
 /**
