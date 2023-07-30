@@ -44,9 +44,9 @@ Menu::Menu(QWidget* parent)
 	imageAlgorithms->setLayout(algVbox);
 
 	classesScroll = new QScrollArea;
+	classes = new QGroupBox("Classes");
+	classesVbox = new QVBoxLayout;
 
-	QGroupBox* classes = new QGroupBox("Classes");
-	QVBoxLayout* classesVbox = new QVBoxLayout;
 	std::ifstream classesFile("../data/models/mobilenet_v2/object_detection_classes_coco.txt");
 	std::string line;
 	int i = 0;

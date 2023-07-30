@@ -421,6 +421,7 @@ void MainWindow::setDetector() {
 			}
 			currDet->setClassNamesValues(menu->classButtons);
 			currDet->detect(mat, menu->showConfidence->isChecked());
+			//sortButtons();
 		}
 
 		if (currDet->getLastRect().empty() == false) {
@@ -571,4 +572,38 @@ bool MainWindow::thresholdActive() {
 		menu->adaptiveThresholdingButton->isChecked() ||
 		menu->truncThresholdingButton->isChecked()
 		);
+}
+
+void MainWindow::sortButtons()
+{
+	//std::vector<std::string> sortedClassNames = currDet->getSortedClassNames();
+	//for (const auto& className : sortedClassNames)
+	//{
+	//	std::vector<QPushButton*> newClassButtons;
+	//	for (const auto& className : sortedClassNames) {
+	//		auto it = std::find_if(menu->classButtons.begin(), menu->classButtons.end(), [className](QPushButton* btn) {
+	//			return btn->text().toStdString() == className;
+	//			});
+	//		if (it != menu->classButtons.end()) {
+	//			newClassButtons.push_back(*it);
+	//		}
+	//	}
+	//	menu->classButtons = std::move(newClassButtons);
+	//}
+
+	///*std::string str;
+	//for (const auto& classButton : menu->classButtons)
+	//{
+	//	str = str + classButton->text().toStdString() + '\n';
+	//}
+	//QMessageBox::information(nullptr, "Titlu", QString::fromStdString(str));*/
+
+	//delete menu->classesVbox;
+	//menu->classesVbox = new QVBoxLayout;
+	//for (const auto& classButton : menu->classButtons)
+	//	menu->classesVbox->addWidget(classButton);
+
+	//menu->classes->setLayout(menu->classesVbox);
+
+	//menu->classesScroll->setWidget(menu->classes);
 }

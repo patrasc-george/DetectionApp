@@ -6,6 +6,7 @@
 
 class OBJECTDETECTION_API ObjectDetector : public Detector {
 private:
+	std::vector<std::string> sortedClassNames;
 	std::vector<std::pair<std::string, bool>> classNames;
 	std::string classNamesPath;
 	std::string infGraphPath;
@@ -68,6 +69,10 @@ public:
 	int init();
 
 	void setClassNamesValues(const std::vector<QPushButton*>& classButtons);
+	
+	void sort(const cv::Mat& detectionMat);
+
+	std::vector<std::string> getSortedClassNames() const;
 
 	int getType() { return type; };
 };

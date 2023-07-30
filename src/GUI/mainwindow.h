@@ -188,4 +188,6 @@ public:
 	void resizeEvent(QResizeEvent* event) override;
 
 	bool thresholdActive();
+
+	void sortButtons();
 };

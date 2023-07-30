@@ -1,5 +1,6 @@
 #include "ObjectDetector.h"
 
+#include <algorithm>
 cv::Rect ObjectDetector::getLastRect() {
 	return lastRect;
 }
@@ -38,6 +39,27 @@ void ObjectDetector::setClassNamesValues(const std::vector<QPushButton*>& classB
 		classNames[i].second = classButtons[i]->isChecked();
 }
 
+void ObjectDetector::sort(const cv::Mat& detectionMat)
+{
+	sortedClassNames.clear();
+	std::map<int, float> counter;
+	for (int i = 0; i < detectionMat.rows; i++)
+	{
+		int classId = detectionMat.at<float>(i, 1) - 1;
+		counter[classId]++;
+	}
+	for (const auto& pair : counter)
+		sortedClassNames.push_back(classNames[pair.first].first);
+	for (const auto& className : classNames)
+		if (std::find(sortedClassNames.begin(), sortedClassNames.end(), className.first) == sortedClassNames.end())
+			sortedClassNames.push_back(className.first);
+}
+
+std::vector<std::string> ObjectDetector::getSortedClassNames() const
+{
+	return sortedClassNames;
+}
+
 void ObjectDetector::detect(cv::Mat& image, bool showConf) {
 	if (image.type() == CV_8UC4)
 		cv::cvtColor(image, image, cv::COLOR_BGRA2BGR);
@@ -65,6 +87,7 @@ void ObjectDetector::detect(cv::Mat& image, bool showConf) {
 	}
 
 	cv::Mat detectionMat(blob.size[2], blob.size[3], CV_32F, blob.ptr<float>());
+	sort(detectionMat);
 
 	for (int i = 0; i < detectionMat.rows; i++) {
 		int classId = detectionMat.at<float>(i, 1);

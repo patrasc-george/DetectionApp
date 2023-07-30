@@ -49,6 +49,7 @@ public:
 	virtual int getType() { return 0; };
 	virtual ~Detector() { std::cout << "detector destroyed" << std::endl; }
 	virtual void setClassNamesValues(const std::vector<QPushButton*>& classButtons) {};
+	virtual std::vector<std::string> getSortedClassNames() const = 0;
 };
 
 /**

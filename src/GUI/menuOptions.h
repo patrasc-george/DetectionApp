@@ -28,7 +28,9 @@ public:
 	QPushButton* undoBtn;
 	QPushButton* redoBtn;
 
-	QScrollArea* classesScroll = new QScrollArea;
+	QGroupBox* classes;
+	QVBoxLayout* classesVbox;
+	QScrollArea* classesScroll;
 	std::vector<QPushButton*> classButtons;
 
 	QGroupBox* imageAlgorithms;
