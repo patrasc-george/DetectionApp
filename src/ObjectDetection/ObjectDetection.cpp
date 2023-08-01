@@ -9,10 +9,12 @@ void drawLabel(cv::Mat& image, std::string text, cv::Rect rect, cv::Scalar color
 
 	if (color == cv::Scalar()) {
 		// we cut off the part with the confidence percent, if present
-		size_t colon = text.find_first_of(":");
+		size_t colon = text.rfind(": ");
 		std::string className = colon != std::string::npos ? text.substr(0, colon) : text;
 
-		uchar b, g, r = 0;
+		uchar b = 0;
+		uchar g = 0;
+		uchar r = 0;
 		uchar step = 1; // count the steps, so we add to each channel sequentially: 1 - b, 2 - g, 3 - r | 4 - b, 5 - g, ... 
 		for (int c = 0; c < className.length(); ++c, ++step) {
 			if (step == 4)
@@ -40,5 +42,4 @@ void drawLabel(cv::Mat& image, std::string text, cv::Rect rect, cv::Scalar color
 	putText(image, text, tlc, cv::FONT_HERSHEY_SIMPLEX, 0.7, color, 2);
 
 	cv::rectangle(image, rect, color, 2);
-
 }
