@@ -5,6 +5,7 @@
 #include <QGraphicsView>
 #include <QGraphicsItem>
 #include <QGridLayout>
+#include <QToolButton>
 
 class LabeledSlider : public QWidget {
 	Q_OBJECT
@@ -118,4 +119,25 @@ public:
 	 * @return An integer representing an image's current zoom level (positive for zoomed in, negative for zoomed out).
 	 */
 	int getZoomCount();
+};
+
+
+class CollapsibleWidget : public QWidget {
+	Q_OBJECT
+
+private:
+	QGridLayout* mainLayout;
+	QToolButton* toggleButton;
+	QScrollArea* contentArea;
+	int collapsedHeight;
+	bool isExpanded;
+
+public slots:
+	void toggle(bool collapsed);
+
+public:
+	CollapsibleWidget(const QString& title = "", QWidget* parent = 0);
+	void setContentLayout(QLayout& contentLayout);
+	void setTitle(QString title);
+	void updateHeights();
 };

@@ -1,6 +1,5 @@
 #pragma once
 #include <opencv2/opencv.hpp>
-#include <QPushButton>
 
 #ifdef OBJECTDETECTION_EXPORTS
 #define OBJECTDETECTION_API __declspec(dllexport)

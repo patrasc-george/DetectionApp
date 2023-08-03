@@ -28,10 +28,9 @@ public:
 	QPushButton* undoBtn;
 	QPushButton* redoBtn;
 
-	QScrollArea* classesScroll;
-	QGroupBox* classButtons;
+	CollapsibleWidget* classButtons;
 
-	QGroupBox* imageAlgorithms;
+	CollapsibleWidget* imageAlgorithms;
 	QPushButton* binaryThresholdingButton;
 	QPushButton* zeroThresholdingButton;
 	QPushButton* truncThresholdingButton;

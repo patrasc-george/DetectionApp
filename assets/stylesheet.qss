@@ -118,15 +118,18 @@ QMessageBox QPushButton {
     min-width: 100px;
 }
 
-QGroupBox QPushButton {
+CollapsibleWidget QPushButton {
     height: 25;
     background-color: hsl(0, 0%, 90%);
 }
-QGroupBox QPushButton:checked {
+CollapsibleWidget QToolButton:hover {
+    color: hsl(200, 75%, 50%);
+}
+CollapsibleWidget QPushButton:checked {
     height: 25;
     background-color: hsl(202, 90%, 90%);
 }
-QGroupBox QPushButton:disabled {
+CollapsibleWidget QPushButton:disabled {
     background-color: hsl(0, 88%, 90%);
 }
 

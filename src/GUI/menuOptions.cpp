@@ -7,6 +7,7 @@ Menu::Menu(QWidget* parent)
 	setFixedWidth(250);
 	// arrange controls in a vertical box (as in display:flexbox from CSS)
 	auto* vbox = new QVBoxLayout();
+	auto* scrollArea = new QScrollArea();
 
 	// initialize controls
 	toggleCamera = new QPushButton("Turn On");
@@ -18,8 +19,8 @@ Menu::Menu(QWidget* parent)
 	thresholdControl = new LabeledSlider("Threshold", 1, 250, 10);
 	uploadButton = new QPushButton("Upload image");
 
-	classButtons = new QGroupBox("Classes");
-	imageAlgorithms = new QGroupBox("Image processing");
+	classButtons = new CollapsibleWidget("Classes");
+	imageAlgorithms = new CollapsibleWidget("Image processing");
 	binaryThresholdingButton = new QPushButton("Binary Thresholding", imageAlgorithms);
 	binaryThresholdingButton->setCheckable(true);
 	zeroThresholdingButton = new QPushButton("Thresholding to zero", imageAlgorithms);
@@ -42,30 +43,21 @@ Menu::Menu(QWidget* parent)
 	algVbox->addWidget(adaptiveThresholdingButton);
 	algVbox->addWidget(histogramEqualizationButton);
 	algVbox->addWidget(detectEdgesButton);
-	imageAlgorithms->setLayout(algVbox);
+	imageAlgorithms->setContentLayout(*algVbox);
 
-	classesScroll = new QScrollArea;
-
+	//TODO: change based on selected detector
 	std::ifstream classesFile("../data/models/mobilenet_v2/object_detection_classes_coco.txt");
 	std::string line;
-	int i = 0;
 	QVBoxLayout* classesVbox = new QVBoxLayout;
 
-	while (std::getline(classesFile, line))
-	{
+	while (std::getline(classesFile, line)) {
 		QPushButton* b = new QPushButton(QString::fromStdString(line));
 		b->setCheckable(true);
 		b->setChecked(true);
 		classesVbox->addWidget(b);
-		i++;
 	}
 
-	classButtons->setLayout(classesVbox);
-
-	classesScroll->setWidget(classButtons);
-	classesScroll->setWidgetResizable(true);
-
-	classesScroll->setFixedSize(230, 150);
+	classButtons->setContentLayout(*classesVbox);
 
 	zoomIn = new QPushButton();
 	zoomIn->setIcon(QIcon(":/assets/zoom-in_dark.png"));
@@ -115,10 +107,24 @@ Menu::Menu(QWidget* parent)
 
 	vbox->addWidget(toggleCamera);
 	vbox->addLayout(miniButtons);
-	vbox->addWidget(new QLabel("Select a detector"));
+
+	vbox->addWidget(new QLabel("Select a detector", detectorsList));
 	vbox->addWidget(detectorsList);
-	vbox->addWidget(imageAlgorithms);
-	vbox->addWidget(classesScroll);
+	
+
+	QWidget* container = new QWidget;
+	scrollArea->setWidget(container);
+
+	QVBoxLayout* lay = new QVBoxLayout(container);
+	lay->setAlignment(Qt::AlignTop);
+	lay->addWidget(imageAlgorithms);
+	lay->addWidget(classButtons);
+
+	scrollArea->setWidgetResizable(true);
+	scrollArea->setContentsMargins(0, 0, 0, 0);
+	scrollArea->setStyleSheet("QScrollArea { border: none; padding: 0; }");
+
+	vbox->addWidget(scrollArea, Qt::AlignTop);
 
 	vbox->addWidget(toggleFaceFeatures);
 	vbox->addWidget(showConfidence);
@@ -130,6 +136,5 @@ Menu::Menu(QWidget* parent)
 	vbox->addWidget(screenshot);
 	vbox->addWidget(editDetectorsBtn);
 
-	vbox->setContentsMargins(10, 0, 10, 0); // add some whitespace
 	setLayout(vbox); // our menu will show the vertical box
 }

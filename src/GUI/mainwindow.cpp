@@ -156,10 +156,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 	menu->flipHorizontal->setChecked(true); // the image is flipped
 	menu->detectorsList->setCurrentIndex(0); // 0 = no detection, 1... = other options
 
-	//menu->binaryThresholdingButton->setChecked(false);
-	//menu->histogramEqualizationButton->setChecked(false);
-	//menu->detectEdgesButton->setChecked(false);
-
 	// init the PixMap
 	imageContainer->setScene(new QGraphicsScene);
 	imageContainer->scene()->addItem(&pixmap);
@@ -213,10 +209,6 @@ void MainWindow::setOptions()
 		!menu->binaryThresholdingButton->isChecked() &&
 		!menu->adaptiveThresholdingButton->isChecked()
 	);
-	//menu->truncThresholdingButton->setEnabled(
-	//	!menu->binaryThresholdingButton->isChecked() &&
-	//	!menu->adaptiveThresholdingButton->isChecked()
-	//);
 	menu->adaptiveThresholdingButton->setEnabled(
 		!menu->binaryThresholdingButton->isChecked() &&
 		!menu->zeroThresholdingButton->isChecked()
@@ -224,7 +216,7 @@ void MainWindow::setOptions()
 
 	menu->imageAlgorithms->setVisible(cameraIsOn || imageIsUpload);
 
-	menu->classesScroll->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
+	menu->classButtons->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
 }
 
 void MainWindow::toggleCameraEvent() {
