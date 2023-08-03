@@ -18,6 +18,7 @@ Menu::Menu(QWidget* parent)
 	thresholdControl = new LabeledSlider("Threshold", 1, 250, 10);
 	uploadButton = new QPushButton("Upload image");
 
+	classButtons = new QGroupBox("Classes");
 	imageAlgorithms = new QGroupBox("Image processing");
 	binaryThresholdingButton = new QPushButton("Binary Thresholding", imageAlgorithms);
 	binaryThresholdingButton->setCheckable(true);
@@ -44,24 +45,24 @@ Menu::Menu(QWidget* parent)
 	imageAlgorithms->setLayout(algVbox);
 
 	classesScroll = new QScrollArea;
-	classes = new QGroupBox("Classes");
-	classesVbox = new QVBoxLayout;
 
 	std::ifstream classesFile("../data/models/mobilenet_v2/object_detection_classes_coco.txt");
 	std::string line;
 	int i = 0;
+	QVBoxLayout* classesVbox = new QVBoxLayout;
+
 	while (std::getline(classesFile, line))
 	{
-		classButtons.push_back(new QPushButton(QString::fromStdString(line), classes));
-		classButtons[i]->setCheckable(true);
-		classButtons[i]->setChecked(true);
-		classesVbox->addWidget(classButtons[i]);
+		QPushButton* b = new QPushButton(QString::fromStdString(line));
+		b->setCheckable(true);
+		b->setChecked(true);
+		classesVbox->addWidget(b);
 		i++;
 	}
 
-	classes->setLayout(classesVbox);
+	classButtons->setLayout(classesVbox);
 
-	classesScroll->setWidget(classes);
+	classesScroll->setWidget(classButtons);
 	classesScroll->setWidgetResizable(true);
 
 	classesScroll->setFixedSize(230, 150);

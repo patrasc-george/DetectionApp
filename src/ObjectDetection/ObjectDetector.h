@@ -68,7 +68,7 @@ public:
 	 */
 	int init();
 
-	void setClassNamesValues(const std::vector<QPushButton*>& classButtons);
+	void setClassNamesValues(const std::vector<bool> classButtons);
 	
 	void sort(const cv::Mat& detectionMat);
 

@@ -33,10 +33,10 @@ int ObjectDetector::init() {
 	return 1;
 }
 
-void ObjectDetector::setClassNamesValues(const std::vector<QPushButton*>& classButtons)
+void ObjectDetector::setClassNamesValues(const std::vector<bool> classesToShow)
 {
 	for (int i = 0; i < classNames.size(); i++)
-		classNames[i].second = classButtons[i]->isChecked();
+		classNames[i].second = classesToShow.at(i);
 }
 
 void ObjectDetector::sort(const cv::Mat& detectionMat)

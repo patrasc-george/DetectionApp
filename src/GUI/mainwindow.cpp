@@ -89,7 +89,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 		processImage();
 		});
 
-	for (QPushButton* button : menu->classButtons) {
+	for (QPushButton* button : menu->classButtons->findChildren<QPushButton*>()) {
 		connect(button, &QPushButton::clicked, this, &MainWindow::processImage);
 	}
 
@@ -419,7 +419,11 @@ void MainWindow::setDetector() {
 				menu->detectorsList->setCurrentIndex(0);
 				return;
 			}
-			currDet->setClassNamesValues(menu->classButtons);
+			std::vector<bool> classBoolValues;
+			for (QPushButton* btn : menu->classButtons->findChildren<QPushButton*>()) {
+				classBoolValues.push_back(btn->isChecked());
+			}
+			currDet->setClassNamesValues(classBoolValues);
 			currDet->detect(mat, menu->showConfidence->isChecked());
 			//sortButtons();
 		}
