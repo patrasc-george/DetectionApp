@@ -7,11 +7,17 @@ set(CMAKE_AUTOUIC OFF)
 add_definitions(-DUI_EXPORTS)
 
 # Take every header and source in the directory
-file(GLOB HEADER_FILES "*.h")
-file(GLOB SOURCE_FILES "*.cpp")
+file(GLOB_RECURSE WIDGET_FILES "custom_widgets/*.hpp" "custom_widgets/*.h" "custom_widgets/*.cpp")
+file(GLOB_RECURSE WINDOW_FILES "window/*.hpp" "window/*.h" "window/*.cpp")
+file(GLOB_RECURSE SIDEMENU "sidemenu/*.hpp" "sidemenu/*.h" "sidemenu/*.cpp")
 
 # Add the library
-add_library(${PROJECT_NAME} STATIC ${HEADER_FILES} ${SOURCE_FILES})
+add_library(${PROJECT_NAME} STATIC ${WIDGET_FILES} ${WINDOW_FILES} ${SIDEMENU})
+
+source_group("UI_Widgets" FILES ${WIDGET_FILES})
+source_group("UI_Window" FILES ${WINDOW_FILES})
+source_group("UI_SideMenu" FILES ${SIDEMENU})
+
 
 target_link_libraries(${PROJECT_NAME} 
 	ImageProcessingUtils
@@ -24,6 +30,7 @@ target_link_libraries(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PUBLIC
 	"${CMAKE_SOURCE_DIR}/src/ImageProcessingUtils"
 	"${CMAKE_SOURCE_DIR}/src/ObjectDetection"
+	"${CMAKE_SOURCE_DIR}/src/GUI"
 	${OpenCV_INCLUDE_DIRS}
 	)
  

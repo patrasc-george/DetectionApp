@@ -7,10 +7,12 @@
 #include <QStatusBar>
 #include <QStandardPaths>
 
-#include "menuOptions.h"
-#include "ModelLoader_GUI.h"
+#include "sidemenu/menu.h"
+#include "ModelLoader_window.h"
 #include "ImageProcessingUtils.h"
 #include "ModelLoader.h"
+#include "custom_widgets/SceneImageViewer.hpp"
+#include <QGraphicsPixmapItem>
 
 
 class MainWindow : public QMainWindow {

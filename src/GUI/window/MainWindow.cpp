@@ -1,4 +1,4 @@
-﻿#include "mainwindow.h"
+﻿#include "MainWindow.h"
 
 #define modelsJSON "../data/detectors.json"
 QVector<QString> names = ModelLoader::getNames(modelsJSON);
@@ -140,7 +140,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 		connect(editor, &DetectorsList::detectorEdited, this, &MainWindow::detectorEditEvent);
 		});
 
-	imageContainer->setMinimumSize(640, 480);
+	imageContainer->setMinimumSize(800, 600);
 
 	QVBoxLayout* vbox = new QVBoxLayout;
 	QHBoxLayout* hbox = new QHBoxLayout;

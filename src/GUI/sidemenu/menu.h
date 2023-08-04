@@ -5,7 +5,8 @@
 #include <QPushButton>
 #include <QCheckbox>
 
-#include "components.h"
+#include "../custom_widgets/LabeledSlider.hpp"
+#include "../custom_widgets/CollapsibleWidget.hpp"
 
 class Menu : public QWidget {
 public:
