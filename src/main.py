@@ -36,7 +36,7 @@ class Window(metaclass=Singleton):
         self.action_just_happened = True  # used so we only update the view on camera
         self.current_detector_name = ''  # see detectors list in detection.py
 
-# BUTTON EVENTS ========================================================================================================
+    # BUTTON EVENTS ========================================================================================================
     def screenshot(self):
         image = Image.fromarray(self.image[:, :, ::-1])
         time = str(datetime.datetime.now().today()).replace(':', "_") + '.jpg'
@@ -107,12 +107,12 @@ while True:
         case ViewType.CAMERA:
             w.image = w.cap.read()[1]
             w.image = cv.flip(w.image, 1)
-            detection.detect(w.image, w.current_detector_name.get())
+            w.image = detection.detect(w.image, w.current_detector_name.get())
             img1 = cv.cvtColor(w.image, cv.COLOR_BGR2RGB)
             img = ImageTk.PhotoImage(Image.fromarray(img1))
             image_box['image'] = img
         case ViewType.IMAGE:
-            detection.detect(w.image, w.current_detector_name.get(), False)  # don't show fps on image
+            w.image = detection.detect(w.image, w.current_detector_name.get())  # don't show fps on image
             img1 = cv.cvtColor(w.image, cv.COLOR_BGR2RGB)
             img = ImageTk.PhotoImage(Image.fromarray(img1))
             image_box['image'] = img

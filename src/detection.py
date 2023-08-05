@@ -1,5 +1,11 @@
+from tkinter import Image
+from PIL import Image
+
 import cv2
 import datetime
+import numpy as np
+import torch
+import ctypes
 
 # INITIALIZATION =======================================================================================================
 
@@ -15,36 +21,76 @@ import datetime
 
 detectors = {
     'MobileNet v3 large': {
-        'weights': "models/MobileNet v3 large/frozen_inference_graph.pb",
-        'model': "models/MobileNet v3 large/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt",
-        'classes': "models/MobileNet v3 large/coco_names.txt",
+        'weights': "C:/Siemens/detectionapp/models/MobileNet v3 large/frozen_inference_graph.pb",
+        'model': "C:/Siemens/detectionapp/models/MobileNet v3 large/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt",
+        'classes': "C:/Siemens/detectionapp/models/MobileNet v3 large/coco_names.txt",
         'framework': 'tensorflow'
     },
-    2: {
-        # pune modelul aici, George
+    "YOLOv5": {
+        'weights': "",
+        'model': "",
+        'classes': "",
+        'framework': 'torch'
     }
 }
 
 nets = {}
 for name in detectors:
-    if isinstance(name, str):
+    if isinstance(name, str) and name != 'YOLOv5':
         nets[name] = cv2.dnn.readNet(detectors[name]['model'], detectors[name]['weights'], detectors[name]['framework'])
+    elif name == 'YOLOv5':
+        nets[name] = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
 
 
 # DETECTION ============================================================================================================
 def detect(frame: cv2.Mat, net_name, show_fps: bool = True):
+    # starter time to computer the fps
+    start = datetime.datetime.now()
+
+    if net_name == "MobileNet v3 large":
+        MobileNet_v3_large(frame, net_name)
+    elif net_name == "YOLOv5":
+        frame = YOLOv5(frame, net_name)
+
+    # end time to compute the fps
+    end = datetime.datetime.now()
+    # calculate the frame per second and draw it on the frame
+    if show_fps:
+        fps = f"FPS: {1 / (end - start).total_seconds():.2f}"
+        cv2.putText(frame, fps, (5, 25),
+                    cv2.FONT_HERSHEY_SIMPLEX, .75, (0, 0, 255), 2)
+
+    return frame
+
+
+def YOLOv5(frame, net_name):
+    results = nets[net_name](frame)
+
+    detected_objects = results.xyxy[0].numpy()
+
+    class_names = results.names
+
+    for box in detected_objects:
+        x1, y1, x2, y2, confidence, class_ = box
+        x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        class_name = class_names[class_]
+        cv2.putText(frame, class_name, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+
+    return frame
+
+
+def MobileNet_v3_large(frame, net_name):
     with open(detectors[net_name]['classes'], "r") as f:
         class_names = f.read().strip().split("\n")
 
-    # starter time to computer the fps
-    start = datetime.datetime.now()
     h = frame.shape[0]
     w = frame.shape[1]
 
     # create a blob from the frame
     blob = cv2.dnn.blobFromImage(
         image=frame,
-        scalefactor=1.0/127.5,
+        scalefactor=1.0 / 127.5,
         size=(320, 320),
         mean=[127.5, 127.5, 127.5]
     )
@@ -77,11 +123,3 @@ def detect(frame: cv2.Mat, net_name, show_fps: bool = True):
         text = f"{label} {probability * 100:.2f}%"
         cv2.putText(frame, text, (box[0], box[1] - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 2)
-
-    # end time to compute the fps
-    end = datetime.datetime.now()
-    # calculate the frame per second and draw it on the frame
-    if show_fps:
-        fps = f"FPS: {1 / (end - start).total_seconds():.2f}"
-        cv2.putText(frame, fps, (5, 25),
-                    cv2.FONT_HERSHEY_SIMPLEX, .75, (0, 0, 255), 2)
