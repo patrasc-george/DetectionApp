@@ -16,6 +16,7 @@ private:
 	bool showConfidence;
 	float minConfidence = 0.6;
 	cv::Rect lastRect;
+	cv::Mat detectionMat;
 
 public:
 	/**
@@ -70,7 +71,7 @@ public:
 
 	void setClassNamesValues(const std::vector<bool> classButtons);
 	
-	void sort(const cv::Mat& detectionMat);
+	void sort();
 
 	std::vector<std::string> getSortedClassNames() const;
 

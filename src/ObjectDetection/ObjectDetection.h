@@ -49,6 +49,7 @@ public:
 	virtual ~Detector() { std::cout << "detector destroyed" << std::endl; }
 	virtual void setClassNamesValues(const std::vector<bool> classesToShow) {};
 	virtual std::vector<std::string> getSortedClassNames() const = 0;
+	virtual void sort() = 0;
 };
 
 /**

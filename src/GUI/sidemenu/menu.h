@@ -29,7 +29,9 @@ public:
 	QPushButton* undoBtn;
 	QPushButton* redoBtn;
 
+	QVBoxLayout* classesVbox;
 	CollapsibleWidget* classButtons;
+	std::map<std::string, QPushButton*> buttonMap;
 
 	CollapsibleWidget* imageAlgorithms;
 	QPushButton* binaryThresholdingButton;

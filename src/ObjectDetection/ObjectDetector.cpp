@@ -39,20 +39,27 @@ void ObjectDetector::setClassNamesValues(const std::vector<bool> classesToShow)
 		classNames[i].second = classesToShow.at(i);
 }
 
-void ObjectDetector::sort(const cv::Mat& detectionMat)
+void ObjectDetector::sort()
 {
 	sortedClassNames.clear();
-	std::map<int, float> counter;
+	std::set<std::string> detectClasses;
+	std::set<std::string> undetectClasses;
+
 	for (int i = 0; i < detectionMat.rows; i++)
 	{
 		int classId = detectionMat.at<float>(i, 1) - 1;
-		counter[classId]++;
+		detectClasses.insert(classNames[classId].first);
 	}
-	for (const auto& pair : counter)
-		sortedClassNames.push_back(classNames[pair.first].first);
+
+	for (const auto& className : detectClasses)
+		sortedClassNames.push_back(className);
+
 	for (const auto& className : classNames)
 		if (std::find(sortedClassNames.begin(), sortedClassNames.end(), className.first) == sortedClassNames.end())
-			sortedClassNames.push_back(className.first);
+			undetectClasses.insert(className.first);
+
+	for (const auto& className : undetectClasses)
+		sortedClassNames.push_back(className);
 }
 
 std::vector<std::string> ObjectDetector::getSortedClassNames() const
@@ -86,8 +93,7 @@ void ObjectDetector::detect(cv::Mat& image, bool showConf) {
 		return;
 	}
 
-	cv::Mat detectionMat(blob.size[2], blob.size[3], CV_32F, blob.ptr<float>());
-	sort(detectionMat);
+	detectionMat = cv::Mat(blob.size[2], blob.size[3], CV_32F, blob.ptr<float>());
 
 	for (int i = 0; i < detectionMat.rows; i++) {
 		int classId = detectionMat.at<float>(i, 1);

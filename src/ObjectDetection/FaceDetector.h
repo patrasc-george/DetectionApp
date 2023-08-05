@@ -62,4 +62,5 @@ public:
 	bool canDetectSmiles() { return smileClassifierLoaded; };
 	int getType() { return type; };
 	virtual std::vector<std::string> getSortedClassNames() const { return std::vector<std::string>(); };
+	virtual void sort() {};
 };

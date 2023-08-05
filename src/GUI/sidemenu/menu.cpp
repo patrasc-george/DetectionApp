@@ -48,13 +48,15 @@ Menu::Menu(QWidget* parent)
 	//TODO: change based on selected detector
 	std::ifstream classesFile("../data/models/mobilenet_v2/object_detection_classes_coco.txt");
 	std::string line;
-	QVBoxLayout* classesVbox = new QVBoxLayout;
+	classesVbox = new QVBoxLayout;
 
 	while (std::getline(classesFile, line)) {
 		QPushButton* b = new QPushButton(QString::fromStdString(line));
 		b->setCheckable(true);
 		b->setChecked(true);
 		classesVbox->addWidget(b);
+
+		buttonMap[line] = b;
 	}
 
 	classButtons->setContentLayout(*classesVbox);

@@ -140,6 +140,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 		connect(editor, &DetectorsList::detectorEdited, this, &MainWindow::detectorEditEvent);
 		});
 
+	connect(menu->classButtons->toggleButton, &QToolButton::toggled, this, &MainWindow::sortButtons);
+	
 	imageContainer->setMinimumSize(800, 600);
 
 	QVBoxLayout* vbox = new QVBoxLayout;
@@ -417,7 +419,6 @@ void MainWindow::setDetector() {
 			}
 			currDet->setClassNamesValues(classBoolValues);
 			currDet->detect(mat, menu->showConfidence->isChecked());
-			//sortButtons();
 		}
 
 		if (currDet->getLastRect().empty() == false) {
@@ -572,34 +573,18 @@ bool MainWindow::thresholdActive() {
 
 void MainWindow::sortButtons()
 {
-	//std::vector<std::string> sortedClassNames = currDet->getSortedClassNames();
-	//for (const auto& className : sortedClassNames)
-	//{
-	//	std::vector<QPushButton*> newClassButtons;
-	//	for (const auto& className : sortedClassNames) {
-	//		auto it = std::find_if(menu->classButtons.begin(), menu->classButtons.end(), [className](QPushButton* btn) {
-	//			return btn->text().toStdString() == className;
-	//			});
-	//		if (it != menu->classButtons.end()) {
-	//			newClassButtons.push_back(*it);
-	//		}
-	//	}
-	//	menu->classButtons = std::move(newClassButtons);
-	//}
+	currDet->sort();
+	std::vector<std::string> sortedClassNames = currDet->getSortedClassNames();
+	std::string str;
+	for (const std::string& className : sortedClassNames)
+	{
+		auto buttonIterator = menu->buttonMap.find(className);
 
-	///*std::string str;
-	//for (const auto& classButton : menu->classButtons)
-	//{
-	//	str = str + classButton->text().toStdString() + '\n';
-	//}
-	//QMessageBox::information(nullptr, "Titlu", QString::fromStdString(str));*/
-
-	//delete menu->classesVbox;
-	//menu->classesVbox = new QVBoxLayout;
-	//for (const auto& classButton : menu->classButtons)
-	//	menu->classesVbox->addWidget(classButton);
-
-	//menu->classes->setLayout(menu->classesVbox);
-
-	//menu->classesScroll->setWidget(menu->classes);
+		if (buttonIterator != menu->buttonMap.end())
+		{
+			QPushButton* button = buttonIterator->second;
+			menu->classesVbox->removeWidget(button);
+			menu->classesVbox->addWidget(button);
+		}
+	}
 }

@@ -10,10 +10,12 @@ class CollapsibleWidget : public QWidget {
 
 private:
 	QGridLayout* mainLayout;
-	QToolButton* toggleButton;
 	QScrollArea* contentArea;
 	int collapsedHeight = 0;
 	bool isExpanded = false;
+
+public:
+    QToolButton* toggleButton;
 
 public:
 	CollapsibleWidget(const QString& title = "", QWidget* parent = 0){
