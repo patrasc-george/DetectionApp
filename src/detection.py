@@ -1,11 +1,6 @@
-from tkinter import Image
-from PIL import Image
-
 import cv2
 import datetime
-import numpy as np
 import torch
-import ctypes
 
 # INITIALIZATION =======================================================================================================
 
@@ -21,9 +16,9 @@ import ctypes
 
 detectors = {
     'MobileNet v3 large': {
-        'weights': "C:/Siemens/detectionapp/models/MobileNet v3 large/frozen_inference_graph.pb",
-        'model': "C:/Siemens/detectionapp/models/MobileNet v3 large/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt",
-        'classes': "C:/Siemens/detectionapp/models/MobileNet v3 large/coco_names.txt",
+        'weights': "../models/MobileNet v3 large/frozen_inference_graph.pb",
+        'model': "../models/MobileNet v3 large/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt",
+        'classes': "../models/MobileNet v3 large/coco_names.txt",
         'framework': 'tensorflow'
     },
     "YOLOv5": {
