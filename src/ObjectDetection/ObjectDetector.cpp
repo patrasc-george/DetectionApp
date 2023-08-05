@@ -42,29 +42,34 @@ void ObjectDetector::setClassNamesValues(const std::vector<bool> classesToShow)
 void ObjectDetector::sort()
 {
 	sortedClassNames.clear();
-	std::set<std::string> detectClasses;
-	std::set<std::string> undetectClasses;
-
-	for (int i = 0; i < detectionMat.rows; i++)
-	{
-		int classId = detectionMat.at<float>(i, 1) - 1;
-		detectClasses.insert(classNames[classId].first);
-	}
+	std::set<std::string> detectClasses = getDetectedClassNames();
+	std::set<std::string> undetectedClasses;
 
 	for (const auto& className : detectClasses)
 		sortedClassNames.push_back(className);
 
 	for (const auto& className : classNames)
 		if (std::find(sortedClassNames.begin(), sortedClassNames.end(), className.first) == sortedClassNames.end())
-			undetectClasses.insert(className.first);
+			undetectedClasses.insert(className.first);
 
-	for (const auto& className : undetectClasses)
+	for (const auto& className : undetectedClasses)
 		sortedClassNames.push_back(className);
 }
 
 std::vector<std::string> ObjectDetector::getSortedClassNames() const
 {
 	return sortedClassNames;
+}
+
+std::set<std::string> ObjectDetector::getDetectedClassNames() const
+{
+	std::set<std::string> detectedClasses;
+	for (int i = 0; i < detectionMat.rows; i++)
+	{
+		int classId = detectionMat.at<float>(i, 1) - 1;
+		detectedClasses.insert(classNames[classId].first);
+	}
+	return detectedClasses;
 }
 
 void ObjectDetector::detect(cv::Mat& image, bool showConf) {

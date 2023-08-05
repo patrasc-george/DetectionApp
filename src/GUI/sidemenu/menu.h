@@ -31,6 +31,7 @@ public:
 
 	QVBoxLayout* classesVbox;
 	CollapsibleWidget* classButtons;
+	QFrame* classSeparator;
 	std::map<std::string, QPushButton*> buttonMap;
 
 	CollapsibleWidget* imageAlgorithms;

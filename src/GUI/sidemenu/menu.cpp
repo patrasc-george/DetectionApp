@@ -15,7 +15,7 @@ Menu::Menu(QWidget* parent)
 	detectorsList = new QComboBox;
 	screenshot = new QPushButton("Save screenshot");
 	showConfidence = new QCheckBox("Show confidences");
-	confControl = new LabeledSlider("Min confidence", 5, 95, 5, true);
+	confControl = new LabeledSlider("Min confidence", 1, 99, 5, true);
 	thresholdControl = new LabeledSlider("Threshold", 1, 250, 10);
 	uploadButton = new QPushButton("Upload image");
 
@@ -60,6 +60,12 @@ Menu::Menu(QWidget* parent)
 	}
 
 	classButtons->setContentLayout(*classesVbox);
+	classSeparator = new QFrame();
+	classSeparator->setFrameShape(QFrame::HLine);
+	classSeparator->setFixedHeight(30);
+	classSeparator->setFrameShadow(QFrame::Plain);
+	classSeparator->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
 
 	zoomIn = new QPushButton();
 	zoomIn->setIcon(QIcon(":/assets/zoom-in_dark.png"));

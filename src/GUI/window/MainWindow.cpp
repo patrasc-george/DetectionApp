@@ -575,6 +575,10 @@ void MainWindow::sortButtons()
 {
 	currDet->sort();
 	std::vector<std::string> sortedClassNames = currDet->getSortedClassNames();
+	std::set<std::string> detectedClasses = ((ObjectDetector*)currDet)->getDetectedClassNames();
+	std::vector<std::string> v;
+	v.assign(detectedClasses.begin(), detectedClasses.end());
+
 	std::string str;
 	for (const std::string& className : sortedClassNames)
 	{
@@ -585,6 +589,12 @@ void MainWindow::sortButtons()
 			QPushButton* button = buttonIterator->second;
 			menu->classesVbox->removeWidget(button);
 			menu->classesVbox->addWidget(button);
+			if (!cameraIsOn && button->text().toStdString() == v.at(v.size() - 1))
+			{
+				menu->classesVbox->removeWidget(menu->classSeparator);
+				menu->classesVbox->addWidget(menu->classSeparator);
+			}
 		}
+
 	}
 }

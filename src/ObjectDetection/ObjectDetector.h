@@ -75,5 +75,7 @@ public:
 
 	std::vector<std::string> getSortedClassNames() const;
 
+	std::set<std::string> getDetectedClassNames() const;
+
 	int getType() { return type; };
 };
