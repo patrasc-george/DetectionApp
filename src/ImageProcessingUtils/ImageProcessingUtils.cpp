@@ -74,11 +74,36 @@ void ProcessingAlgorithms::zeroThresholding(Mat src, Mat& dst, short threshold) 
 	}
 }
 
-void ProcessingAlgorithms::adaptiveThresholding(Mat src, Mat& dst, short threshold) {
-	if (src.type() != CV_8UC1)
-		cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
-	cv::adaptiveThreshold(src, dst, threshold, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 11, 2);
-	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
+void ProcessingAlgorithms::adaptiveThresholding(Mat src, Mat& dst, short maxValue) {
+    if (src.type() != CV_8UC1)
+        cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
+
+    int blockSize = 11;
+    double C = 2;
+    cv::Mat sum;
+    cv::integral(src, sum, CV_32S);
+    dst.create(src.size(), src.type());
+
+    for (int y = 0; y < src.rows; y++) {
+        for (int x = 0; x < src.cols; x++) {
+            int x1 = std::max(0, x - blockSize / 2);
+            int y1 = std::max(0, y - blockSize / 2);
+            int x2 = std::min(src.cols - 1, x + blockSize / 2);
+            int y2 = std::min(src.rows - 1, y + blockSize / 2);
+
+			double area = (x2 - x1 + 1) * (y2 - y1 + 1);
+			double sumRegion = sum.at<int>(y1, x1) + sum.at<int>(y2 + 1, x2 + 1) - sum.at<int>(y1, x2 + 1) - sum.at<int>(y2 + 1, x1);
+
+			double mean = sumRegion / area;
+
+			double threshold;
+			threshold = mean * (1 - C / 100.0);
+
+			dst.at<uchar>(y, x) = src.at<uchar>(y, x) > threshold ? maxValue : 0;
+		}
+    }
+
+    cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
 }
 
 void ProcessingAlgorithms::truncate(cv::Mat src, cv::Mat& dst, short threshold) {
