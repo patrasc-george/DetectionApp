@@ -1,12 +1,5 @@
 #pragma once
 
-#include <QApplication>
-#include <QMainWindow>
-#include <QMessageBox>
-#include <QCoreApplication>
-#include <QStatusBar>
-#include <QStandardPaths>
-
 #include "sidemenu/menu.h"
 #include "ModelLoader_window.h"
 #include "ImageProcessingUtils.h"
@@ -14,6 +7,12 @@
 #include "custom_widgets/SceneImageViewer.hpp"
 #include <QGraphicsPixmapItem>
 
+#include <QApplication>
+#include <QMainWindow>
+#include <QMessageBox>
+#include <QCoreApplication>
+#include <QStatusBar>
+#include <QStandardPaths>
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT

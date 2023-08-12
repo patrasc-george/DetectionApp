@@ -1,9 +1,9 @@
 #pragma once
-#include <opencv2/opencv.hpp>
-#include <QPainter>
-
 #include "OptionsHistory.h"
 #include "Timer.h"
+
+#include <opencv2/opencv.hpp>
+#include <QPainter>
 
 class IMAGEPROCESSINGUTILS_API ProcessingAlgorithms
 {

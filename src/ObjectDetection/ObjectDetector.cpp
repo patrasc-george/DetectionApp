@@ -1,6 +1,7 @@
 #include "ObjectDetector.h"
 
 #include <algorithm>
+
 cv::Rect ObjectDetector::getLastRect() {
 	return lastRect;
 }

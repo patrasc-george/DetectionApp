@@ -1,8 +1,8 @@
+#include <ObjectDetection.h>
+
 #include <iostream>
 #include <fstream>
 #include<QPushButton>
-
-#include <ObjectDetection.h>
 
 class OBJECTDETECTION_API ObjectDetector : public Detector {
 private:
