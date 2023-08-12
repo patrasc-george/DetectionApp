@@ -73,9 +73,29 @@ std::set<std::string> ObjectDetector::getDetectedClassNames() const
 }
 
 void ObjectDetector::detect(cv::Mat& image, bool showConf) {
-	if (image.type() == CV_8UC4)
-		cv::cvtColor(image, image, cv::COLOR_BGRA2BGR);
-	cv::Mat blob = cv::dnn::blobFromImage(image, 1.0, cv::Size(320, 320), meanValues, shouldSwapRB, false);
+	// Convert the image to grayscale
+	cv::Mat gray;
+	cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+
+	// Apply a Gaussian filter for denoising
+	cv::Mat denoised;
+	cv::GaussianBlur(gray, denoised, cv::Size(5, 5), 0);
+
+	// Enhance the image contrast
+	cv::Mat enhanced;
+	cv::equalizeHist(denoised, enhanced);
+
+	// Resize the image to increase speed
+	cv::Mat resized;
+	cv::resize(enhanced, resized, cv::Size(), 0.5, 0.5);
+
+	// Convert resized image to BGR for compatibility
+	cv::Mat BGR;
+	cv::cvtColor(resized, BGR, cv::COLOR_BGRA2BGR);
+
+	// Create a blob from the normalized image
+	cv::Mat blob = cv::dnn::blobFromImage(BGR);
+	
 	std::vector<std::string> layers = model.getLayerNames();
 
 	model.setInput(blob);
