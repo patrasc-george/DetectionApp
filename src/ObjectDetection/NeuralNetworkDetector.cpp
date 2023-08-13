@@ -21,10 +21,10 @@ NeuralNetworkDetector::NeuralNetworkDetector(const std::string& modelFilePath, c
 		throw std::runtime_error("Failed to open labels file: " + classesFilePath);
 	}
 
-	std::string line;
-	while (std::getline(labelsStream, line)) {
-		classNames.push_back(line);
-		objectEnabledMap.insert({ line, true });
+	std::string className;
+	while (std::getline(labelsStream, className)) {
+		classNames.push_back(className);
+		objectEnabledMap.insert({ className, true });
 	}
 }
 
@@ -101,7 +101,12 @@ void NeuralNetworkDetector::adjustThreshold(float newThreshold) {
 }
 
 void NeuralNetworkDetector::enableObject(const std::string& label, bool enable) {
-	objectEnabledMap.find(label);
+	for (auto& obj : objectEnabledMap) {
+		if (obj.first == label) {
+			obj.second = enable;
+			break;
+		}
+	}
 }
 
 void NeuralNetworkDetector::serialize(const std::string& filename) const {

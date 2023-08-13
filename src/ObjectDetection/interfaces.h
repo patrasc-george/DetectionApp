@@ -10,7 +10,7 @@
 
 class OBJECTDETECTION_API Shape {
 public:
-    virtual ~Shape() {}
+    virtual ~Shape() = default;
     virtual void render(cv::Mat& image) const = 0;
     virtual std::string getLabel() const = 0;
     virtual double getConfidence() const = 0;
@@ -20,7 +20,7 @@ public:
 
 class OBJECTDETECTION_API Detector {
 public:
-    virtual ~Detector() {}
+    virtual ~Detector() = default;
     virtual std::vector<std::unique_ptr<Shape>> detect(const cv::Mat& image) = 0;
 };
 
@@ -31,13 +31,13 @@ public:
 
 class OBJECTDETECTION_API ThresholdAdjuster {
 public:
-    virtual ~ThresholdAdjuster() {}
+    virtual ~ThresholdAdjuster() = default;
     virtual void adjustThreshold(float newThreshold) = 0;
 };
 
 class Serializable {
 public:
-    virtual ~Serializable() {}
+    virtual ~Serializable() = default;
     virtual void serialize(const std::string& filePath) const = 0;
     virtual void deserialize(const std::string& filePath) = 0;
 };
