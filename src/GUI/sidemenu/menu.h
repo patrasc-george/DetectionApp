@@ -1,12 +1,12 @@
 #pragma once
 
+#include "../custom_widgets/LabeledSlider.hpp"
+#include "../custom_widgets/CollapsibleWidget.hpp"
+
 #include <QComboBox>
 #include <QGroupBox>
 #include <QPushButton>
 #include <QCheckbox>
-
-#include "../custom_widgets/LabeledSlider.hpp"
-#include "../custom_widgets/CollapsibleWidget.hpp"
 
 class Menu : public QWidget {
 public:

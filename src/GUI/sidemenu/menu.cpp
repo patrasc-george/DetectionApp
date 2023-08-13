@@ -1,4 +1,5 @@
 #include "menu.h"
+
 #include <fstream>
 
 Menu::Menu(QWidget* parent)

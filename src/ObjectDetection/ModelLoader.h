@@ -1,13 +1,13 @@
 #pragma once
 
+#include "ModelErrors.h"
+#include <FaceDetector.h>
+#include <ObjectDetector.h>
+
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QFile>
-
-#include "ModelErrors.h"
-#include <FaceDetector.h>
-#include <ObjectDetector.h>
 
 class OBJECTDETECTION_API ModelLoader {
 public:

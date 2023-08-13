@@ -1,6 +1,6 @@
-#include <deque>
-
 #include "FrameOptions.h"
+
+#include <deque>
 
 class IMAGEPROCESSINGUTILS_API OptionsHistory {
 private:

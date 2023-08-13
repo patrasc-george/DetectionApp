@@ -1,6 +1,6 @@
-#include <string>
-
 #include "RevertableOptions.h"
+
+#include <string>
 
 class IMAGEPROCESSINGUTILS_API FrameOptions {
 private:

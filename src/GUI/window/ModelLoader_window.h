@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ModelLoader.h"
+
 #include <QLabel>
 #include <QSpinBox>
 #include <QPushButton>
@@ -10,8 +12,6 @@
 #include <QListWidget>
 #include <QMessageBox>
 #include <QFileDialog>
-
-#include "ModelLoader.h"
 
 class DetectorEditor : public QDialog {
 	Q_OBJECT

@@ -74,7 +74,8 @@ void ProcessingAlgorithms::zeroThresholding(Mat src, Mat& dst, short threshold) 
 	}
 }
 
-void ProcessingAlgorithms::adaptiveThresholding(Mat src, Mat& dst, short maxValue) {
+void ProcessingAlgorithms::adaptiveThresholding(Mat src, Mat& dst, short maxValue) 
+{
     if (src.type() != CV_8UC1)
         cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
 
@@ -84,8 +85,9 @@ void ProcessingAlgorithms::adaptiveThresholding(Mat src, Mat& dst, short maxValu
     cv::integral(src, sum, CV_32S);
     dst.create(src.size(), src.type());
 
-    for (int y = 0; y < src.rows; y++) {
-        for (int x = 0; x < src.cols; x++) {
+    for (int y = 0; y < src.rows; y++)
+        for (int x = 0; x < src.cols; x++) 
+		{
             int x1 = std::max(0, x - blockSize / 2);
             int y1 = std::max(0, y - blockSize / 2);
             int x2 = std::min(src.cols - 1, x + blockSize / 2);
@@ -101,7 +103,6 @@ void ProcessingAlgorithms::adaptiveThresholding(Mat src, Mat& dst, short maxValu
 
 			dst.at<uchar>(y, x) = src.at<uchar>(y, x) > threshold ? maxValue : 0;
 		}
-    }
 
     cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
 }
