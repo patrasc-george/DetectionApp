@@ -1,7 +1,10 @@
 ﻿#include "MainWindow.h"
 
-#define modelsJSON "../data/detectors.json"
-QVector<QString> names = ModelLoader::getNames(modelsJSON);
+#include "DetectorFactory.h"
+#include "DetectionMat.h"
+#include "ThresholdAdjuster.h"
+#include <NeuralNetworkDetector.h>
+#include <CascadeClassifierDetector.h>
 
 void MainWindow::closeEvent(QCloseEvent* event) {
 	// close the entire application
@@ -133,11 +136,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 		});
 	connect(menu->editDetectorsBtn, &QPushButton::clicked, [&] {
 		// open the detectors editor
-		DetectorsList* editor = new DetectorsList(modelsJSON);
-		editor->show();
-		connect(editor, &DetectorsList::detectorRemoved, this, &MainWindow::detectorEditEvent);
-		connect(editor, &DetectorsList::detectorAdded, this, &MainWindow::detectorEditEvent);
-		connect(editor, &DetectorsList::detectorEdited, this, &MainWindow::detectorEditEvent);
+		//DetectorsList* editor = new DetectorsList(modelsJSON);
+		//editor->show();
+		//connect(editor, &DetectorsList::detectorRemoved, this, &MainWindow::detectorEditEvent);
+		//connect(editor, &DetectorsList::detectorAdded, this, &MainWindow::detectorEditEvent);
+		//connect(editor, &DetectorsList::detectorEdited, this, &MainWindow::detectorEditEvent);
 		});
 
 	connect(menu->classButtons->toggleButton, &QToolButton::toggled, this, &MainWindow::sortButtons);
@@ -151,7 +154,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 	vbox->addLayout(hbox);
 	vbox->addWidget(statusBar);
 	hbox->setContentsMargins(20, 0, 20, 0);
-	//setLayout(vbox);
 	layout()->setContentsMargins(0, 20, 0, 0);
 
 	// set the initial values of the menu controls
@@ -163,24 +165,38 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 	imageContainer->scene()->addItem(&pixmap);
 	imageContainer->setAlignment(Qt::AlignCenter);
 
-	// load labels for detectors (after being seleced they might be deleted if the corresponding detector didn't load succesfully)
-	for (QString name : names) {
-		menu->detectorsList->addItem(name);
-	}
-
 	QWidget* centralWidget = new QWidget;
 	centralWidget->setLayout(vbox);
 	setCentralWidget(centralWidget);
 
+	QDir folder("../data/detectors");
+	QStringList files = folder.entryList({ "*.yaml" }, QDir::Files);
+
+	for (const QString& filename : files) {
+		QString filePath = folder.absoluteFilePath(filename);
+
+		try {
+			Detector* detector = DetectorFactory::createDetectorFromFile(filePath.toStdString());
+
+			if (detector) {
+				menu->detectorsList->addItem(filename);
+				//delete detector;
+			}
+		}
+		catch (const std::exception& e) {
+			// Handle errors if needed
+			throw std::runtime_error("No detectors");
+		}
+	}
 }
 
 void MainWindow::setOptions()
 {
 	menu->detectorsList->setEnabled(cameraIsOn || imageIsUpload);
 	menu->toggleCamera->setText("   Turn Camera " + QString(cameraIsOn ? "Off" : "On"));
-	menu->toggleFaceFeatures->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == cascade && (currDet->canDetectEyes() || currDet->canDetectSmiles()));
-	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
-	menu->confControl->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
+	//menu->toggleFaceFeatures->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == cascade && (currDet->canDetectEyes() || currDet->canDetectSmiles()));
+	//menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
+	menu->confControl->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && dynamic_cast<NeuralNetworkDetector*>(currDet));
 	menu->flipHorizontal->setEnabled(cameraIsOn || imageIsUpload);
 	menu->flipVertical->setEnabled(cameraIsOn || imageIsUpload);
 	menu->screenshot->setVisible(cameraIsOn || imageIsUpload);
@@ -218,7 +234,7 @@ void MainWindow::setOptions()
 
 	menu->imageAlgorithms->setVisible(cameraIsOn || imageIsUpload);
 
-	menu->classButtons->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
+	menu->classButtons->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && dynamic_cast<NeuralNetworkDetector*>(currDet));
 }
 
 void MainWindow::toggleCameraEvent() {
@@ -297,86 +313,91 @@ void MainWindow::selectDetectorEvent() {
 
 	QString currText = menu->detectorsList->currentText();
 	int index = menu->detectorsList->findText(currText);
-	int loadState = ModelLoader::getFromFileByName(currDet, currText, modelsJSON);
-	bool loaded = false;
-	switch (loadState) {
-	case ModelErrors::NAME_NOT_FOUND:
-		QMessageBox::critical(this, "Model not found",
-			QString("No entry named \"%1\" was found in %2")
-			.arg(currText)
-			.arg(modelsJSON)
-		);
-		break;
-	case ModelErrors::TYPE_NOT_PROVIDED:
-		QMessageBox::critical(this, "Type not found",
-			QString("Model \"%1\" was not provided a type (cascade or neural network) in %2")
-			.arg(currText)
-			.arg(modelsJSON)
-		);
-		break;
-	case ModelErrors::MODEL_PATH_EMPTY:
-		QMessageBox::critical(this, "Empty path",
-			QString("Model \"%1\" was not provided a path to the detection model in %2")
-			.arg(currText)
-			.arg(modelsJSON)
-		);
-		break;
-	case ModelErrors::INVALID_CASCADE:
-		QMessageBox::critical(this, "Couldn't load cascade file",
-			QString("\"%1\" is not a valid cascade file.")
-			.arg(ModelLoader::getObjectByName(currText, modelsJSON).value("paths").toObject()["face"].toString())
-		);
-		break;
-	case ModelErrors::INF_GRAPH_PATH_EMPTY:
-		QMessageBox::critical(this, "Inference graph path empty",
-			QString("Model \"%1\" was not provided a path to a frozen inference graph in %2")
-			.arg(currText)
-			.arg(modelsJSON)
-		);
-		break;
-	case ModelErrors::CANNOT_READ_NETWORK:
-		QMessageBox::critical(this, "Couldn't read model",
-			QString("Couldn't read model \"%1\". Please check to following paths in %2 lead to a valid inference graph and weights file: \n%3 \n%4")
-			.arg(currText)
-			.arg(modelsJSON)
-			.arg(ModelLoader::getObjectByName(currText, modelsJSON).value("paths").toObject()["inf"].toString())
-			.arg(ModelLoader::getObjectByName(currText, modelsJSON).value("paths").toObject()["model"].toString())
-		);
-		break;
-	case 1:
-		loaded = true;
-	}
 
-	if (!loaded) {
-		menu->detectorsList->setItemIcon(index, QIcon(QApplication::style()->standardIcon(QStyle::SP_MessageBoxCritical)));
-		menu->detectorsList->setCurrentIndex(0);
-		delete currDet;
-		currDet = nullptr;
-	}
-	else if (currDet->getType() == cascade && (!currDet->canDetectEyes() || !currDet->canDetectSmiles())) {
-		if (menu->detectorsList->itemIcon(index).isNull()) {
-			QMessageBox::information(this, "Model not completely loaded",
-				QString("Model \"%1\" has only loaded cascade(s) to detect %2. If you want to be able to detect %3 you can add the paths to the cascades in %4 and reload.")
-				.arg(currText)
-				.arg(QString("faces%1")
-					.arg(currDet->canDetectEyes() ? " and eyes" : currDet->canDetectSmiles() ? " and smiles" : ""))
-				.arg(QString(!currDet->canDetectSmiles() ? currDet->canDetectEyes() ? "smiles" : "eyes or smiles" : "eyes"))
-				.arg(modelsJSON)
-			);
-			menu->detectorsList->setItemIcon(index, QIcon(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation)));
-		}
-	}
-	else
-		menu->detectorsList->setItemIcon(index, QIcon());
+	currDet = DetectorFactory::createDetectorFromFile("../data/detectors/" + currText.toStdString());
+
+	//int loadState = ModelLoader::getFromFileByName(currDet, currText, modelsJSON);
+	//bool loaded = false;
+	//switch (loadState) {
+	//case ModelErrors::NAME_NOT_FOUND:
+	//	QMessageBox::critical(this, "Model not found",
+	//		QString("No entry named \"%1\" was found in %2")
+	//		.arg(currText)
+	//		.arg(modelsJSON)
+	//	);
+	//	break;
+	//case ModelErrors::TYPE_NOT_PROVIDED:
+	//	QMessageBox::critical(this, "Type not found",
+	//		QString("Model \"%1\" was not provided a type (cascade or neural network) in %2")
+	//		.arg(currText)
+	//		.arg(modelsJSON)
+	//	);
+	//	break;
+	//case ModelErrors::MODEL_PATH_EMPTY:
+	//	QMessageBox::critical(this, "Empty path",
+	//		QString("Model \"%1\" was not provided a path to the detection model in %2")
+	//		.arg(currText)
+	//		.arg(modelsJSON)
+	//	);
+	//	break;
+	//case ModelErrors::INVALID_CASCADE:
+	//	QMessageBox::critical(this, "Couldn't load cascade file",
+	//		QString("\"%1\" is not a valid cascade file.")
+	//		.arg(ModelLoader::getObjectByName(currText, modelsJSON).value("paths").toObject()["face"].toString())
+	//	);
+	//	break;
+	//case ModelErrors::INF_GRAPH_PATH_EMPTY:
+	//	QMessageBox::critical(this, "Inference graph path empty",
+	//		QString("Model \"%1\" was not provided a path to a frozen inference graph in %2")
+	//		.arg(currText)
+	//		.arg(modelsJSON)
+	//	);
+	//	break;
+	//case ModelErrors::CANNOT_READ_NETWORK:
+	//	QMessageBox::critical(this, "Couldn't read model",
+	//		QString("Couldn't read model \"%1\". Please check to following paths in %2 lead to a valid inference graph and weights file: \n%3 \n%4")
+	//		.arg(currText)
+	//		.arg(modelsJSON)
+	//		.arg(ModelLoader::getObjectByName(currText, modelsJSON).value("paths").toObject()["inf"].toString())
+	//		.arg(ModelLoader::getObjectByName(currText, modelsJSON).value("paths").toObject()["model"].toString())
+	//	);
+	//	break;
+	//case 1:
+	//	loaded = true;
+	//}
+
+	//if (!loaded) {
+	//	menu->detectorsList->setItemIcon(index, QIcon(QApplication::style()->standardIcon(QStyle::SP_MessageBoxCritical)));
+	//	menu->detectorsList->setCurrentIndex(0);
+	//	delete currDet;
+	//	currDet = nullptr;
+	//}
+	////else if (currDet->getType() == cascade && (!currDet->canDetectEyes() || !currDet->canDetectSmiles())) {
+	//	//if (menu->detectorsList->itemIcon(index).isNull()) {
+	//	//	QMessageBox::information(this, "Model not completely loaded",
+	//	//		QString("Model \"%1\" has only loaded cascade(s) to detect %2. If you want to be able to detect %3 you can add the paths to the cascades in %4 and reload.")
+	//	//		.arg(currText)
+	//	//		.arg(QString("faces%1")
+	//	//			.arg(currDet->canDetectEyes() ? " and eyes" : currDet->canDetectSmiles() ? " and smiles" : ""))
+	//	//		.arg(QString(!currDet->canDetectSmiles() ? currDet->canDetectEyes() ? "smiles" : "eyes or smiles" : "eyes"))
+	//	//		.arg(modelsJSON)
+	//	//	);
+	//	//	menu->detectorsList->setItemIcon(index, QIcon(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation)));
+	//	//}
+	//}
+	//else
+	//	menu->detectorsList->setItemIcon(index, QIcon());
 	if (imageIsUpload)
 		processImage();
 	setOptions();
 }
 
 void MainWindow::changeMinConfEvent() {
-	currDet->setMinConfidence(menu->confControl->value() / static_cast<float>(100));
+	if (NeuralNetworkDetector* nnDetector = dynamic_cast<NeuralNetworkDetector*>(currDet))
+		nnDetector->adjustThreshold(menu->confControl->value() / static_cast<float>(100));
 	if (imageIsUpload)
 		processImage();
+	sortButtons();
 }
 
 void MainWindow::screenshotEvent() {
@@ -404,10 +425,7 @@ void MainWindow::setDetector() {
 	try {
 		cv::Mat mat;
 		ConvertQImage2Mat(frame, mat);
-		if (currDet->getType() == cascade) {
-			currDet->detect(mat, menu->toggleFaceFeatures->isChecked());
-		}
-		else if (currDet->getType() == network) {
+		if (dynamic_cast<NeuralNetworkDetector*>(currDet)) {
 			if (mat.type() == CV_8UC1) {
 				QMessageBox::critical(this, "Error", "This detector does not work on 1-channel images");
 				menu->detectorsList->setCurrentIndex(0);
@@ -417,21 +435,23 @@ void MainWindow::setDetector() {
 			for (QPushButton* btn : menu->classButtons->findChildren<QPushButton*>()) {
 				classBoolValues.push_back(btn->isChecked());
 			}
-			currDet->setClassNamesValues(classBoolValues);
-			currDet->detect(mat, menu->showConfidence->isChecked());
+			//currDet->setClassNamesValues(classBoolValues);
 		}
 
-		if (currDet->getLastRect().empty() == false) {
-			cv::Rect rect = currDet->getLastRect();
-			statusBar->showMessage(QString("Detected %5 at: <%1 %2> - <%3 %4>")
-				.arg(QString::number(rect.x))
-				.arg(QString::number(rect.y))
-				.arg(QString::number(rect.x + rect.width))
-				.arg(QString::number(rect.y + rect.height))
-				.arg(QString::fromStdString(currDet->currentClassName)));
-		}
-		else statusBar->clearMessage();
+		detMat = currDet->detect(mat);
+		detMat.renderShapes(mat);
 		ConvertMat2QImage(mat, frame);
+
+	//	if (currDet->getLastRect().empty() == false) {
+	//		cv::Rect rect = currDet->getLastRect();
+	//		statusBar->showMessage(QString("Detected %5 at: <%1 %2> - <%3 %4>")
+	//			.arg(QString::number(rect.x))
+	//			.arg(QString::number(rect.y))
+	//			.arg(QString::number(rect.x + rect.width))
+	//			.arg(QString::number(rect.y + rect.height))
+	//			.arg(QString::fromStdString(currDet->currentClassName)));
+	//	}
+	//	else statusBar->clearMessage();
 	}
 	catch (const std::exception& e) {
 		QMessageBox::critical(this, "Error", e.what());
@@ -548,14 +568,14 @@ void MainWindow::detectorEditEvent() {
 	menu->detectorsList->setCurrentIndex(0);
 	for (int i = menu->detectorsList->count() - 1; i > 0; i--)
 		menu->detectorsList->removeItem(i);
-	QStringList names = ModelLoader::getNames(modelsJSON);
+	//QStringList names = ModelLoader::getNames(modelsJSON);
 
-	for (auto&& name : names)
-		menu->detectorsList->addItem(name);
+	//for (auto&& name : names)
+	//	menu->detectorsList->addItem(name);
 
-	// if the current detector is not in the list, set it to None
-	if (names.contains(menu->detectorsList->currentText()) == false)
-		menu->detectorsList->setCurrentIndex(0);
+	//// if the current detector is not in the list, set it to None
+	//if (names.contains(menu->detectorsList->currentText()) == false)
+	//	menu->detectorsList->setCurrentIndex(0);
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event) {
@@ -573,28 +593,41 @@ bool MainWindow::thresholdActive() {
 
 void MainWindow::sortButtons()
 {
-	currDet->sort();
-	std::vector<std::string> sortedClassNames = currDet->getSortedClassNames();
-	std::set<std::string> detectedClasses = ((ObjectDetector*)currDet)->getDetectedClassNames();
-	std::vector<std::string> v;
-	v.assign(detectedClasses.begin(), detectedClasses.end());
+	detMat.sortByConfidence();
+	std::vector<std::string> classNames = dynamic_cast<NeuralNetworkDetector*>(currDet)->getClassNames();
+	std::sort(classNames.begin(), classNames.end());
 
-	std::string str;
-	for (const std::string& className : sortedClassNames)
-	{
-		auto buttonIterator = menu->buttonMap.find(className);
+	// exclude detected classes from the classNames
+	for (auto& det : detMat) {
+		auto d = std::find(classNames.begin(), classNames.end(), det.getLabel());
+		if (d != classNames.end()) {
+			classNames.erase(d);
+		}
+	}
 
-		if (buttonIterator != menu->buttonMap.end())
-		{
+	// add detected classes, sorted by confidence
+	for (auto& det : detMat) {
+		auto buttonIterator = menu->buttonMap.find(det.getLabel());
+
+		if (buttonIterator != menu->buttonMap.end()) {
 			QPushButton* button = buttonIterator->second;
 			menu->classesVbox->removeWidget(button);
 			menu->classesVbox->addWidget(button);
-			if (!cameraIsOn && button->text().toStdString() == v.at(v.size() - 1))
-			{
-				menu->classesVbox->removeWidget(menu->classSeparator);
-				menu->classesVbox->addWidget(menu->classSeparator);
-			}
 		}
+	}
 
+	// add the separator line
+	menu->classesVbox->removeWidget(menu->classSeparator);
+	menu->classesVbox->addWidget(menu->classSeparator);
+
+	// add the rest of the classes, sorted alphabetically
+	for (auto& c : classNames) {
+		auto buttonIterator = menu->buttonMap.find(c);
+
+		if (buttonIterator != menu->buttonMap.end()) {
+			QPushButton* button = buttonIterator->second;
+			menu->classesVbox->removeWidget(button);
+			menu->classesVbox->addWidget(button);
+		}
 	}
 }

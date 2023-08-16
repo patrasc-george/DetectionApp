@@ -136,62 +136,62 @@ DetectorEditor::DetectorEditor(QString json, QString detName, QWidget* parent) {
 	name->setReadOnly(true);
 	name->setStyleSheet("QLineEdit { background-color: hsl(0, 0, 90%); height: 30px; }");
 
-	QJsonObject obj = ModelLoader::getObjectByName(detName, jsonPath);
-	// find the detector by name
+	//QJsonObject obj = ModelLoader::getObjectByName(detName, jsonPath);
+	//// find the detector by name
 
-	if (obj.isEmpty())
-		return;
+	//if (obj.isEmpty())
+	//	return;
 
-	if (obj["type"].toString() == "cascade") {
-		cascade->setChecked(true);
-		network->setChecked(false);
-	}
-	else {
-		cascade->setChecked(false);
-		network->setChecked(true);
-	}
+	//if (obj["type"].toString() == "cascade") {
+	//	cascade->setChecked(true);
+	//	network->setChecked(false);
+	//}
+	//else {
+	//	cascade->setChecked(false);
+	//	network->setChecked(true);
+	//}
 	cascade->setEnabled(false);
 	network->setEnabled(false);
 	emit typeChanged();
 
-	QJsonObject props = obj["properties"].toObject();
-	if (props.contains("meanValues")) {
-		QJsonArray meanValues = props["meanValues"].toArray();
-		meanR->setValue(!meanValues.isEmpty() ? meanValues[0].toInt() : 0);
-		meanG->setValue(!meanValues.isEmpty() ? meanValues[1].toInt() : 0);
-		meanB->setValue(!meanValues.isEmpty() ? meanValues[2].toInt() : 0);
-	}
+	//QJsonObject props = obj["properties"].toObject();
+	//if (props.contains("meanValues")) {
+	//	QJsonArray meanValues = props["meanValues"].toArray();
+	//	meanR->setValue(!meanValues.isEmpty() ? meanValues[0].toInt() : 0);
+	//	meanG->setValue(!meanValues.isEmpty() ? meanValues[1].toInt() : 0);
+	//	meanB->setValue(!meanValues.isEmpty() ? meanValues[2].toInt() : 0);
+	//}
 
-	if (props.contains("swapRB"))
-		swapRB->setChecked(props["swapRB"].toBool());
+	//if (props.contains("swapRB"))
+	//	swapRB->setChecked(props["swapRB"].toBool());
 
-	QJsonObject paths = obj["paths"].toObject();
-	if (cascade->isChecked()) {
-		this->paths.emplace(0, paths["face"].toString());
-		if (paths["face"].toString() != "")
-			file_1_label->setText(paths["face"].toString());
+	//QJsonObject paths = obj["paths"].toObject();
+	//if (cascade->isChecked()) {
+	//	this->paths.emplace(0, paths["face"].toString());
+	//	if (paths["face"].toString() != "")
+	//		file_1_label->setText(paths["face"].toString());
 
-		this->paths.emplace(1, paths["eyes"].toString());
-		if (paths["eyes"].toString() != "")
-			file_2_label->setText(paths["eyes"].toString());
+	//	this->paths.emplace(1, paths["eyes"].toString());
+	//	if (paths["eyes"].toString() != "")
+	//		file_2_label->setText(paths["eyes"].toString());
 
-		this->paths.emplace(2, paths["smile"].toString());
-		if (paths["smile"].toString() != "")
-			file_3_label->setText(paths["smile"].toString());
-	}
-	else {
-		this->paths.emplace(0, paths["inf"].toString());
-		if (paths["inf"].toString() != "")
-			file_1_label->setText(paths["inf"].toString());
+	//	this->paths.emplace(2, paths["smile"].toString());
+	//	if (paths["smile"].toString() != "")
+	//		file_3_label->setText(paths["smile"].toString());
+	//}
+	//else {
+	//	this->paths.emplace(0, paths["inf"].toString());
+	//	if (paths["inf"].toString() != "")
+	//		file_1_label->setText(paths["inf"].toString());
 
-		this->paths.emplace(1, paths["classes"].toString());
-		if (paths["classes"].toString() != "")
-			file_2_label->setText(paths["classes"].toString());
+	//	this->paths.emplace(1, paths["classes"].toString());
+	//	if (paths["classes"].toString() != "")
+	//		file_2_label->setText(paths["classes"].toString());
 
-		this->paths.emplace(2, paths["model"].toString());
-		if (paths["model"].toString() != "")
-			file_3_label->setText(paths["model"].toString());
-	}
+	//	this->paths.emplace(2, paths["model"].toString());
+	//	if (paths["model"].toString() != "")
+	//		file_3_label->setText(paths["model"].toString());
+	//}
 }
 
 
@@ -246,16 +246,16 @@ DetectorsList::DetectorsList(QString jsonPath, QWidget* parent) {
 	this->setWindowTitle("Detectors List");
 	this->setMinimumSize(400, 300);
 
-	QVector <QString> names = ModelLoader::getNames(jsonPath);
+	//QVector <QString> names = ModelLoader::getNames(jsonPath);
 
-	QListWidget* list = new QListWidget(this);
+	//QListWidget* list = new QListWidget(this);
 
-	for (int i = 0; i < names.size(); i++) {
-		QListWidgetItem* item = new QListWidgetItem(names[i], list);
-		item->setFlags(Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled);
-	}
+	//for (int i = 0; i < names.size(); i++) {
+	//	QListWidgetItem* item = new QListWidgetItem(names[i], list);
+	//	item->setFlags(Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled);
+	//}
 
-	connect(list, SIGNAL(itemSelectionChanged()), this, SLOT(selectionChanged()));
+	//connect(list, SIGNAL(itemSelectionChanged()), this, SLOT(selectionChanged()));
 
 	addDet = new QPushButton("Add", this);
 	removeDet = new QPushButton("Remove", this);
@@ -270,7 +270,7 @@ DetectorsList::DetectorsList(QString jsonPath, QWidget* parent) {
 	buttons->addWidget(editDet);
 
 	QVBoxLayout* mainLayout = new QVBoxLayout();
-	mainLayout->addWidget(list);
+	//mainLayout->addWidget(list);
 	mainLayout->addLayout(buttons);
 
 	connect(addDet, SIGNAL(clicked()), this, SLOT(addDetector()));
@@ -307,151 +307,151 @@ void DetectorsList::selectionChanged() {
 
 void DetectorsList::addDetector() {
 	DetectorEditor* editor = new DetectorEditor(jsonPath);
-	connect(editor, &DetectorEditor::detectorCreated, this, [&](QString jsonPath, QString name, QString type, QStringList paths, QVector<int> meanValues, bool swapRB) {
-		// add to json
-		QFile file(jsonPath);
-		file.open(QIODevice::ReadOnly | QIODevice::Text);
-		QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
-		file.close();
+	//connect(editor, &DetectorEditor::detectorCreated, this, [&](QString jsonPath, QString name, QString type, QStringList paths, QVector<int> meanValues, bool swapRB) {
+	//	// add to json
+	//	QFile file(jsonPath);
+	//	file.open(QIODevice::ReadOnly | QIODevice::Text);
+	//	QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+	//	file.close();
 
-		QJsonArray arr = doc.array();
-		QJsonObject obj;
-		obj["name"] = name;
-		obj["type"] = type;
+	//	QJsonArray arr = doc.array();
+	//	QJsonObject obj;
+	//	obj["name"] = name;
+	//	obj["type"] = type;
 
-		if (obj["type"] == "cascade") {
-			obj["paths"] = QJsonObject({
-				{"face", paths.at(0)},
-				{"eyes", paths.size() > 1 ? paths.at(1) : ""},
-				{"smile", paths.size() > 2 ? paths.at(2) : ""}
-				});
-		}
-		else {
-			obj["paths"] = QJsonObject({
-				{"inf", paths.at(0)},
-				{"classes", paths.at(1)},
-				{"model", paths.at(2)}
-				});
-			QJsonObject propertiesObj = obj["properties"].toObject();
-			QJsonArray meanV = propertiesObj["meanValues"].toArray();
-			meanV.push_back(meanValues.at(0));
-			meanV.push_back(meanValues.at(1));
-			meanV.push_back(meanValues.at(2));
+	//	if (obj["type"] == "cascade") {
+	//		obj["paths"] = QJsonObject({
+	//			{"face", paths.at(0)},
+	//			{"eyes", paths.size() > 1 ? paths.at(1) : ""},
+	//			{"smile", paths.size() > 2 ? paths.at(2) : ""}
+	//			});
+	//	}
+	//	else {
+	//		obj["paths"] = QJsonObject({
+	//			{"inf", paths.at(0)},
+	//			{"classes", paths.at(1)},
+	//			{"model", paths.at(2)}
+	//			});
+	//		QJsonObject propertiesObj = obj["properties"].toObject();
+	//		QJsonArray meanV = propertiesObj["meanValues"].toArray();
+	//		meanV.push_back(meanValues.at(0));
+	//		meanV.push_back(meanValues.at(1));
+	//		meanV.push_back(meanValues.at(2));
 
-			propertiesObj["meanValues"] = meanV;
-			propertiesObj["swapRB"] = swapRB;
+	//		propertiesObj["meanValues"] = meanV;
+	//		propertiesObj["swapRB"] = swapRB;
 
-			obj["properties"] = propertiesObj;
-		}
+	//		obj["properties"] = propertiesObj;
+	//	}
 
-		arr.append(obj);
+	//	arr.append(obj);
 
-		doc.setArray(arr);
+	//	doc.setArray(arr);
 
-		file.open(QIODevice::WriteOnly | QIODevice::Text);
-		file.write(doc.toJson());
-		file.close();
+	//	file.open(QIODevice::WriteOnly | QIODevice::Text);
+	//	file.write(doc.toJson());
+	//	file.close();
 
 		emit detectorAdded();
 
 		// add to list
 		QListWidget* list = (QListWidget*)this->layout()->itemAt(0)->widget();
-		list->addItem(name);
-		});
+		//list->addItem(name);
+		//});
 }
 
 void DetectorsList::removeDetector() {
 	// ask if sure
-	QMessageBox::StandardButton reply;
-	reply = QMessageBox::question(this, "Remove Detector", "Are you sure you want to remove this detector?", QMessageBox::Yes | QMessageBox::No);
-	if (reply == QMessageBox::No)
-		return;
-	else {
-		// remove from json
-		QFile file(jsonPath);
-		file.open(QIODevice::ReadOnly | QIODevice::Text);
-		QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
-		file.close();
+	//QMessageBox::StandardButton reply;
+	//reply = QMessageBox::question(this, "Remove Detector", "Are you sure you want to remove this detector?", QMessageBox::Yes | QMessageBox::No);
+	//if (reply == QMessageBox::No)
+	//	return;
+	//else {
+	//	// remove from json
+	//	QFile file(jsonPath);
+	//	file.open(QIODevice::ReadOnly | QIODevice::Text);
+	//	QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+	//	file.close();
 
-		QJsonArray arr = doc.array();
-		QJsonArray newArr;
-		for (int i = 0; i < arr.size(); i++) {
-			if (arr[i].toObject()["name"].toString() != selectedDetector)
-				newArr.append(arr[i]);
-		}
+	//	QJsonArray arr = doc.array();
+	//	QJsonArray newArr;
+	//	for (int i = 0; i < arr.size(); i++) {
+	//		if (arr[i].toObject()["name"].toString() != selectedDetector)
+	//			newArr.append(arr[i]);
+	//	}
 
-		doc.setArray(newArr);
+	//	doc.setArray(newArr);
 
-		file.open(QIODevice::WriteOnly | QIODevice::Text);
-		file.write(doc.toJson());
-		file.close();
+	//	file.open(QIODevice::WriteOnly | QIODevice::Text);
+	//	file.write(doc.toJson());
+	//	file.close();
 
-		// remove from list
-		QListWidget* list = (QListWidget*)this->layout()->itemAt(0)->widget();
-		for (int i = 0; i < list->count(); i++) {
-			if (list->item(i)->text() == selectedDetector) {
-				list->takeItem(i);
-				break;
-			}
-		}
+	//	// remove from list
+	//	QListWidget* list = (QListWidget*)this->layout()->itemAt(0)->widget();
+	//	for (int i = 0; i < list->count(); i++) {
+	//		if (list->item(i)->text() == selectedDetector) {
+	//			list->takeItem(i);
+	//			break;
+	//		}
+	//	}
 
-	}
+	//}
 	emit detectorRemoved();
 }
 
 void DetectorsList::editDetector() {
 	DetectorEditor* editor = new DetectorEditor(jsonPath, selectedDetector);
-	connect(editor, &DetectorEditor::detectorCreated, this, [&](QString jsonPath, QString name, QString type, QStringList paths, QVector<int> meanValues, bool swapRB) {
-		// add to json
-		QJsonObject obj = ModelLoader::getObjectByName(selectedDetector, jsonPath);
+	//connect(editor, &DetectorEditor::detectorCreated, this, [&](QString jsonPath, QString name, QString type, QStringList paths, QVector<int> meanValues, bool swapRB) {
+	//	// add to json
+	//	QJsonObject obj = ModelLoader::getObjectByName(selectedDetector, jsonPath);
 
-		QJsonObject pathsObj = obj["paths"].toObject();
-		QJsonObject propertiesObj = obj["properties"].toObject();
+	//	QJsonObject pathsObj = obj["paths"].toObject();
+	//	QJsonObject propertiesObj = obj["properties"].toObject();
 
-		if (obj["type"] == "cascade") {
-			pathsObj["face"] = paths.at(0);
-			pathsObj["eyes"] = paths.size() > 1 ? paths.at(1) : "";
-			pathsObj["smile"] = paths.size() > 2 ? paths.at(2) : "";
-		}
-		else {
-			pathsObj["inf"] = paths.at(0);
-			pathsObj["classes"] = paths.at(1);
-			pathsObj["model"] = paths.at(2);
+	//	if (obj["type"] == "cascade") {
+	//		pathsObj["face"] = paths.at(0);
+	//		pathsObj["eyes"] = paths.size() > 1 ? paths.at(1) : "";
+	//		pathsObj["smile"] = paths.size() > 2 ? paths.at(2) : "";
+	//	}
+	//	else {
+	//		pathsObj["inf"] = paths.at(0);
+	//		pathsObj["classes"] = paths.at(1);
+	//		pathsObj["model"] = paths.at(2);
 
-			QJsonArray meanV = propertiesObj["meanValues"].toArray();
-			meanV.replace(0, meanValues.at(0));
-			meanV.replace(1, meanValues.at(1));
-			meanV.replace(2, meanValues.at(2));
+	//		QJsonArray meanV = propertiesObj["meanValues"].toArray();
+	//		meanV.replace(0, meanValues.at(0));
+	//		meanV.replace(1, meanValues.at(1));
+	//		meanV.replace(2, meanValues.at(2));
 
-			propertiesObj["meanValues"] = meanV;
-			propertiesObj["swapRB"] = swapRB;
+	//		propertiesObj["meanValues"] = meanV;
+	//		propertiesObj["swapRB"] = swapRB;
 
-			obj["properties"] = propertiesObj;
-		}
+	//		obj["properties"] = propertiesObj;
+	//	}
 
-		obj["paths"] = pathsObj;
+	//	obj["paths"] = pathsObj;
 
-		QFile file(jsonPath);
-		file.open(QIODevice::ReadOnly | QIODevice::Text);
-		QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
-		file.close();
+	//	QFile file(jsonPath);
+	//	file.open(QIODevice::ReadOnly | QIODevice::Text);
+	//	QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+	//	file.close();
 
-		QJsonArray arr = doc.array();
-		for (int i = 0; i < arr.size(); i++) {
-			if (arr[i].toObject()["name"].toString() == selectedDetector) {
-				arr[i] = obj;
-				break;
-			}
-		}
+	//	QJsonArray arr = doc.array();
+	//	for (int i = 0; i < arr.size(); i++) {
+	//		if (arr[i].toObject()["name"].toString() == selectedDetector) {
+	//			arr[i] = obj;
+	//			break;
+	//		}
+		//}
 
-		doc.setArray(arr);
+		//doc.setArray(arr);
 
-		file.open(QIODevice::WriteOnly | QIODevice::Text);
-		file.write(doc.toJson());
-		file.close();
+		//file.open(QIODevice::WriteOnly | QIODevice::Text);
+		//file.write(doc.toJson());
+		//file.close();
 
-		emit detectorEdited();
+		//emit detectorEdited();
 
-		this->close();
-		});
+		//this->close();
+		//});
 }

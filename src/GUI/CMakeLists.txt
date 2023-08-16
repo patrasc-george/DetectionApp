@@ -7,16 +7,23 @@ set(CMAKE_AUTOUIC OFF)
 add_definitions(-DUI_EXPORTS)
 
 # Take every header and source in the directory
-file(GLOB_RECURSE WIDGET_FILES "custom_widgets/*.hpp" "custom_widgets/*.h" "custom_widgets/*.cpp")
-file(GLOB_RECURSE WINDOW_FILES "window/*.hpp" "window/*.h" "window/*.cpp")
-file(GLOB_RECURSE SIDEMENU "sidemenu/*.hpp" "sidemenu/*.h" "sidemenu/*.cpp")
+set(GUI_ROOT_DIR "${ROOT_DIR}/src/GUI")
+file(
+    GLOB_RECURSE GUI_FILES
+    LIST_DIRECTORIES false
+    "${GUI_ROOT_DIR}/*.c*"
+    "${GUI_ROOT_DIR}/*.h*"
+)
 
 # Add the library
-add_library(${PROJECT_NAME} STATIC ${WIDGET_FILES} ${WINDOW_FILES} ${SIDEMENU})
+add_library(${PROJECT_NAME} STATIC ${GUI_FILES})
 
-source_group("UI_Widgets" FILES ${WIDGET_FILES})
-source_group("UI_Window" FILES ${WINDOW_FILES})
-source_group("UI_SideMenu" FILES ${SIDEMENU})
+foreach(_source IN ITEMS ${GUI_FILES})
+    get_filename_component(_source_path "${_source}" PATH)
+    file(RELATIVE_PATH _source_path_rel "${GUI_ROOT_DIR}" "${_source_path}")
+    string(REPLACE "/" "\\" _group_path "${_source_path_rel}")
+    source_group("${_group_path}" FILES "${_source}")
+endforeach()
 
 
 target_link_libraries(${PROJECT_NAME} 

@@ -3,7 +3,6 @@
 #include "sidemenu/menu.h"
 #include "ModelLoader_window.h"
 #include "ImageProcessingUtils.h"
-#include "ModelLoader.h"
 #include "custom_widgets/SceneImageViewer.hpp"
 #include <QGraphicsPixmapItem>
 
@@ -13,6 +12,7 @@
 #include <QCoreApplication>
 #include <QStatusBar>
 #include <QStandardPaths>
+#include <DetectorFactory.h>
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -24,6 +24,7 @@ public:
 	QStatusBar* statusBar;
 	QLabel* resLabel;
 	QLabel* fpsLabel;
+	DetectionMat detMat;
 
 protected:
 	void closeEvent(QCloseEvent* event) override;
@@ -35,7 +36,7 @@ public:
 	 It creates and initializes various components such as a menu, image container, and status bar.
 	 These components are used to interact with the application and control its behavior.
 	 The constructor also connects signals emitted by the menu controls to slots in the MainWindow object that handle those signals.
-	 The components are arranged in a layout and added to the MainWindow widget.
+	 The components are arranged in a  and added to the MainWindow widget.
 	 * @param[in] parent The parent widget of the MainWindow object.
 	 */
 	MainWindow(QWidget* parent = nullptr);
