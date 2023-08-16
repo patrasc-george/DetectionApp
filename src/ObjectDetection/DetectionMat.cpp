@@ -17,6 +17,11 @@ void DetectionMat::setShapeRenderStatus(size_t index, bool enableRender) {
     }
 }
 
+void DetectionMat::setShowConfidence(bool show) {
+    for (auto& detection : detections)
+        detection.get()->setConfidenceVisibility(show);
+}
+
 void DetectionMat::renderShapes(cv::Mat& image) {
     for (const auto& shape : detections) {
         if (shape->shouldRender()) {

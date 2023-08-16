@@ -195,7 +195,7 @@ void MainWindow::setOptions()
 	menu->detectorsList->setEnabled(cameraIsOn || imageIsUpload);
 	menu->toggleCamera->setText("   Turn Camera " + QString(cameraIsOn ? "Off" : "On"));
 	//menu->toggleFaceFeatures->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == cascade && (currDet->canDetectEyes() || currDet->canDetectSmiles()));
-	//menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == network);
+	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && dynamic_cast<NeuralNetworkDetector*>(currDet));
 	menu->confControl->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && dynamic_cast<NeuralNetworkDetector*>(currDet));
 	menu->flipHorizontal->setEnabled(cameraIsOn || imageIsUpload);
 	menu->flipVertical->setEnabled(cameraIsOn || imageIsUpload);
@@ -431,14 +431,15 @@ void MainWindow::setDetector() {
 				menu->detectorsList->setCurrentIndex(0);
 				return;
 			}
-			std::vector<bool> classBoolValues;
-			for (QPushButton* btn : menu->classButtons->findChildren<QPushButton*>()) {
-				classBoolValues.push_back(btn->isChecked());
+			if (auto det = dynamic_cast<NeuralNetworkDetector*>(currDet)) {
+				for (QPushButton* btn : menu->classButtons->findChildren<QPushButton*>()) {
+					det->enableObject(btn->text().toStdString(), btn->isChecked());
+				}
 			}
-			//currDet->setClassNamesValues(classBoolValues);
 		}
 
 		detMat = currDet->detect(mat);
+		detMat.setShowConfidence(menu->showConfidence->isChecked());
 		detMat.renderShapes(mat);
 		ConvertMat2QImage(mat, frame);
 

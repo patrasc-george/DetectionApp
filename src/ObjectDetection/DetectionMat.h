@@ -17,6 +17,7 @@ public:
     void add(std::shared_ptr<Detection>& detection);
     void sortByConfidence();
     void setShapeRenderStatus(size_t index, bool enableRender);
+    void setShowConfidence(bool show);
     void renderShapes(cv::Mat& image);
 
     class OBJECTDETECTION_API iterator {

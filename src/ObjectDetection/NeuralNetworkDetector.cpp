@@ -99,6 +99,7 @@ DetectionMat NeuralNetworkDetector::detect(const cv::Mat& image) {
 
 			std::string c = classNames[classId - 1];
 			std::shared_ptr<Detection> shape = std::make_shared<Detection>(rect, c, confidence);
+			shape.get()->setRenderStatus(objectEnabledMap[c]);
 			det.add(shape);
 		}
 	}
