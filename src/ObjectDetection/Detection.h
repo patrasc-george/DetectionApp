@@ -19,6 +19,7 @@ public:
     bool shouldRender() const;
     void setConfidenceVisibility(bool visible);
     void setColor(const cv::Scalar& color);
+    cv::Rect getRect();
 
 private:
     cv::Rect rect;

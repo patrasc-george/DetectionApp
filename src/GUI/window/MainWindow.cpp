@@ -36,17 +36,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 	connect(menu->detectorsList, &QComboBox::currentIndexChanged, this, &MainWindow::selectDetectorEvent);
 	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
 
-	connect(menu->toggleFaceFeatures, &QCheckBox::clicked, this, [&] {
-		history.add(SHOW_FEATURES, menu->toggleFaceFeatures->isChecked());
-		statusBar->showMessage(QString("Toggled face features %1").arg(menu->toggleFaceFeatures->isChecked() ? "on" : "off"));
-		processImage();
-		});
-	connect(menu->showConfidence, &QCheckBox::clicked, this, [&] {
-		history.add(SHOW_CONFIDENCE, menu->showConfidence->isChecked());
-		statusBar->showMessage(QString("Toggled show confidences %1").arg(menu->toggleFaceFeatures->isChecked() ? "on" : "off"));
-		processImage();
-		});
-
 	connect(menu->confControl, &LabeledSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
 	connect(menu->thresholdControl, &LabeledSlider::valueChanged, this, &MainWindow::changeThresholdEvent);
 
@@ -194,7 +183,6 @@ void MainWindow::setOptions()
 {
 	menu->detectorsList->setEnabled(cameraIsOn || imageIsUpload);
 	menu->toggleCamera->setText("   Turn Camera " + QString(cameraIsOn ? "Off" : "On"));
-	//menu->toggleFaceFeatures->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->getType() == cascade && (currDet->canDetectEyes() || currDet->canDetectSmiles()));
 	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && dynamic_cast<NeuralNetworkDetector*>(currDet));
 	menu->confControl->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && dynamic_cast<NeuralNetworkDetector*>(currDet));
 	menu->flipHorizontal->setEnabled(cameraIsOn || imageIsUpload);
@@ -209,7 +197,6 @@ void MainWindow::setOptions()
 	menu->redoBtn->setEnabled(history.canRedo());
 
 	menu->showConfidence->setChecked(history.get()->getShowConfidence());
-	menu->toggleFaceFeatures->setChecked(history.get()->getShowFeatures());
 	menu->flipHorizontal->setChecked(history.get()->getFlipH());
 	menu->flipVertical->setChecked(history.get()->getFlipV());
 	menu->binaryThresholdingButton->setChecked(history.get()->getBinaryThresholdingValue());
@@ -440,19 +427,24 @@ void MainWindow::setDetector() {
 
 		detMat = currDet->detect(mat);
 		detMat.setShowConfidence(menu->showConfidence->isChecked());
-		detMat.renderShapes(mat);
+		for (auto& det : detMat) {
+			det.setColor(generateColorFromString(det.getLabel()));
+		}
+		detMat.render(mat);
 		ConvertMat2QImage(mat, frame);
 
-	//	if (currDet->getLastRect().empty() == false) {
-	//		cv::Rect rect = currDet->getLastRect();
-	//		statusBar->showMessage(QString("Detected %5 at: <%1 %2> - <%3 %4>")
-	//			.arg(QString::number(rect.x))
-	//			.arg(QString::number(rect.y))
-	//			.arg(QString::number(rect.x + rect.width))
-	//			.arg(QString::number(rect.y + rect.height))
-	//			.arg(QString::fromStdString(currDet->currentClassName)));
-	//	}
-	//	else statusBar->clearMessage();
+		std::vector<Detection> dets = detMat.getAll();
+		if (!dets.empty()) {
+			cv::Rect rect = dets.back().getRect();
+			statusBar->showMessage(QString("Detected %5 at: <%1 %2> - <%3 %4>")
+				.arg(QString::number(rect.x))
+				.arg(QString::number(rect.y))
+				.arg(QString::number(rect.x + rect.width))
+				.arg(QString::number(rect.y + rect.height))
+				.arg(QString::fromStdString(dets.back().getLabel())));
+		}
+		else statusBar->clearMessage();
+
 	}
 	catch (const std::exception& e) {
 		QMessageBox::critical(this, "Error", e.what());

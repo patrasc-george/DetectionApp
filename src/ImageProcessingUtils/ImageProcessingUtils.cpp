@@ -260,3 +260,32 @@ QImage putLogo(const short& width, const short& height)
 	p.end();
 	return img;
 }
+
+cv::Scalar IMAGEPROCESSINGUTILS_API generateColorFromString(const std::string& str) {
+	uchar b = 0;
+	uchar g = 0;
+	uchar r = 0;
+	uchar step = 1; // count the steps, so we add to each channel sequentially: 1 - b, 2 - g, 3 - r | 4 - b, 5 - g, ... 
+	for (int c = 0; c < str.length(); ++c, ++step) {
+		if (step == 4)
+			step = 1;
+		if (step == 1)
+			b += str[c];
+		if (step == 2)
+			g += str[c];
+		if (step == 3)
+			r += str[c];
+	}
+	// we do this so the color values for each channel are not close together, resulting in black, gray or white colors
+	while (abs(b - g) <= 30 || abs(b - r) <= 30 || abs(g - r) <= 30) {
+		b -= 15;
+		g += 45;
+		r += 15;
+	}
+
+	// if a channel exceeds 255, it is clamped to 255. We apply the remainder operator so that we always get values from 0 to 255
+	b %= 256;
+	g %= 256;
+	r %= 256;
+	return cv::Scalar(b, g, r);
+}

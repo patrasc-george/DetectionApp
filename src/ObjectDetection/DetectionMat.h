@@ -18,7 +18,8 @@ public:
     void sortByConfidence();
     void setShapeRenderStatus(size_t index, bool enableRender);
     void setShowConfidence(bool show);
-    void renderShapes(cv::Mat& image);
+    void render(cv::Mat& image);
+    std::vector<Detection> getAll();
 
     class OBJECTDETECTION_API iterator {
     public:

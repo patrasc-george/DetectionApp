@@ -12,7 +12,6 @@ Menu::Menu(QWidget* parent)
 
 	// initialize controls
 	toggleCamera = new QPushButton("Turn On");
-	toggleFaceFeatures = new QCheckBox("Detect eyes and smiles");
 	detectorsList = new QComboBox;
 	screenshot = new QPushButton("Save screenshot");
 	showConfidence = new QCheckBox("Show confidences");
@@ -135,7 +134,6 @@ Menu::Menu(QWidget* parent)
 
 	vbox->addWidget(scrollArea, Qt::AlignTop);
 
-	vbox->addWidget(toggleFaceFeatures);
 	vbox->addWidget(showConfidence);
 	vbox->addWidget(confControl);
 	vbox->addWidget(thresholdControl);

@@ -9,13 +9,17 @@ Detection::Detection(const cv::Rect& rect, const std::string& label, double conf
 void Detection::render(cv::Mat& image) const {
     if (shouldRender()) {
         cv::rectangle(image, rect, shapeColor, 2);
-        if (showConfidence) {
-            cv::putText(image, label + ": " + std::to_string(confidence), cv::Point(rect.x, rect.y - 5),
-                cv::FONT_HERSHEY_COMPLEX, 0.5, shapeColor, 1);
-        }
+        std::string text = label;
+
+        cv::Size label_size = cv::getTextSize(text, cv::FONT_HERSHEY_SIMPLEX, 0.7, 1.5, 0);
+
+        if (showConfidence && confidence > 0)
+            text = text + ": " + std::to_string(static_cast<int>(confidence * 100)) + "%";
+        cv::putText(image, text, cv::Point(rect.x + 4, rect.y + label_size.height + 6)
+            , cv::FONT_HERSHEY_SIMPLEX, 0.7, shapeColor, 2);
     }
 }
-
+    
 std::string Detection::getLabel() const {
     return label;
 }
@@ -38,4 +42,8 @@ void Detection::setConfidenceVisibility(bool visible) {
 
 void Detection::setColor(const cv::Scalar& color) {
     shapeColor = color;
+}
+
+cv::Rect Detection::getRect() {
+    return rect;
 }

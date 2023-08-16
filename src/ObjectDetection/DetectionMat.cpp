@@ -22,12 +22,21 @@ void DetectionMat::setShowConfidence(bool show) {
         detection.get()->setConfidenceVisibility(show);
 }
 
-void DetectionMat::renderShapes(cv::Mat& image) {
-    for (const auto& shape : detections) {
-        if (shape->shouldRender()) {
-            shape->render(image);
+void DetectionMat::render(cv::Mat& image) {
+    for (const auto& detection : detections)
+        if (detection->shouldRender()) {
+            detection->render(image);
         }
-    }
+}
+
+std::vector<Detection> DetectionMat::getAll()
+{
+    std::vector<Detection> vec;
+
+    for (const auto& det : detections)
+        vec.push_back(*det);
+
+    return vec;
 }
 
 DetectionMat::DetectionMat(const std::vector<std::shared_ptr<Detection>>& detections)
