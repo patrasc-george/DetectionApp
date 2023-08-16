@@ -7,17 +7,18 @@ void CascadeClassifierGroup::addDetector(const std::string& cascadeFilePath, con
     labelToIndexMap[objectLabel] = detectors.size() - 1;
 }
 
-std::vector<std::unique_ptr<Shape>> CascadeClassifierGroup::detect(const cv::Mat& image) {
-    std::vector<std::unique_ptr<Shape>> allShapes;
+DetectionMat CascadeClassifierGroup::detect(const cv::Mat& image) {
+    std::vector<std::shared_ptr<Detection>> allShapes;
 
     for (auto& detector : detectors) {
         if (isDetectorEnabled(detector.getObjectLabel())) {
-            auto shapes = detector.detect(image);
-            allShapes.insert(allShapes.end(), std::make_move_iterator(shapes.begin()), std::make_move_iterator(shapes.end()));
+            auto detections = detector.detect(image);
+            for (auto& shape : detections)
+                allShapes.push_back(std::make_shared<Detection>(shape));
         }
     }
 
-    return allShapes;
+    return DetectionMat(allShapes);
 }
 
 void CascadeClassifierGroup::enableDetector(const std::string& objectLabel, bool enable) {
@@ -43,6 +44,7 @@ void CascadeClassifierGroup::serialize(const std::string& filename) const {
         throw std::runtime_error("Failed to open file for writing: " + filename);
     }
 
+    fs << "type" << "CASCADE_GROUP";
     fs << "classifiers" << "[";
     for (const auto& detector : detectors) {
         fs << "{";
@@ -71,6 +73,11 @@ void CascadeClassifierGroup::deserialize(const std::string& filename) {
         CascadeClassifierDetector::read(detectorNode, detector);
         detectors.push_back(detector);
     }
+}
+
+std::string CascadeClassifierGroup::getSerializationFile() const
+{
+    return serializationFilePath;
 }
 
 void CascadeClassifierGroup::read(cv::FileNode& node, CascadeClassifierGroup& group) {

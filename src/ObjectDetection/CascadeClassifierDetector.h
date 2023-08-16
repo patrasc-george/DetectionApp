@@ -1,12 +1,21 @@
 #pragma once
-#include "interfaces.h"
-#include <opencv2/opencv.hpp>
+#include "Detector.h"
+#include "DetectionMat.h"
 
-class CascadeClassifierDetector : public Detector, Serializable {
+#include <opencv2/objdetect.hpp>
+
+#ifdef OBJECTDETECTION_EXPORTS
+#define OBJECTDETECTION_API __declspec(dllexport)
+#else
+#define OBJECTDETECTION_API __declspec(dllimport)
+#endif
+
+class OBJECTDETECTION_API CascadeClassifierDetector : public Detector {
 public:
     CascadeClassifierDetector(const std::string& cascadeFilePath, const std::string& objectLabel);
     CascadeClassifierDetector();
-    std::vector<std::unique_ptr<Shape>> detect(const cv::Mat& image) override;
+
+    DetectionMat detect(const cv::Mat& image) override;
 
     void setEnabled(bool enable);
     bool isEnabled() const;
@@ -19,9 +28,12 @@ public:
 
     std::string getCascadeFilePath() const;
 
+    std::string getSerializationFile() const override;
 private:
     std::string cascadeFilePath;
     cv::CascadeClassifier cascade;
     std::string objectLabel;
     bool enabled;
+
+    std::string serializationFilePath;
 };

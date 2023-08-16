@@ -1,5 +1,6 @@
 #include "CascadeClassifierDetector.h"
-#include "RectangleShape.h"
+#include "Detection.h"
+#include <opencv2/imgproc.hpp>
 
 CascadeClassifierDetector::CascadeClassifierDetector(const std::string& cascadeFilePath, const std::string& objectLabel)
     : objectLabel(objectLabel), cascadeFilePath(cascadeFilePath), enabled(true) {
@@ -9,16 +10,29 @@ CascadeClassifierDetector::CascadeClassifierDetector(const std::string& cascadeF
 CascadeClassifierDetector::CascadeClassifierDetector()
     : enabled(false) {}
 
-std::vector<std::unique_ptr<Shape>> CascadeClassifierDetector::detect(const cv::Mat& image) {
+DetectionMat CascadeClassifierDetector::detect(const cv::Mat& image) {
     std::vector<cv::Rect> detections;
-    cascade.detectMultiScale(image, detections);
+    if (cascade.empty())
+        cascade.load(cascadeFilePath);
 
-    std::vector<std::unique_ptr<Shape>> shapes;
+    if (image.type() == CV_8UC4)
+        cv::cvtColor(image, image, cv::COLOR_BGRA2BGR);
+    cv::Mat gray;
+    if (image.type() != CV_8UC1)
+        cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+    else
+        gray = image;
+
+    cascade.detectMultiScale(gray, detections, 1.1, 6);
+
+    DetectionMat detMat;
     for (const cv::Rect& rect : detections) {
-        shapes.push_back(std::make_unique<RectangleShape>(rect, objectLabel, 0.0)); // Zero, wew will not shouldRender it
+        if (rect.size().width > 10 && rect.size().height > 10) {
+            std::shared_ptr<Detection> d = std::make_shared<Detection>(rect, objectLabel, 0.0); // Zero, we will not render it
+            detMat.add(d);
+        }
     }
-
-    return shapes;
+    return detMat;
 }
 
 void CascadeClassifierDetector::setEnabled(bool enable) {
@@ -38,9 +52,10 @@ void CascadeClassifierDetector::serialize(const std::string& filename) const {
     if (!fs.isOpened()) {
         throw std::runtime_error("Failed to open file for writing: " + filename);
     }
-    fs << "detectorType" << "CASCADE";
+    fs << "type" << "CASCADE";
     fs << "objectLabel" << objectLabel;
     fs << "cascadeFilePath" << cascadeFilePath;
+    fs.release();
 }
 
 void CascadeClassifierDetector::deserialize(const std::string& filename) {
@@ -51,6 +66,9 @@ void CascadeClassifierDetector::deserialize(const std::string& filename) {
 
     fs["objectLabel"] >> objectLabel;
     fs["cascadeFilePath"] >> cascadeFilePath;
+
+    serializationFilePath = filename;
+    fs.release();
 }
 
 void CascadeClassifierDetector::read(cv::FileNode& node, CascadeClassifierDetector& detector) {
@@ -64,4 +82,9 @@ void CascadeClassifierDetector::read(cv::FileNode& node, CascadeClassifierDetect
 
 std::string CascadeClassifierDetector::getCascadeFilePath() const {
     return cascadeFilePath;
+}
+
+std::string CascadeClassifierDetector::getSerializationFile() const
+{
+    return serializationFilePath;
 }

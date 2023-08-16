@@ -1,6 +1,5 @@
 #include "NeuralNetworkDetector.h"
-#include "interfaces.h"
-#include "RectangleShape.h"
+#include "Detection.h"
 #include <fstream>
 
 NeuralNetworkDetector::NeuralNetworkDetector(const std::string& modelFilePath, const std::string& configFilePath, const std::string& classesFilePath)
@@ -28,24 +27,36 @@ NeuralNetworkDetector::NeuralNetworkDetector(const std::string& modelFilePath, c
 	}
 }
 
-std::vector<std::unique_ptr<Shape>> NeuralNetworkDetector::detect(const cv::Mat& image) {
+NeuralNetworkDetector::NeuralNetworkDetector() : confidenceThreshold(0.5)
+{
+}
+
+DetectionMat NeuralNetworkDetector::detect(const cv::Mat& image) {
+	if (net.empty()) {
+		try {
+			net = cv::dnn::readNet(modelFilePath, configFilePath);
+		}
+		catch (cv::Exception& e) {
+			throw std::runtime_error("Couldn't load neural network using " + modelFilePath + " and " + configFilePath);
+		}
+	}
 	// Convert the image to grayscale
 	cv::Mat gray;
 	cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
 
-	// Apply a Gaussian filter for denoising
+	//// Apply a Gaussian filter for denoising
 	cv::Mat denoised;
 	cv::GaussianBlur(gray, denoised, cv::Size(5, 5), 0);
 
-	// Enhance the image contrast
+	//// Enhance the image contrast
 	cv::Mat enhanced;
 	cv::equalizeHist(denoised, enhanced);
 
-	// Resize the image to increase speed
+	//// Resize the image to increase speed
 	cv::Mat resized;
 	cv::resize(enhanced, resized, cv::Size(), 0.5, 0.5);
 
-	// Convert resized image to BGR for compatibility
+	//// Convert resized image to BGR for compatibility
 	cv::Mat BGR;
 	cv::cvtColor(resized, BGR, cv::COLOR_BGRA2BGR);
 
@@ -53,9 +64,6 @@ std::vector<std::unique_ptr<Shape>> NeuralNetworkDetector::detect(const cv::Mat&
 	cv::Mat blob = cv::dnn::blobFromImage(BGR);
 
 	net.setInput(blob);
-	cv::Mat detections;
-	std::vector<std::unique_ptr<Shape>> shapes;
-
 	try {
 		/*
 		In Debug mode, the forward method requires a string argument representing the layer,
@@ -63,36 +71,39 @@ std::vector<std::unique_ptr<Shape>> NeuralNetworkDetector::detect(const cv::Mat&
 		In Release mode, it automatically chooses the right layer
 		*/
 #ifdef NDEBUG
-		detections = net.forward();
+		blob = net.forward();
 #else
-		detections = net.forward("layer");
+		blob = model.forward("layer");
 #endif
 	}
 	catch (const std::exception& e) {
 		std::cout << e.what() << std::endl;
 		std::exception ex("No valid layer was provided to model.forward(). This would happen if the application is run in Debug mode.");
 		throw ex;
-		return shapes;
+		return DetectionMat();
 	}
 
+	cv::Mat detectionMat = cv::Mat(blob.size[2], blob.size[3], CV_32F, blob.ptr<float>());
+	DetectionMat det;
 
-    for (int i = 0; i < detections.size[2]; ++i) {
-        float confidence = detections.at<float>(i, 2);
-        if (confidence > confidenceThreshold) {
-            int classId = static_cast<int>(detections.at<float>(i, 1));
-            int left = static_cast<int>(detections.at<float>(i, 3) * image.cols);
-            int top = static_cast<int>(detections.at<float>(i, 4) * image.rows);
-            int right = static_cast<int>(detections.at<float>(i, 5) * image.cols);
-            int bottom = static_cast<int>(detections.at<float>(i, 6) * image.rows);
+	for (int i = 0; i < detectionMat.rows; i++) {
+		int classId = detectionMat.at<float>(i, 1);
+		float confidence = detectionMat.at<float>(i, 2);
 
-            cv::Rect rect(left, top, right - left, bottom - top);
-            std::string name = "Class " + classNames[classId];
+		if (confidence > confidenceThreshold) {
+			int box_x = (int)(detectionMat.at<float>(i, 3) * image.cols);
+			int box_y = (int)(detectionMat.at<float>(i, 4) * image.rows);
+			int box_width = (int)(detectionMat.at<float>(i, 5) * image.cols - box_x);
+			int box_height = (int)(detectionMat.at<float>(i, 6) * image.rows - box_y);
+			cv::Rect rect(box_x, box_y, box_width, box_height);
 
-            shapes.push_back(std::make_unique<RectangleShape>(rect, name, confidence));
-        }
-    }
+			std::string c = classNames[classId - 1];
+			std::shared_ptr<Detection> shape = std::make_shared<Detection>(rect, c, confidence);
+			det.add(shape);
+		}
+	}
 
-    return shapes;
+    return det;
 }
 
 void NeuralNetworkDetector::adjustThreshold(float newThreshold) {
@@ -115,6 +126,7 @@ void NeuralNetworkDetector::serialize(const std::string& filename) const {
         throw std::runtime_error("Failed to open file for writing: " + filename);
     }
 
+	fs << "type" << "NETWORK";
     fs << "modelFilePath" << modelFilePath;
     fs << "configFilePath" << configFilePath;
     fs << "labelsFilePath" << classesFilePath;
@@ -126,7 +138,7 @@ void NeuralNetworkDetector::serialize(const std::string& filename) const {
 		}
 	}
 	fs << "disabledClassNames" << disabledClassNames;
-
+	fs.release();
 }
 
 void NeuralNetworkDetector::deserialize(const std::string& filename) {
@@ -139,10 +151,16 @@ void NeuralNetworkDetector::deserialize(const std::string& filename) {
     fs["configFilePath"] >> configFilePath;
     fs["labelsFilePath"] >> classesFilePath; // Read labels file path
     //fs["confidenceThreshold"] >> confidenceThreshold;
-   
-	cv::FileNode disabledClassesNode = fs["disabledClasses"];
-	if (!disabledClassesNode.isSeq()) {
-		return;
+
+	std::ifstream labelsStream(classesFilePath);
+	if (!labelsStream.is_open()) {
+		throw std::runtime_error("Failed to open labels file: " + classesFilePath);
+	}
+
+	std::string className;
+	while (std::getline(labelsStream, className)) {
+		classNames.push_back(className);
+		objectEnabledMap.insert({ className, true });
 	}
 
 	std::vector<std::string> disabledClassNames;
@@ -150,4 +168,15 @@ void NeuralNetworkDetector::deserialize(const std::string& filename) {
 	for (const auto& className : disabledClassNames) {
 		objectEnabledMap[className] = false;
 	}
+	fs.release();
+}
+
+std::string NeuralNetworkDetector::getSerializationFile() const
+{
+	return serializationFile;
+}
+
+std::vector<std::string> NeuralNetworkDetector::getClassNames()
+{
+	return classNames;
 }
