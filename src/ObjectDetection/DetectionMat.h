@@ -1,16 +1,43 @@
-#include "interfaces.h"
+#pragma once
+#include "Detection.h"
 
-#include <vector>
+#include <iterator>
+#include <opencv2/core.hpp>
+#include <set>
 #include <memory>
-#include <opencv2/opencv.hpp>
+
+#ifdef OBJECTDETECTION_EXPORTS
+#define OBJECTDETECTION_API __declspec(dllexport)
+#else
+#define OBJECTDETECTION_API __declspec(dllimport)
+#endif
     
-class DetectionMat {
+class OBJECTDETECTION_API DetectionMat {
 public:
-    void addShape(std::unique_ptr<Shape> shape);
-    void sortShapesByConfidence();
+    void add(std::shared_ptr<Detection>& detection);
+    void sortByConfidence();
     void setShapeRenderStatus(size_t index, bool enableRender);
     void renderShapes(cv::Mat& image);
 
+    class OBJECTDETECTION_API iterator {
+    public:
+        iterator(std::vector<std::shared_ptr<Detection>>::iterator it);
+        iterator& operator++();
+        iterator operator++(int);
+        Detection& operator*();
+        bool operator==(const iterator&) const;
+        bool operator!=(const iterator&) const;
+    private:
+        std::vector<std::shared_ptr<Detection>>::iterator iter;
+    };
+
 private:
-    std::vector<std::unique_ptr<Shape>> shapes;
+    std::vector<std::shared_ptr<Detection>> detections;
+public:
+    DetectionMat(const std::vector<std::shared_ptr<Detection>>& detections);
+
+    DetectionMat::iterator begin();
+    DetectionMat::iterator end();
+
+    DetectionMat() = default;
 };
