@@ -74,28 +74,25 @@ std::set<std::string> ObjectDetector::getDetectedClassNames() const
 }
 
 void ObjectDetector::detect(cv::Mat& image, bool showConf) {
+	cv::Mat copy = image;
+
 	// Convert the image to grayscale
-	cv::Mat gray;
-	cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+	cv::cvtColor(copy, copy, cv::COLOR_BGR2GRAY);
 
 	// Apply a Gaussian filter for denoising
-	cv::Mat denoised;
-	cv::GaussianBlur(gray, denoised, cv::Size(5, 5), 0);
+	cv::GaussianBlur(copy, copy, cv::Size(5, 5), 0);
 
 	// Enhance the image contrast
-	cv::Mat enhanced;
-	cv::equalizeHist(denoised, enhanced);
+	cv::equalizeHist(copy, copy);
 
 	// Resize the image to increase speed
-	cv::Mat resized;
-	cv::resize(enhanced, resized, cv::Size(), 0.5, 0.5);
+	cv::resize(copy, copy, cv::Size(), 0.5, 0.5);
 
 	// Convert resized image to BGR for compatibility
-	cv::Mat BGR;
-	cv::cvtColor(resized, BGR, cv::COLOR_BGRA2BGR);
+	cv::cvtColor(copy, copy, cv::COLOR_BGRA2BGR);
 
 	// Create a blob from the normalized image
-	cv::Mat blob = cv::dnn::blobFromImage(BGR);
+	cv::Mat blob = cv::dnn::blobFromImage(copy);
 	
 	std::vector<std::string> layers = model.getLayerNames();
 
@@ -140,6 +137,7 @@ void ObjectDetector::detect(cv::Mat& image, bool showConf) {
 			drawLabel(image, ss.str(), lastRect);
 		}
 	}
+	cv::cvtColor(image, image, cv::COLOR_BGRA2BGR);
 }
 
 void ObjectDetector::setMinConfidence(float c) {
