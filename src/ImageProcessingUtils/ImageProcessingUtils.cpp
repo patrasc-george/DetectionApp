@@ -1,4 +1,5 @@
 #include "ImageProcessingUtils.h"
+#include <qmessagebox.h>
 
 using cv::Mat;
 
@@ -74,24 +75,25 @@ void ProcessingAlgorithms::zeroThresholding(Mat src, Mat& dst, short threshold) 
 	}
 }
 
-void ProcessingAlgorithms::adaptiveThresholding(Mat src, Mat& dst, short maxValue) 
+void ProcessingAlgorithms::adaptiveThresholding(Mat src, Mat& dst, short maxValue)
 {
-    if (src.type() != CV_8UC1)
-        cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
+	if (src.type() != CV_8UC1)
+		cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
 
-    int blockSize = 11;
-    double C = 2;
-    cv::Mat sum;
-    cv::integral(src, sum, CV_32S);
-    dst.create(src.size(), src.type());
+	int blockSize = 11;
+	double C = 2;
+	cv::Mat sum;
 
-    for (int y = 0; y < src.rows; y++)
-        for (int x = 0; x < src.cols; x++) 
+	cv::integral(src, sum, CV_32S);
+	dst.create(src.size(), src.type());
+
+	for (int y = 0; y < src.rows; y++)
+		for (int x = 0; x < src.cols; x++)
 		{
-            int x1 = std::max(0, x - blockSize / 2);
-            int y1 = std::max(0, y - blockSize / 2);
-            int x2 = std::min(src.cols - 1, x + blockSize / 2);
-            int y2 = std::min(src.rows - 1, y + blockSize / 2);
+			int x1 = std::max(0, x - blockSize / 2);
+			int y1 = std::max(0, y - blockSize / 2);
+			int x2 = std::min(src.cols - 1, x + blockSize / 2);
+			int y2 = std::min(src.rows - 1, y + blockSize / 2);
 
 			double area = (x2 - x1 + 1) * (y2 - y1 + 1);
 			double sumRegion = sum.at<int>(y1, x1) + sum.at<int>(y2 + 1, x2 + 1) - sum.at<int>(y1, x2 + 1) - sum.at<int>(y2 + 1, x1);
@@ -101,10 +103,10 @@ void ProcessingAlgorithms::adaptiveThresholding(Mat src, Mat& dst, short maxValu
 			double threshold;
 			threshold = mean * (1 - C / 100.0);
 
-			dst.at<uchar>(y, x) = src.at<uchar>(y, x) > threshold ? maxValue : 0;
+			dst.at<uchar>(y, x) = src.at<uchar>(y, x) > threshold ? 255 : 0;
 		}
 
-    cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
+	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
 }
 
 void ProcessingAlgorithms::truncate(cv::Mat src, cv::Mat& dst, short threshold) {
@@ -169,11 +171,30 @@ void ProcessingAlgorithms::histogramEqualization(Mat src, Mat& dst)
 	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
 }
 
-void ProcessingAlgorithms::detectEdges(Mat src, Mat& dst) {
-	if (src.type() == CV_8UC4)
-		cv::cvtColor(src, src, cv::COLOR_BGRA2BGR);
-	cv::Laplacian(src, dst, CV_8U);
-	cv::normalize(dst, dst, 0, 255, cv::NORM_MINMAX);
+void ProcessingAlgorithms::detectEdges(Mat src, Mat& dst)
+{
+	if (src.type() != CV_8UC1)
+		cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
+	dst.create(src.size(), src.type());
+
+	for (int i = 1; i < src.rows - 1; i++)
+		for (int j = 1; j < src.cols - 1; j++)
+		{
+			int top = src.at<uchar>(i - 1, j);
+			int bottom = src.at<uchar>(i + 1, j);
+			int left = src.at<uchar>(i, j - 1);
+			int right = src.at<uchar>(i, j + 1);
+
+			int difference1 = abs(top - bottom);
+			int difference2 = abs(left - right);
+
+			int totalDifference = difference1 + difference2;
+
+
+			dst.at<uchar>(i, j) = totalDifference;
+		}
+
+	cv::cvtColor(dst, dst, cv::COLOR_BGRA2BGR);
 }
 
 void ProcessingAlgorithms::applyingAlgorithms(Mat& image, FrameOptions* options, const short& value)
