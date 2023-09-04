@@ -80,13 +80,13 @@ void ObjectDetector::detect(cv::Mat& image, bool showConf) {
 	cv::cvtColor(copy, copy, cv::COLOR_BGR2GRAY);
 
 	// Apply a Gaussian filter for denoising
-	cv::GaussianBlur(copy, copy, cv::Size(5, 5), 0);
+	// cv::GaussianBlur(copy, copy, cv::Size(5, 5), 0);
 
 	// Enhance the image contrast
 	cv::equalizeHist(copy, copy);
 
 	// Resize the image to increase speed
-	cv::resize(copy, copy, cv::Size(), 0.5, 0.5);
+	cv::resize(copy, copy, cv::Size(), 0.5, 0.5, 6);
 
 	// Convert resized image to BGR for compatibility
 	cv::cvtColor(copy, copy, cv::COLOR_BGRA2BGR);
