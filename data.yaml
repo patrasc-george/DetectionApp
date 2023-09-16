@@ -1,0 +1,5 @@
+dnc: 2
+names: ['ev', 'vehicles']
+
+train: ./Dataset/train
+val: ./Dataset/val
