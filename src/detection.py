@@ -1,6 +1,12 @@
+from PIL import Image
+
 import cv2
 import datetime
+
+import numpy as np
 import torch
+from torchvision import models, transforms
+import torch.nn as nn
 
 # INITIALIZATION =======================================================================================================
 
@@ -26,15 +32,38 @@ detectors = {
         'model': "",
         'classes': "",
         'framework': 'torch'
+    },
+    "Model_Vehicles": {
+        'weights': "",
+        'model': "../models/Model_Vehicles/model_vehicles.pth",
+        'classes': "../models/Model_Vehicles/class_names.txt",
+        'framework': 'torch'
     }
 }
 
+def read_class_names_from_txt(file_name):
+    class_names = []
+
+    with open(file_name, 'r') as file:
+        for line in file:
+            class_name = line.strip()
+            class_names.append(class_name)
+
+    return class_names
+
 nets = {}
 for name in detectors:
-    if isinstance(name, str) and name != 'YOLOv5':
+    if isinstance(name, str) and name == 'MobileNet v3 large':
         nets[name] = cv2.dnn.readNet(detectors[name]['model'], detectors[name]['weights'], detectors[name]['framework'])
     elif name == 'YOLOv5':
         nets[name] = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
+    elif name == 'Model_Vehicles':
+        class_names = read_class_names_from_txt(detectors[name]['classes'])
+        model = models.resnet18(pretrained=False)
+        model.fc = nn.Linear(512, 4)
+        model.load_state_dict(torch.load(detectors[name]['model']))
+        model.eval()
+        nets[name] = model
 
 
 # DETECTION ============================================================================================================
@@ -46,6 +75,8 @@ def detect(frame: cv2.Mat, net_name, show_fps: bool = True):
         MobileNet_v3_large(frame, net_name)
     elif net_name == "YOLOv5":
         frame = YOLOv5(frame, net_name)
+    elif net_name == "Model_Vehicles":
+        model_vehicles(frame, net_name)
 
     # end time to compute the fps
     end = datetime.datetime.now()
@@ -118,3 +149,33 @@ def MobileNet_v3_large(frame, net_name):
         text = f"{label} {probability * 100:.2f}%"
         cv2.putText(frame, text, (box[0], box[1] - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 2)
+
+def model_vehicles(frame, net_name):
+    # Convertim imaginea din cv2.Mat în obiect PIL
+    frame = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+
+    # Aplicăm transformările
+    transform = transforms.Compose([
+        transforms.Resize((150, 150)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+
+    frame = transform(frame)  # Aplicăm transformările pe obiectul PIL
+
+    with torch.no_grad():
+        frame = frame.unsqueeze(0)
+        output = nets[net_name](frame)
+
+    class_scores = output[0].tolist()
+
+    scores_tensor = torch.tensor(class_scores)
+
+    probabilities = torch.nn.functional.softmax(scores_tensor, dim=0)
+
+    predicted_class_index = torch.argmax(probabilities).item()
+
+    for i in range(len(class_names)):
+        print(f'{class_names[i]}: {probabilities[i]:.3f}')
+
+    print(f'Predicted class: {class_names[predicted_class_index]}\n\n')
