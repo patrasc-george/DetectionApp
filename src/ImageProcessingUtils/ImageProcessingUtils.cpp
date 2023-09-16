@@ -3,36 +3,6 @@
 
 using cv::Mat;
 
-// WORK IN PROGRESS, does not work correctly
-void applyKernel(Mat src, Mat& dst, Mat kernel) {
-	int rows = src.rows;
-	int cols = src.cols;
-	dst = Mat(rows, cols, src.type());
-
-	// size of the border that will bw added to the image
-	int size = kernel.rows / 2;
-	// add a border to extend the image so we can use outside pixels
-	cv::copyMakeBorder(src, src, size, size, size, size, cv::BORDER_REPLICATE);
-
-	cv::parallel_for_(cv::Range(0, rows * cols), [&](const cv::Range& range) {
-		for (int r = range.start; r < range.end; r++)
-		{
-			int i = r / cols;
-			int j = r % cols;
-			double value = 0;
-			for (int k = -size; k <= size; k++)
-			{
-				uchar* sptr = src.ptr(i + size + k);
-				for (int l = -size; l <= size; l++)
-				{
-					value += kernel.ptr<double>(k + size)[l + size] * sptr[j + size + l];
-				}
-			}
-			dst.ptr(i)[j] = cv::saturate_cast<uchar>(value);
-		}
-		});
-}
-
 // if the average value of a pixel is lower than the treshold it becomes zero, otherwise it gets the max value
 void ProcessingAlgorithms::binaryThresholding(Mat src, Mat& dst, short threshold) {
 	if (src.type() == CV_8UC4)
@@ -103,7 +73,7 @@ void ProcessingAlgorithms::adaptiveThresholding(Mat src, Mat& dst, short maxValu
 			double threshold;
 			threshold = mean * (1 - C / 100.0);
 
-			dst.at<uchar>(y, x) = src.at<uchar>(y, x) > threshold ? 255 : 0;
+			dst.at<uchar>(y, x) = src.at<uchar>(y, x) > threshold ? maxValue : 0;
 		}
 
 	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
