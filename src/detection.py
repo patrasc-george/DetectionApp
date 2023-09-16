@@ -3,10 +3,10 @@ from PIL import Image
 import cv2
 import datetime
 
-import numpy as np
 import torch
 from torchvision import models, transforms
 import torch.nn as nn
+from ultralytics import YOLO
 
 # INITIALIZATION =======================================================================================================
 
@@ -33,13 +33,20 @@ detectors = {
         'classes': "",
         'framework': 'torch'
     },
-    "Model_Vehicles": {
+    "Classification Model": {
         'weights': "",
-        'model': "../models/Model_Vehicles/model_vehicles.pth",
-        'classes': "../models/Model_Vehicles/class_names.txt",
+        'model': "../models/Classification Model/classification_model.pth",
+        'classes': "../models/Classification Model/class_names.txt",
+        'framework': 'torch'
+    },
+    "Trained Model": {
+        'weights': "",
+        'model': "../models/detection_model.pt",
+        'classes': "",
         'framework': 'torch'
     }
 }
+
 
 def read_class_names_from_txt(file_name):
     class_names = []
@@ -51,19 +58,22 @@ def read_class_names_from_txt(file_name):
 
     return class_names
 
+
 nets = {}
 for name in detectors:
     if isinstance(name, str) and name == 'MobileNet v3 large':
         nets[name] = cv2.dnn.readNet(detectors[name]['model'], detectors[name]['weights'], detectors[name]['framework'])
     elif name == 'YOLOv5':
         nets[name] = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
-    elif name == 'Model_Vehicles':
+    elif name == 'Classification Model':
         class_names = read_class_names_from_txt(detectors[name]['classes'])
         model = models.resnet18(pretrained=False)
         model.fc = nn.Linear(512, 4)
         model.load_state_dict(torch.load(detectors[name]['model']))
         model.eval()
         nets[name] = model
+    elif name == 'Trained Model':
+        nets[name] = YOLO(detectors[name]['model'])
 
 
 # DETECTION ============================================================================================================
@@ -75,8 +85,10 @@ def detect(frame: cv2.Mat, net_name, show_fps: bool = True):
         MobileNet_v3_large(frame, net_name)
     elif net_name == "YOLOv5":
         frame = YOLOv5(frame, net_name)
-    elif net_name == "Model_Vehicles":
+    elif net_name == "Classification Model":
         model_vehicles(frame, net_name)
+    elif net_name == "Trained Model":
+        trained_model(frame, net_name)
 
     # end time to compute the fps
     end = datetime.datetime.now()
@@ -99,9 +111,11 @@ def YOLOv5(frame, net_name):
     for box in detected_objects:
         x1, y1, x2, y2, confidence, class_ = box
         x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
-        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
         class_name = class_names[class_]
-        cv2.putText(frame, class_name, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+        text = f"{class_name} {confidence * 100:.2f}%"
+        cv2.putText(frame, text, (x1, y1 - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
 
     return frame
 
@@ -150,18 +164,17 @@ def MobileNet_v3_large(frame, net_name):
         cv2.putText(frame, text, (box[0], box[1] - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 2)
 
+
 def model_vehicles(frame, net_name):
-    # Convertim imaginea din cv2.Mat în obiect PIL
     frame = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
-    # Aplicăm transformările
     transform = transforms.Compose([
         transforms.Resize((150, 150)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
-    frame = transform(frame)  # Aplicăm transformările pe obiectul PIL
+    frame = transform(frame)
 
     with torch.no_grad():
         frame = frame.unsqueeze(0)
@@ -179,3 +192,20 @@ def model_vehicles(frame, net_name):
         print(f'{class_names[i]}: {probabilities[i]:.3f}')
 
     print(f'Predicted class: {class_names[predicted_class_index]}\n\n')
+
+
+def trained_model(frame, net_name):
+    results = nets[net_name](frame)[0]
+
+    class_names = results.names
+
+    for i in range(len(results.boxes.cls)):
+        class_name = class_names[int(results.boxes.cls[i])]
+        confidence = results.boxes.conf[i]
+        x1, y1, x2, y2 = map(int, results.boxes.xyxy[i].tolist())
+
+        if confidence > 0.6:
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+            text = f"{class_name} {confidence * 100:.2f}%"
+            cv2.putText(frame, text, (x1, y1 - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)

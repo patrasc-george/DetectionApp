@@ -60,9 +60,9 @@ with torch.no_grad():
 test_accuracy = correct_predictions / total_samples
 print(f'Test Accuracy: {100 * test_accuracy:.2f}%')
 
-torch.save(model.state_dict(), '../models/Model_Vehicles/model_vehicles.pth')
+torch.save(model.state_dict(), '../models/Classification Model/classification_model.pth')
 
-class_names_file = "../models/Model_Vehicles/class_names.txt"
+class_names_file = "../models/Classification Model/class_names.txt"
 
 with open(class_names_file, "w") as file:
     for class_name in class_names:
