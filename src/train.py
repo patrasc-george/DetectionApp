@@ -11,7 +11,7 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
-data_dir = 'dataset'
+data_dir = '../Dataset'
 batch_size = 32
 dataset = datasets.ImageFolder(data_dir, transform=transform)
 class_names = dataset.classes
@@ -27,7 +27,7 @@ model.fc = nn.Linear(512, num_classes)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-num_epochs = 10
+num_epochs = 20
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
@@ -60,9 +60,9 @@ with torch.no_grad():
 test_accuracy = correct_predictions / total_samples
 print(f'Test Accuracy: {100 * test_accuracy:.2f}%')
 
-torch.save(model.state_dict(), 'model_vehicles.pth')
+torch.save(model.state_dict(), '../models/Model_Vehicles/model_vehicles.pth')
 
-class_names_file = "class_names.txt"
+class_names_file = "../models/Model_Vehicles/class_names.txt"
 
 with open(class_names_file, "w") as file:
     for class_name in class_names:
