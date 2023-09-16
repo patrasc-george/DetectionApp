@@ -79,9 +79,6 @@ void ObjectDetector::detect(cv::Mat& image, bool showConf) {
 	// Convert the image to grayscale
 	cv::cvtColor(copy, copy, cv::COLOR_BGR2GRAY);
 
-	// Apply a Gaussian filter for denoising
-	// cv::GaussianBlur(copy, copy, cv::Size(5, 5), 0);
-
 	// Enhance the image contrast
 	cv::equalizeHist(copy, copy);
 
