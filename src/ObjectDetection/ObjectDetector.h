@@ -69,12 +69,36 @@ public:
 	 */
 	int init();
 
+	/**
+	* @brief Sets the visibility status of object class names based on the provided list.
+	* @details This function updates the visibility status of object class names based on
+	the boolean values provided in the 'classesToShow' vector. Each class name in the 'classNames'
+	vector is associated with a boolean value that determines whether it should be shown or hidden.
+	*
+	* @param[in] classesToShow A vector of boolean values specifying the visibility status of each
+	object class name. The vector size should match the number of class names.
+	*/
 	void setClassNamesValues(const std::vector<bool> classButtons);
-	
+
+	/**
+	* @brief Sorts the list of object class names for display.
+	* @details This function sorts the list of object class names based on the detected classes
+	and appends undetected classes at the end. The sorted class names are stored in the 'sortedClassNames' vector.
+	The sorting is based on the order of classes in 'detectClasses', followed by undetected classes in the order
+	they appear in the 'classNames' vector.
+	*/
 	void sort();
 
+	/**
+	* @brief Retrieves the sorted list of object class names.
+	* @return Returns a vector of strings containing the sorted object class names.
+	*/
 	std::vector<std::string> getSortedClassNames() const;
 
+	/**
+	* @brief Retrieves the set of detected object class names from the detection results.
+	* @return Returns a set of strings containing the names of detected object classes.
+	*/
 	std::set<std::string> getDetectedClassNames() const;
 
 	int getType() { return type; };

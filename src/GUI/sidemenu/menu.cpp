@@ -119,7 +119,7 @@ Menu::Menu(QWidget* parent)
 
 	vbox->addWidget(new QLabel("Select a detector", detectorsList));
 	vbox->addWidget(detectorsList);
-	
+
 
 	QWidget* container = new QWidget;
 	scrollArea->setWidget(container);

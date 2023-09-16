@@ -136,14 +136,12 @@ signals:
 	/**
 	* @brief Emits a signal when a detector is added.
 	* @return void
-	*
 	*/
 	void detectorAdded();
 
 	/**
 	* @brief Emits a signal when a detector is removed.
 	* @return void
-	*
 	*/
 	void detectorRemoved();
 
@@ -165,7 +163,7 @@ private slots:
 	* @brief Opens a dialog box to remoeve a detector.
 	* It also connects the dialog box to the detectorAdded() signal.
 	* When the dialog is accepted, the deetector will be removed from the json file and the list widget, and the detectorRemoved() signal will be emitted.
-	* 	*/
+	*/
 	void removeDetector();
 
 	/**

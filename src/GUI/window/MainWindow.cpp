@@ -141,7 +141,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 		});
 
 	connect(menu->classButtons->toggleButton, &QToolButton::toggled, this, &MainWindow::sortButtons);
-	
+
 	imageContainer->setMinimumSize(800, 600);
 
 	QVBoxLayout* vbox = new QVBoxLayout;

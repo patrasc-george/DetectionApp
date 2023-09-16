@@ -186,9 +186,28 @@ public:
 	 */
 	void preventReset();
 
+	/**
+	* @brief Overrides the default resize event handler.
+	* @details This function is an override of the default resize event handler for the MainWindow class.
+	It calls the 'preventReset' function to prevent certain actions during window resizing.
+	* @param[in] event A pointer to the QResizeEvent object that represents the resize event.
+	*/
 	void resizeEvent(QResizeEvent* event) override;
 
+	/**
+	* @brief Checks if any thresholding option is active in the menu.
+	* @details This function checks if any of the binary thresholding, zero thresholding,
+	adaptive thresholding, or truncation thresholding options is currently selected in the menu.
+	* @return Returns true if at least one thresholding option is active; otherwise, returns false.
+	*/
 	bool thresholdActive();
 
+	/**
+	* @brief Sorts and updates buttons in the user interface based on detection results.
+	* @details This function sorts the buttons in the user interface based on detection results
+	and updates their order. It retrieves sorted class names and detected classes from the current
+	detector instance, and then rearranges the buttons accordingly.
+	* @note This function assumes the existence of specific UI elements and their interactions.
+	*/
 	void sortButtons();
 };

@@ -90,7 +90,7 @@ void ObjectDetector::detect(cv::Mat& image, bool showConf) {
 
 	// Create a blob from the normalized image
 	cv::Mat blob = cv::dnn::blobFromImage(copy);
-	
+
 	std::vector<std::string> layers = model.getLayerNames();
 
 	model.setInput(blob);
