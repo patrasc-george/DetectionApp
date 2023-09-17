@@ -3,8 +3,10 @@
 #include "DetectorFactory.h"
 #include "DetectionMat.h"
 #include "ThresholdAdjuster.h"
-#include <NeuralNetworkDetector.h>
-#include <CascadeClassifierDetector.h>
+#include "NeuralNetworkDetector.h"
+#include "CascadeClassifierDetector.h"
+
+#include <iostream>
 
 void MainWindow::closeEvent(QCloseEvent* event) {
 	// close the entire application
@@ -303,77 +305,25 @@ void MainWindow::selectDetectorEvent() {
 
 	currDet = DetectorFactory::createDetectorFromFile("../detector_paths/" + currText.toStdString());
 
-	//int loadState = ModelLoader::getFromFileByName(currDet, currText, modelsJSON);
-	//bool loaded = false;
-	//switch (loadState) {
-	//case ModelErrors::NAME_NOT_FOUND:
-	//	QMessageBox::critical(this, "Model not found",
-	//		QString("No entry named \"%1\" was found in %2")
-	//		.arg(currText)
-	//		.arg(modelsJSON)
-	//	);
-	//	break;
-	//case ModelErrors::TYPE_NOT_PROVIDED:
-	//	QMessageBox::critical(this, "Type not found",
-	//		QString("Model \"%1\" was not provided a type (cascade or neural network) in %2")
-	//		.arg(currText)
-	//		.arg(modelsJSON)
-	//	);
-	//	break;
-	//case ModelErrors::MODEL_PATH_EMPTY:
-	//	QMessageBox::critical(this, "Empty path",
-	//		QString("Model \"%1\" was not provided a path to the detection model in %2")
-	//		.arg(currText)
-	//		.arg(modelsJSON)
-	//	);
-	//	break;
-	//case ModelErrors::INVALID_CASCADE:
-	//	QMessageBox::critical(this, "Couldn't load cascade file",
-	//		QString("\"%1\" is not a valid cascade file.")
-	//		.arg(ModelLoader::getObjectByName(currText, modelsJSON).value("paths").toObject()["face"].toString())
-	//	);
-	//	break;
-	//case ModelErrors::INF_GRAPH_PATH_EMPTY:
-	//	QMessageBox::critical(this, "Inference graph path empty",
-	//		QString("Model \"%1\" was not provided a path to a frozen inference graph in %2")
-	//		.arg(currText)
-	//		.arg(modelsJSON)
-	//	);
-	//	break;
-	//case ModelErrors::CANNOT_READ_NETWORK:
-	//	QMessageBox::critical(this, "Couldn't read model",
-	//		QString("Couldn't read model \"%1\". Please check to following paths in %2 lead to a valid inference graph and weights file: \n%3 \n%4")
-	//		.arg(currText)
-	//		.arg(modelsJSON)
-	//		.arg(ModelLoader::getObjectByName(currText, modelsJSON).value("paths").toObject()["inf"].toString())
-	//		.arg(ModelLoader::getObjectByName(currText, modelsJSON).value("paths").toObject()["model"].toString())
-	//	);
-	//	break;
-	//case 1:
-	//	loaded = true;
-	//}
+	// TODO: add back errosr messages
+	
+	if (auto det = dynamic_cast<NeuralNetworkDetector*>(currDet)) {
+		QLayoutItem* item;
+		while ( ( item = menu->classesVbox->takeAt( 0 ) ) != NULL ) {
+			delete item->widget();
+			delete item;
+		}
 
-	//if (!loaded) {
-	//	menu->detectorsList->setItemIcon(index, QIcon(QApplication::style()->standardIcon(QStyle::SP_MessageBoxCritical)));
-	//	menu->detectorsList->setCurrentIndex(0);
-	//	delete currDet;
-	//	currDet = nullptr;
-	//}
-	////else if (currDet->getType() == cascade && (!currDet->canDetectEyes() || !currDet->canDetectSmiles())) {
-	//	//if (menu->detectorsList->itemIcon(index).isNull()) {
-	//	//	QMessageBox::information(this, "Model not completely loaded",
-	//	//		QString("Model \"%1\" has only loaded cascade(s) to detect %2. If you want to be able to detect %3 you can add the paths to the cascades in %4 and reload.")
-	//	//		.arg(currText)
-	//	//		.arg(QString("faces%1")
-	//	//			.arg(currDet->canDetectEyes() ? " and eyes" : currDet->canDetectSmiles() ? " and smiles" : ""))
-	//	//		.arg(QString(!currDet->canDetectSmiles() ? currDet->canDetectEyes() ? "smiles" : "eyes or smiles" : "eyes"))
-	//	//		.arg(modelsJSON)
-	//	//	);
-	//	//	menu->detectorsList->setItemIcon(index, QIcon(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation)));
-	//	//}
-	//}
-	//else
-	//	menu->detectorsList->setItemIcon(index, QIcon());
+		auto classes = det->getClassNames();
+		for (auto c : classes) {
+			QPushButton* b = new QPushButton(QString::fromStdString(c));
+			b->setCheckable(true);
+			b->setChecked(true);
+			menu->classesVbox->addWidget(b);
+			menu->buttonMap[c] = b;
+		}
+	}
+	
 	if (imageIsUpload)
 		processImage();
 	setOptions();
