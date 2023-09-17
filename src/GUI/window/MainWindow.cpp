@@ -158,7 +158,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 	centralWidget->setLayout(vbox);
 	setCentralWidget(centralWidget);
 
-	QDir folder("../data/detectors");
+	QDir folder("../detector_paths");
 	QStringList files = folder.entryList({ "*.yaml" }, QDir::Files);
 
 	for (const QString& filename : files) {
@@ -301,7 +301,7 @@ void MainWindow::selectDetectorEvent() {
 	QString currText = menu->detectorsList->currentText();
 	int index = menu->detectorsList->findText(currText);
 
-	currDet = DetectorFactory::createDetectorFromFile("../data/detectors/" + currText.toStdString());
+	currDet = DetectorFactory::createDetectorFromFile("../detector_paths/" + currText.toStdString());
 
 	//int loadState = ModelLoader::getFromFileByName(currDet, currText, modelsJSON);
 	//bool loaded = false;

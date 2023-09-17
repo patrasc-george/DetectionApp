@@ -27,7 +27,7 @@ DetectionMat CascadeClassifierDetector::detect(const cv::Mat& image) {
 
     DetectionMat detMat;
     for (const cv::Rect& rect : detections) {
-        if (rect.size().width > 10 && rect.size().height > 10) {
+        if (rect.size().width > 10 || rect.size().height > 10) {
             std::shared_ptr<Detection> d = std::make_shared<Detection>(rect, objectLabel, 0.0); // Zero, we will not render it
             detMat.add(d);
         }
