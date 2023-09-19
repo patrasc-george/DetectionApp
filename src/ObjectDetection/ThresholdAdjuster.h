@@ -10,4 +10,5 @@ class OBJECTDETECTION_API ThresholdAdjuster {
 public:
     virtual ~ThresholdAdjuster() = default;
     virtual void adjustThreshold(float newThreshold) = 0;
+    virtual float getCurrentThreshold() = 0;
 };

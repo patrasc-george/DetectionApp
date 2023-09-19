@@ -73,6 +73,10 @@ public:
 		toggleButton->setText(std::move(title));
 	}
 
+	bool expanded() {
+		return isExpanded;
+	}
+
 private slots:
 	/**
 	* @brief Updates the widget's height based on its expansion state.
@@ -91,6 +95,7 @@ private slots:
 		}
 	}
 
+public slots:
 	/**
 	 * @brief Toggles the expansion state of the `CollapsibleWidget`.
 	 * @param[in] expanded True if the widget should be expanded; false if it should be collapsed.

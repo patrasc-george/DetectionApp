@@ -8,9 +8,11 @@ public:
     NeuralNetworkDetector(const std::string& modelFilePath, const std::string& configFilePath, const std::string& classesFilePath);
     NeuralNetworkDetector();
     DetectionMat detect(const cv::Mat& image) override;
-    void adjustThreshold(float newThreshold);
+    void adjustThreshold(float newThreshold) override;
+    float getCurrentThreshold() override;
     void loadClasses(const std::string& classesFilePath);
     void enableObject(const std::string& label, bool enable);
+    bool isObjectEnabled(const std::string& name);
 
     void serialize(const std::string& filename) const override;
     void deserialize(const std::string& filename) override;

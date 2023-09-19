@@ -9,6 +9,8 @@
 #include <iostream>
 
 void MainWindow::closeEvent(QCloseEvent* event) {
+	if (currDet != nullptr)
+		currDet->serialize(currDet->getSerializationFile());
 	// close the entire application
 	qApp->closeAllWindows();
 	qApp->exit(0);
@@ -296,6 +298,10 @@ void MainWindow::uploadImageEvent() {
 }
 
 void MainWindow::selectDetectorEvent() {
+	menu->classButtons->toggle(false);
+	if (currDet != nullptr) {
+		currDet->serialize(currDet->getSerializationFile());
+	}
 	delete currDet;
 	currDet = nullptr;
 	if (menu->detectorsList->currentIndex() == 0) {
@@ -313,18 +319,33 @@ void MainWindow::selectDetectorEvent() {
 	// TODO: add back errosr messages
 	
 	if (auto det = dynamic_cast<NeuralNetworkDetector*>(currDet)) {
-		QLayoutItem* item;
-		while ( ( item = menu->classesVbox->takeAt( 0 ) ) != NULL ) {
-			delete item->widget();
-			delete item;
+		changeMinConfEvent();
+		// Identify and remove non-label widgets (separators) from the layout
+		for (int i = menu->detectedClassesVbox->count() - 1; i >= 0; --i) {
+			if (!dynamic_cast<QLabel*>(menu->detectedClassesVbox->itemAt(i)->widget())) {
+				QLayoutItem* item = menu->detectedClassesVbox->takeAt(i);
+				if (QWidget* widget = item->widget()) {
+					delete widget;
+				}
+				delete item;
+			}
+		}
+		for (int i = menu->undetectedClassesVbox->count() - 1; i >= 0; --i) {
+			if (!dynamic_cast<QLabel*>(menu->undetectedClassesVbox->itemAt(i)->widget())) {
+				QLayoutItem* item = menu->undetectedClassesVbox->takeAt(i);
+				if (QWidget* widget = item->widget()) {
+					delete widget;
+				}
+				delete item;
+			}
 		}
 
 		auto classes = det->getClassNames();
 		for (auto c : classes) {
 			QPushButton* b = new QPushButton(QString::fromStdString(c));
 			b->setCheckable(true);
-			b->setChecked(true);
-			menu->classesVbox->addWidget(b);
+			b->setChecked(det->isObjectEnabled(c));
+			menu->undetectedClassesVbox->addWidget(b);
 			menu->buttonMap[c] = b;
 		}
 	}
@@ -539,8 +560,10 @@ bool MainWindow::thresholdActive() {
 		);
 }
 
-void MainWindow::sortButtons()
-{
+void MainWindow::sortButtons() {
+	if (!menu->classButtons->expanded())
+		return;
+
 	detMat.sortByConfidence();
 	std::vector<std::string> classNames = dynamic_cast<NeuralNetworkDetector*>(currDet)->getClassNames();
 	std::sort(classNames.begin(), classNames.end());
@@ -559,14 +582,16 @@ void MainWindow::sortButtons()
 
 		if (buttonIterator != menu->buttonMap.end()) {
 			QPushButton* button = buttonIterator->second;
-			menu->classesVbox->removeWidget(button);
-			menu->classesVbox->addWidget(button);
+			menu->detectedClassesVbox->removeWidget(button);
+			menu->detectedClassesVbox->addWidget(button);
 		}
 	}
-
-	// add the separator line
-	menu->classesVbox->removeWidget(menu->classSeparator);
-	menu->classesVbox->addWidget(menu->classSeparator);
+	if (detMat.empty()) {
+		menu->detectedLabel->setText("<html><font color='black'>Detected</font><br/><font color='gray'> -- None</font></html>");
+	}
+	else {
+		menu->detectedLabel->setText("Detected");
+	}
 
 	// add the rest of the classes, sorted alphabetically
 	for (auto& c : classNames) {
@@ -574,8 +599,15 @@ void MainWindow::sortButtons()
 
 		if (buttonIterator != menu->buttonMap.end()) {
 			QPushButton* button = buttonIterator->second;
-			menu->classesVbox->removeWidget(button);
-			menu->classesVbox->addWidget(button);
+			menu->undetectedClassesVbox->removeWidget(button);
+			menu->undetectedClassesVbox->addWidget(button);
 		}
 	}
+	if (classNames.empty()) {
+		menu->undetectedLabel->setText("<html><font color='black'>Unetected</font><br/><font color='gray'> -- None</font></html>");
+	}
+	else {
+		menu->undetectedLabel->setText("Detected");
+	}
+
 }

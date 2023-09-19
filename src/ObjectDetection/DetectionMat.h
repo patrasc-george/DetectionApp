@@ -40,6 +40,7 @@ public:
 
     DetectionMat::iterator begin();
     DetectionMat::iterator end();
+    bool empty();
 
     DetectionMat() = default;
 };

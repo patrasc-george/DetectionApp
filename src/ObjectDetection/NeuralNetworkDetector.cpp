@@ -110,6 +110,10 @@ void NeuralNetworkDetector::adjustThreshold(float newThreshold) {
 		confidenceThreshold = newThreshold;
 }
 
+float NeuralNetworkDetector::getCurrentThreshold() {
+	return confidenceThreshold;
+}
+
 void NeuralNetworkDetector::enableObject(const std::string& label, bool enable) {
 	for (auto& obj : objectEnabledMap) {
 		if (obj.first == label) {
@@ -117,6 +121,15 @@ void NeuralNetworkDetector::enableObject(const std::string& label, bool enable) 
 			break;
 		}
 	}
+}
+
+bool NeuralNetworkDetector::isObjectEnabled(const std::string& name) {
+	for (auto& obj : objectEnabledMap) {
+		if (obj.first == name) {
+			return obj.second;
+		}
+	}
+	return false;
 }
 
 void NeuralNetworkDetector::serialize(const std::string& filename) const {
@@ -158,7 +171,9 @@ void NeuralNetworkDetector::deserialize(const std::string& filename) {
 	for (const auto& className : disabledClassNames) {
 		objectEnabledMap[className] = false;
 	}
+
 	fs.release();
+	serializationFile = filename;
 }
 
 std::string NeuralNetworkDetector::getSerializationFile() const

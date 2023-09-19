@@ -45,13 +45,20 @@ Menu::Menu(QWidget* parent)
 	algVbox->addWidget(detectEdgesButton);
 	imageAlgorithms->setContentLayout(*algVbox);
 
-	classesVbox = new QVBoxLayout;
+	detectedClassesVbox = new QVBoxLayout;
+	undetectedClassesVbox = new QVBoxLayout;
+
+	QVBoxLayout* classesVbox = new QVBoxLayout;
+	classesVbox->addLayout(detectedClassesVbox);
+	classesVbox->addLayout(undetectedClassesVbox);
+
+	detectedLabel = new QLabel("Detected");
+	undetectedLabel = new QLabel("Undetected");
+
+	detectedClassesVbox->addWidget(detectedLabel);
+	undetectedClassesVbox->addWidget(undetectedLabel);
+
 	classButtons->setContentLayout(*classesVbox);
-	classSeparator = new QFrame();
-	classSeparator->setFrameShape(QFrame::HLine);
-	classSeparator->setFixedHeight(30);
-	classSeparator->setFrameShadow(QFrame::Plain);
-	classSeparator->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
 	zoomIn = new QPushButton();
 	zoomIn->setIcon(QIcon(":/assets/zoom-in_dark.png"));

@@ -28,9 +28,11 @@ public:
 	QPushButton* undoBtn;
 	QPushButton* redoBtn;
 
-	QVBoxLayout* classesVbox;
+	QVBoxLayout* detectedClassesVbox;
+	QVBoxLayout* undetectedClassesVbox;
+	QLabel* detectedLabel;
+	QLabel* undetectedLabel;
 	CollapsibleWidget* classButtons;
-	QFrame* classSeparator;
 	std::map<std::string, QPushButton*> buttonMap;
 
 	CollapsibleWidget* imageAlgorithms;

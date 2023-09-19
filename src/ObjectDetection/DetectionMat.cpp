@@ -78,3 +78,7 @@ DetectionMat::iterator DetectionMat::begin() {
 DetectionMat::iterator DetectionMat::end() {
     return iterator(detections.end());
 }
+
+bool DetectionMat::empty() {
+    return detections.empty();
+}
