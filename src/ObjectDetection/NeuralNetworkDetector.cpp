@@ -3,10 +3,10 @@
 #include <fstream>
 
 NeuralNetworkDetector::NeuralNetworkDetector(const std::string& modelFilePath, const std::string& configFilePath, const std::string& classesFilePath)
-    : modelFilePath(modelFilePath)
+	: modelFilePath(modelFilePath)
 	, configFilePath(configFilePath)
 	, classesFilePath(classesFilePath)
-	, confidenceThreshold(0.5) 
+	, confidenceThreshold(0.5)
 {
 	try {
 		net = cv::dnn::readNet(modelFilePath, configFilePath);
@@ -32,37 +32,46 @@ NeuralNetworkDetector::NeuralNetworkDetector() : confidenceThreshold(0.5)
 }
 
 DetectionMat NeuralNetworkDetector::detect(const cv::Mat& image) {
+	bool isONNX = false;
+	if (configFilePath.find(".onnx") != std::string::npos)
+		isONNX = true;
+
 	if (net.empty()) {
 		try {
-			net = cv::dnn::readNet(modelFilePath, configFilePath);
+			if (isONNX)
+				net = cv::dnn::readNet(configFilePath);
+			else
+				net = cv::dnn::readNet(modelFilePath, configFilePath);
 		}
 		catch (cv::Exception& e) {
 			throw std::runtime_error("Couldn't load neural network using " + modelFilePath + " and " + configFilePath);
 		}
 	}
+	cv::Mat blob;
+	cv::Mat copy = image;
+
 	// Convert the image to grayscale
-	cv::Mat gray;
-	cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+	cv::cvtColor(copy, copy, cv::COLOR_BGR2GRAY);
 
-	//// Apply a Gaussian filter for denoising
-	cv::Mat denoised;
-	cv::GaussianBlur(gray, denoised, cv::Size(5, 5), 0);
+	// Enhance the image contrast
+	cv::equalizeHist(copy, copy);
 
-	//// Enhance the image contrast
-	cv::Mat enhanced;
-	cv::equalizeHist(denoised, enhanced);
 
-	//// Resize the image to increase speed
-	cv::Mat resized;
-	cv::resize(enhanced, resized, cv::Size(), 0.5, 0.5);
-
-	//// Convert resized image to BGR for compatibility
-	cv::Mat BGR;
-	cv::cvtColor(resized, BGR, cv::COLOR_BGRA2BGR);
+	// Convert resized image to BGR for compatibility
+	cv::cvtColor(copy, copy, cv::COLOR_BGRA2BGR);
 
 	// Create a blob from the normalized image
-	cv::Mat blob = cv::dnn::blobFromImage(BGR);
-
+	if (isONNX)
+	{
+		// Resize the image to increase speed
+		cv::resize(copy, copy, cv::Size(224, 224), 6);
+		cv::dnn::blobFromImage(copy, blob, 1. / 255., cv::Size(224, 224));
+	}
+	else
+	{
+		cv::resize(copy, copy, cv::Size(), 0.5, 0.5, 6);
+		cv::dnn::blobFromImage(copy, blob);
+	}
 	net.setInput(blob);
 	try {
 		/*
@@ -71,9 +80,11 @@ DetectionMat NeuralNetworkDetector::detect(const cv::Mat& image) {
 		In Release mode, it automatically chooses the right layer
 		*/
 #ifdef NDEBUG
-		blob = net.forward();
+		std::vector<cv::Mat> outputs;
+		net.forward(outputs);
+		blob = outputs[0];
 #else
-		blob = model.forward("layer");
+		blob = net.forward("layer");
 #endif
 	}
 	catch (const std::exception& e) {
@@ -83,28 +94,82 @@ DetectionMat NeuralNetworkDetector::detect(const cv::Mat& image) {
 		return DetectionMat();
 	}
 
-	cv::Mat detectionMat = cv::Mat(blob.size[2], blob.size[3], CV_32F, blob.ptr<float>());
 	DetectionMat det;
+	if (isONNX)
+	{
+		float* data = (float*)blob.data;
+		const int rows = blob.size[1];
 
-	for (int i = 0; i < detectionMat.rows; i++) {
-		int classId = detectionMat.at<float>(i, 1);
-		float confidence = detectionMat.at<float>(i, 2);
+		float scaleX = image.cols / (float)copy.cols;
+		float scaleY = image.rows / (float)copy.rows;
+		std::vector<cv::Rect> boxes;
+		std::vector<float> confidences;
+		std::vector<int> classes;
 
-		if (confidence > confidenceThreshold) {
-			int box_x = (int)(detectionMat.at<float>(i, 3) * image.cols);
-			int box_y = (int)(detectionMat.at<float>(i, 4) * image.rows);
-			int box_width = (int)(detectionMat.at<float>(i, 5) * image.cols - box_x);
-			int box_height = (int)(detectionMat.at<float>(i, 6) * image.rows - box_y);
-			cv::Rect rect(box_x, box_y, box_width, box_height);
+		for (int i = 0; i < rows; i++) {
+			float confidence = data[4];
+			if (confidence > confidenceThreshold)
+			{
+				int classId = 0;
+				float maxConfidence = 0;
+				for (int j = 0; j < classNames.size(); j++)
+					if (data[5 + j] > maxConfidence)
+					{
+						classId = j;
+						maxConfidence = data[5 + j];
+					}
+				int box_width = int(data[2] * scaleX);
+				int box_height = int(data[3] * scaleY);
+				int box_x = int(data[0] * scaleX - 0.5 * box_width);
+				int box_y = int(data[1] * scaleY - 0.5 * box_height);
+				cv::Rect rect(box_x, box_y, box_width, box_height);
+				boxes.push_back(rect);
+				confidences.push_back(confidence);
+				classes.push_back(classId);
+			}
+			data += 5 + classNames.size();
+		}
+		float nmsThreshold = 0.4;
+		std::vector<int> indices;
 
-			std::string c = classNames[classId - 1];
+		cv::dnn::NMSBoxes(boxes, confidences, confidenceThreshold, nmsThreshold, indices);
+
+		for (const auto& index : indices)
+		{
+			cv::Rect rect = boxes[index];
+			float confidence = confidences[index];
+			int classId = classes[index];
+
+			std::string c = classNames[classId];
 			std::shared_ptr<Detection> shape = std::make_shared<Detection>(rect, c, confidence);
 			shape.get()->setRenderStatus(objectEnabledMap[c]);
 			det.add(shape);
 		}
 	}
+	else
+	{
+		cv::Mat detectionMat = cv::Mat(blob.size[2], blob.size[3], CV_32F, blob.ptr<float>());
 
-    return det;
+		for (int i = 0; i < detectionMat.rows; i++) {
+			int classId = detectionMat.at<float>(i, 1);
+			float confidence = detectionMat.at<float>(i, 2);
+
+			if (confidence > confidenceThreshold) {
+				int box_x = (int)(detectionMat.at<float>(i, 3) * image.cols);
+				int box_y = (int)(detectionMat.at<float>(i, 4) * image.rows);
+				int box_width = (int)(detectionMat.at<float>(i, 5) * image.cols - box_x);
+				int box_height = (int)(detectionMat.at<float>(i, 6) * image.rows - box_y);
+				cv::Rect rect(box_x, box_y, box_width, box_height);
+
+				std::string c = classNames[classId - 1];
+				std::shared_ptr<Detection> shape = std::make_shared<Detection>(rect, c, confidence);
+				shape.get()->setRenderStatus(objectEnabledMap[c]);
+				det.add(shape);
+			}
+		}
+	}
+
+	return det;
 }
 
 void NeuralNetworkDetector::adjustThreshold(float newThreshold) {
@@ -122,16 +187,16 @@ void NeuralNetworkDetector::enableObject(const std::string& label, bool enable) 
 }
 
 void NeuralNetworkDetector::serialize(const std::string& filename) const {
-    cv::FileStorage fs(filename, cv::FileStorage::WRITE);
-    if (!fs.isOpened()) {
-        throw std::runtime_error("Failed to open file for writing: " + filename);
-    }
+	cv::FileStorage fs(filename, cv::FileStorage::WRITE);
+	if (!fs.isOpened()) {
+		throw std::runtime_error("Failed to open file for writing: " + filename);
+	}
 
 	fs << "type" << "NETWORK";
-    fs << "modelFilePath" << modelFilePath;
-    fs << "configFilePath" << configFilePath;
-    fs << "labelsFilePath" << classesFilePath;
-    //fs << "confidenceThreshold" << confidenceThreshold;
+	fs << "modelFilePath" << modelFilePath;
+	fs << "configFilePath" << configFilePath;
+	fs << "labelsFilePath" << classesFilePath;
+	//fs << "confidenceThreshold" << confidenceThreshold;
 	std::vector<std::string> disabledClassNames;
 	for (const auto& classEntry : objectEnabledMap) {
 		if (!classEntry.second) {
@@ -143,15 +208,15 @@ void NeuralNetworkDetector::serialize(const std::string& filename) const {
 }
 
 void NeuralNetworkDetector::deserialize(const std::string& filename) {
-    cv::FileStorage fs(filename, cv::FileStorage::READ);
-    if (!fs.isOpened()) {
-        throw std::runtime_error("Failed to open file for reading: " + filename);
-    }
+	cv::FileStorage fs(filename, cv::FileStorage::READ);
+	if (!fs.isOpened()) {
+		throw std::runtime_error("Failed to open file for reading: " + filename);
+	}
 
-    fs["modelFilePath"] >> modelFilePath;
-    fs["configFilePath"] >> configFilePath;
-    fs["labelsFilePath"] >> classesFilePath; // Read labels file path
-    //fs["confidenceThreshold"] >> confidenceThreshold;
+	fs["modelFilePath"] >> modelFilePath;
+	fs["configFilePath"] >> configFilePath;
+	fs["labelsFilePath"] >> classesFilePath; // Read labels file path
+	//fs["confidenceThreshold"] >> confidenceThreshold;
 
 	std::ifstream labelsStream(classesFilePath);
 	if (!labelsStream.is_open()) {
