@@ -40,7 +40,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 	connect(menu->detectorsList, &QComboBox::currentIndexChanged, this, &MainWindow::selectDetectorEvent);
 	connect(menu->screenshot, &QPushButton::clicked, this, &MainWindow::screenshotEvent);
 
-	connect(menu->confControl, &LabeledSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
+	//connect(menu->confControl, &LabeledSlider::sliderReleased, this, &MainWindow::changeMinConfEvent);
 	connect(menu->thresholdControl, &LabeledSlider::valueChanged, this, &MainWindow::changeThresholdEvent);
 	connect(menu->showConfidence, &QCheckBox::clicked, this, [&] {
 		history.add(SHOW_CONFIDENCE, menu->showConfidence->isChecked());
@@ -89,10 +89,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 		history.add(DETECT_EDGES, menu->detectEdgesButton->isChecked());
 		processImage();
 		});
-
-	for (QPushButton* button : menu->classButtons->findChildren<QPushButton*>()) {
-		connect(button, &QPushButton::clicked, this, &MainWindow::processImage);
-	}
 
 	connect(menu->flipHorizontal, &QCheckBox::clicked, this, [&] {
 		history.add(FLIP_HORIZONTAL, menu->flipHorizontal->isChecked());
@@ -173,18 +169,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 	for (const QString& filename : files) {
 		QString filePath = folder.absoluteFilePath(filename);
 
-		try {
-			Detector* detector = DetectorFactory::createDetectorFromFile(filePath.toStdString());
-
-			if (detector) {
-				menu->detectorsList->addItem(filename);
-				//delete detector;
-			}
-		}
-		catch (const std::exception& e) {
-			// Handle errors if needed
-			throw std::runtime_error("No detectors");
-		}
+		Detector* detector = DetectorFactory::createDetectorFromFile(filePath.toStdString());
+		if (detector)
+			menu->detectorsList->addItem(filename);
 	}
 }
 
@@ -243,6 +230,10 @@ void MainWindow::toggleCameraEvent() {
 	imageContainer->zoomReset();
 
 	if (cameraIsOn) {
+		// only update min confidence when slider is released
+		connect(menu->confControl, &LabeledSlider::sliderReleased, this, &MainWindow::changeMinConfEvent);
+		disconnect(menu->confControl, &LabeledSlider::valueChanged , this, &MainWindow::changeMinConfEvent);
+
 		menu->flipHorizontal->setChecked(true);
 		history.get()->setFlipH(menu->flipHorizontal->isChecked());
 		menu->flipVertical->setChecked(false);
@@ -250,6 +241,7 @@ void MainWindow::toggleCameraEvent() {
 
 		startVideoCapture();
 		selectDetectorEvent();
+
 	}
 	else {
 		frame = putLogo(imageContainer->size().width(), imageContainer->size().height());
@@ -288,6 +280,10 @@ void MainWindow::uploadImageEvent() {
 	history.reset();
 	history.get()->setFlipH(menu->flipHorizontal->isChecked());
 	history.get()->setFlipV(menu->flipVertical->isChecked());
+
+	// update min confidence whenever slider is updated, since it diesn't affect performance
+	disconnect(menu->confControl, &LabeledSlider::sliderReleased, this, &MainWindow::changeMinConfEvent);
+	connect(menu->confControl, &LabeledSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
 
 	imageIsUpload = true;
 	imageContainer->zoomReset();
@@ -347,6 +343,9 @@ void MainWindow::selectDetectorEvent() {
 			b->setChecked(det->isObjectEnabled(c));
 			menu->undetectedClassesVbox->addWidget(b);
 			menu->buttonMap[c] = b;
+		}
+		for (QPushButton* button : menu->classButtons->findChildren<QPushButton*>()) {
+			connect(button, &QPushButton::clicked, this, &MainWindow::processImage);
 		}
 	}
 	
@@ -607,7 +606,7 @@ void MainWindow::sortButtons() {
 		menu->undetectedLabel->setText("<html><font color='black'>Unetected</font><br/><font color='gray'> -- None</font></html>");
 	}
 	else {
-		menu->undetectedLabel->setText("Detected");
+		menu->undetectedLabel->setText("Undetected");
 	}
 
 }

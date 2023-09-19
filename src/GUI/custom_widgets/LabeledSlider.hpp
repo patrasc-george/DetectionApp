@@ -51,7 +51,15 @@ public:
 		this->setLayout(vbox);
 
 		connect(slider, QOverload<int>::of(&QSlider::valueChanged), this, &LabeledSlider::valueChanged);
-		connect(slider, &QSlider::valueChanged, this, &LabeledSlider::changeLabelValue);
+
+		// on mouse released
+		connect(slider, &QSlider::sliderReleased, this, [&] { emit sliderReleased(value()); });
+		connect(slider, &QSlider::valueChanged, this, [&] {
+			changeLabelValue();
+			// on arrow key released
+			if (!slider->isSliderDown())
+				emit sliderReleased(value());
+			});
 		slider->setValue((int)(min + max) / 2);
 	}
 
@@ -90,4 +98,5 @@ protected:
 
 signals:
 	void valueChanged(int x);
+	void sliderReleased(int x);
 };
