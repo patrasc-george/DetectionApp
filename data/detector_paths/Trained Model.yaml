@@ -1,6 +1,5 @@
 %YAML:1.0
 ---
 type: NETWORK
-modelFilePath: "none"
-configFilePath: "../default_detectors/models/trained_model/detection_model.onnx"
+modelFilePath: "../default_detectors/models/trained_model/detection_model.onnx"
 labelsFilePath: "../default_detectors/models/trained_model/class_names.txt"

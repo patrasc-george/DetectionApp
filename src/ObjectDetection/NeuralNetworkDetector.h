@@ -9,6 +9,7 @@ public:
     NeuralNetworkDetector();
     DetectionMat detect(const cv::Mat& image) override;
     void adjustThreshold(float newThreshold);
+    void loadClasses(const std::string& classesFilePath);
     void enableObject(const std::string& label, bool enable);
 
     void serialize(const std::string& filename) const override;
@@ -17,15 +18,17 @@ public:
 
     std::vector<std::string> getClassNames();
 
-private:
+protected:
     cv::dnn::Net net;
     std::vector<std::string> classNames;
     float confidenceThreshold;
     std::unordered_map<std::string, bool> objectEnabledMap;
 
     std::string modelFilePath;
-    std::string configFilePath;
     std::string classesFilePath;
 
     std::string serializationFile;
+
+private:
+    std::string configFilePath;
 };
