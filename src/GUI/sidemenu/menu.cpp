@@ -12,7 +12,6 @@ Menu::Menu(QWidget* parent)
 
 	// initialize controls
 	toggleCamera = new QPushButton("Turn On");
-	toggleFaceFeatures = new QCheckBox("Detect eyes and smiles");
 	detectorsList = new QComboBox;
 	screenshot = new QPushButton("Save screenshot");
 	showConfidence = new QCheckBox("Show confidences");
@@ -46,27 +45,13 @@ Menu::Menu(QWidget* parent)
 	algVbox->addWidget(detectEdgesButton);
 	imageAlgorithms->setContentLayout(*algVbox);
 
-	//TODO: change based on selected detector
-	std::ifstream classesFile("../data/models/mobilenet_v2/object_detection_classes_coco.txt");
-	std::string line;
 	classesVbox = new QVBoxLayout;
-
-	while (std::getline(classesFile, line)) {
-		QPushButton* b = new QPushButton(QString::fromStdString(line));
-		b->setCheckable(true);
-		b->setChecked(true);
-		classesVbox->addWidget(b);
-
-		buttonMap[line] = b;
-	}
-
 	classButtons->setContentLayout(*classesVbox);
 	classSeparator = new QFrame();
 	classSeparator->setFrameShape(QFrame::HLine);
 	classSeparator->setFixedHeight(30);
 	classSeparator->setFrameShadow(QFrame::Plain);
 	classSeparator->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-
 
 	zoomIn = new QPushButton();
 	zoomIn->setIcon(QIcon(":/assets/zoom-in_dark.png"));
@@ -135,7 +120,6 @@ Menu::Menu(QWidget* parent)
 
 	vbox->addWidget(scrollArea, Qt::AlignTop);
 
-	vbox->addWidget(toggleFaceFeatures);
 	vbox->addWidget(showConfidence);
 	vbox->addWidget(confControl);
 	vbox->addWidget(thresholdControl);

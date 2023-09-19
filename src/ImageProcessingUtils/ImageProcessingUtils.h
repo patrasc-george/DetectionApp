@@ -100,3 +100,5 @@ bool IMAGEPROCESSINGUTILS_API ConvertMat2QImage(const cv::Mat& src, QImage& dest
 bool IMAGEPROCESSINGUTILS_API ConvertQImage2Mat(const QImage& src, cv::Mat& dest);
 
 QImage IMAGEPROCESSINGUTILS_API putLogo(const short& width, const short& height);
+
+cv::Scalar IMAGEPROCESSINGUTILS_API generateColorFromString(const std::string& str);
