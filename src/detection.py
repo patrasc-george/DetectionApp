@@ -41,7 +41,7 @@ detectors = {
     },
     "Trained Model": {
         'weights': "",
-        'model': "../models/detection_model.pt",
+        'model': "../models/Trained Model/detection_model.pt",
         'classes': "",
         'framework': 'torch'
     }
