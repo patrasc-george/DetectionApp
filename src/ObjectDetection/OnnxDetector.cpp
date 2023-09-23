@@ -106,5 +106,3 @@ DetectionMat OnnxDetector::detect(const cv::Mat& image) {
 
 	return det;
 }
-
-

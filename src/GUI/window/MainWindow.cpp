@@ -232,7 +232,7 @@ void MainWindow::toggleCameraEvent() {
 	if (cameraIsOn) {
 		// only update min confidence when slider is released
 		connect(menu->confControl, &LabeledSlider::sliderReleased, this, &MainWindow::changeMinConfEvent);
-		disconnect(menu->confControl, &LabeledSlider::valueChanged , this, &MainWindow::changeMinConfEvent);
+		disconnect(menu->confControl, &LabeledSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
 
 		menu->flipHorizontal->setChecked(true);
 		history.get()->setFlipH(menu->flipHorizontal->isChecked());
@@ -313,7 +313,7 @@ void MainWindow::selectDetectorEvent() {
 	currDet = DetectorFactory::createDetectorFromFile("../detector_paths/" + currText.toStdString());
 
 	// TODO: add back errosr messages
-	
+
 	if (auto det = dynamic_cast<NeuralNetworkDetector*>(currDet)) {
 		changeMinConfEvent();
 		// Identify and remove non-label widgets (separators) from the layout
@@ -348,7 +348,7 @@ void MainWindow::selectDetectorEvent() {
 			connect(button, &QPushButton::clicked, this, &MainWindow::processImage);
 		}
 	}
-	
+
 	if (imageIsUpload)
 		processImage();
 	setOptions();

@@ -73,6 +73,15 @@ public:
 	 */
 	static void detectEdges(cv::Mat src, cv::Mat& dst);
 
+	/**
+	* @brief Applies various image processing algorithms based on the provided options.
+	* @details This function applies a series of image processing algorithms to the input image
+	based on the specified options. The algorithms include histogram equalization, binary thresholding,
+	adaptive thresholding, zero thresholding, edge detection, and truncation.
+	* @param[in,out] image The input and output cv::Mat image to be processed.
+	* @param[in] options A pointer to a FrameOptions object containing the algorithm activation flags.
+	* @param[in] value The threshold value used in some of the algorithms (e.g., binary thresholding).
+	*/
 	static void applyingAlgorithms(cv::Mat& image, FrameOptions* options, const short& value);
 };
 
@@ -99,6 +108,24 @@ bool IMAGEPROCESSINGUTILS_API ConvertMat2QImage(const cv::Mat& src, QImage& dest
  */
 bool IMAGEPROCESSINGUTILS_API ConvertQImage2Mat(const QImage& src, cv::Mat& dest);
 
+/**
+ * @brief Generates an image with a logo and a text overlay.
+ * @details This function creates a QImage with a logo centered on a white background.
+ * It also adds a text overlay below the logo to indicate that the camera is turned off.
+ * @param[in] width The width of the generated image.
+ * @param[in] height The height of the generated image.
+ * @return Returns a QImage with the logo and text overlay.
+ */
 QImage IMAGEPROCESSINGUTILS_API putLogo(const short& width, const short& height);
 
+/**
+ * @brief Generates a color from a given string.
+ * @details This function takes a string as input and calculates a color based on it.
+ Each character in the string contributes to the color channels sequentially:
+ 1 - blue (B), 2 - green (G), 3 - red (R), and so on.
+ The generated color is adjusted to avoid colors that are close to black, gray, or white,
+ and the channel values are clamped to the range [0, 255].
+ * @param[in] str The input string used for color generation.
+ * @return The generated color as a cv::Scalar with values for the blue (B), green (G), and red (R) channels.
+ */
 cv::Scalar IMAGEPROCESSINGUTILS_API generateColorFromString(const std::string& str);

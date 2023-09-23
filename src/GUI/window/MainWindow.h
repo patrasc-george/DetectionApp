@@ -128,8 +128,13 @@ private slots:
 	void selectAlgorithmsEvent();
 
 	/**
-	* @brief Refreshes the list of detectors after a new detector is added, edited, or deleted.
-	*/
+	 * @brief Event handler for editing detectors in the main window.
+	 * @details This function is called when the user edits detectors in the main window.
+	 It performs the following tasks:
+	 Refreshes the detector list.
+	 Deletes all detectors except the first one (None) from the detector list.
+	 The function ensures that only the "None" detector remains in the list after editing.
+	 */
 	void detectorEditEvent();
 
 public:

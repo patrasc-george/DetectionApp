@@ -97,6 +97,22 @@ protected:
 	}
 
 signals:
+	/**
+	 * @brief Signal handler for the valueChanged signal.
+	 * @details This function is a signal handler for the valueChanged signal emitted by a `LabeledSlider`.
+	 It is invoked when the slider's value changes. The function internally triggers the corresponding
+	 Qt signal using QMetaObject::activate().
+	 * @param[in] _t1 The new value of the slider.
+	 */
 	void valueChanged(int x);
+
+
+	/**
+	 * @brief Signal handler for the sliderReleased signal.
+	 * @details This function is a signal handler for the sliderReleased signal emitted by a `LabeledSlider`.
+	 * It is invoked when the slider is released after being dragged by the user. The function internally triggers
+	 * the corresponding Qt signal using QMetaObject::activate().
+	 * @param[in] _t1 The value of the slider when it was released.
+	 */
 	void sliderReleased(int x);
 };

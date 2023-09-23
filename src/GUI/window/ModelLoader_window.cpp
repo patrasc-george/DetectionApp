@@ -352,12 +352,12 @@ void DetectorsList::addDetector() {
 	//	file.write(doc.toJson());
 	//	file.close();
 
-		emit detectorAdded();
+	emit detectorAdded();
 
-		// add to list
-		QListWidget* list = (QListWidget*)this->layout()->itemAt(0)->widget();
-		//list->addItem(name);
-		//});
+	// add to list
+	QListWidget* list = (QListWidget*)this->layout()->itemAt(0)->widget();
+	//list->addItem(name);
+	//});
 }
 
 void DetectorsList::removeDetector() {

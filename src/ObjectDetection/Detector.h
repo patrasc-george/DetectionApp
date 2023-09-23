@@ -11,6 +11,6 @@
 
 class OBJECTDETECTION_API Detector : public Serializable {
 public:
-    virtual ~Detector() = default;
-    virtual DetectionMat detect(const cv::Mat& image) = 0;
+	virtual ~Detector() = default;
+	virtual DetectionMat detect(const cv::Mat& image) = 0;
 };
