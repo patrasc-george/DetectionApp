@@ -1,0 +1,7 @@
+%YAML:1.0
+---
+type: NETWORK
+modelFilePath: "../default_detectors/models/traffic_detector/traffic_detector.onnx"
+labelsFilePath: "../default_detectors/models/traffic_detector/class_names.txt"
+disabledClassNames:
+   []

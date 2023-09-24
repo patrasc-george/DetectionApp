@@ -39,9 +39,9 @@ DetectionMat OnnxDetector::detect(const cv::Mat& image) {
 	cv::cvtColor(copy, copy, cv::COLOR_BGRA2BGR);
 
 	// Resize the image to increase speed
-	cv::resize(copy, copy, cv::Size(224, 224), 6);
+	cv::resize(copy, copy, cv::Size(256, 256), 6);
 
-	cv::dnn::blobFromImage(copy, blob, 1. / 255., cv::Size(224, 224));
+	cv::dnn::blobFromImage(copy, blob, 1. / 255., cv::Size(256, 256));
 
 	net.setInput(blob);
 	try {
