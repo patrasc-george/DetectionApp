@@ -15,6 +15,9 @@ private:
 	bool isPercent;
 
 public:
+	enum SignalMode { OnRelease, OnChange };
+	SignalMode signalMode;
+
 	/**
 	 * @brief Constructs a LabeledSlider object.
 	 * @details This constructor initializes a LabeledSlider object with the provided parameters.
@@ -32,6 +35,8 @@ public:
 		label = new QLabel();
 		slider = new QSlider(Qt::Horizontal);
 		this->isPercent = isPercent;
+		this->signalMode = OnChange;
+
 
 		slider->setRange(min, max);
 		slider->setSingleStep(step);
@@ -51,15 +56,21 @@ public:
 		this->setLayout(vbox);
 
 		connect(slider, QOverload<int>::of(&QSlider::valueChanged), this, &LabeledSlider::valueChanged);
-
-		// on mouse released
-		connect(slider, &QSlider::sliderReleased, this, [&] { emit sliderReleased(value()); });
 		connect(slider, &QSlider::valueChanged, this, [&] {
-			changeLabelValue();
-			// on arrow key released
-			if (!slider->isSliderDown())
-				emit sliderReleased(value());
-			});
+			switch (signalMode) {
+			case OnChange:
+				changeLabelValue();
+				emit valueChanged(value());
+				break;
+			case OnRelease:
+				if (!slider->isSliderDown()) {
+					changeLabelValue();
+					emit valueChanged(value());
+				}
+				break;
+			}
+		});
+
 		slider->setValue((int)(min + max) / 2);
 	}
 
@@ -82,7 +93,6 @@ public:
 	int value() {
 		return slider->value();
 	}
-
 protected:
 	/**
 	 * @brief Updates the label text to reflect the current value of the slider.
@@ -98,5 +108,4 @@ protected:
 
 signals:
 	void valueChanged(int x);
-	void sliderReleased(int x);
 };

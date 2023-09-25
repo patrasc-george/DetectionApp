@@ -17,8 +17,6 @@ public:
 
     DetectionMat detect(const cv::Mat& image) override;
 
-    void setEnabled(bool enable);
-    bool isEnabled() const;
     std::string getObjectLabel() const;
 
     void serialize(const std::string& filename) const override;
@@ -33,7 +31,6 @@ private:
     std::string cascadeFilePath;
     cv::CascadeClassifier cascade;
     std::string objectLabel;
-    bool enabled;
 
     std::string serializationFilePath;
 };

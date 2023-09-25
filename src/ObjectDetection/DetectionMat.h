@@ -15,11 +15,13 @@
 class OBJECTDETECTION_API DetectionMat {
 public:
     void add(std::shared_ptr<Detection>& detection);
+    void add(const DetectionMat& other);
+
     void sortByConfidence();
     void setShapeRenderStatus(size_t index, bool enableRender);
     void setShowConfidence(bool show);
     void render(cv::Mat& image);
-    std::vector<Detection> getAll();
+    std::vector<Detection> getAll() const;
 
     class OBJECTDETECTION_API iterator {
     public:
@@ -37,7 +39,6 @@ private:
     std::vector<std::shared_ptr<Detection>> detections;
 public:
     DetectionMat(const std::vector<std::shared_ptr<Detection>>& detections);
-
     DetectionMat::iterator begin();
     DetectionMat::iterator end();
     bool empty();

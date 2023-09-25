@@ -17,7 +17,7 @@ NeuralNetworkDetector::NeuralNetworkDetector(const std::string& modelFilePath, c
 	loadClasses(this->classesFilePath);
 }
 
-NeuralNetworkDetector::NeuralNetworkDetector() : confidenceThreshold(0.5)
+NeuralNetworkDetector::NeuralNetworkDetector() : confidenceThreshold(0.5) 
 {
 }
 
@@ -123,7 +123,7 @@ void NeuralNetworkDetector::enableObject(const std::string& label, bool enable) 
 	}
 }
 
-bool NeuralNetworkDetector::isObjectEnabled(const std::string& name) {
+bool NeuralNetworkDetector::isObjectEnabled(const std::string& name) const {
 	for (auto& obj : objectEnabledMap) {
 		if (obj.first == name) {
 			return obj.second;
@@ -176,14 +176,19 @@ void NeuralNetworkDetector::deserialize(const std::string& filename) {
 	serializationFile = filename;
 }
 
-std::string NeuralNetworkDetector::getSerializationFile() const
-{
+std::string NeuralNetworkDetector::getSerializationFile() const {
 	return serializationFile;
 }
 
-std::vector<std::string> NeuralNetworkDetector::getClassNames()
-{
+std::vector<std::string> NeuralNetworkDetector::getObjectLabels() const {
 	return classNames;
+}
+
+ThresholdAdjuster* NeuralNetworkDetector::toThresholdAdjuster() {
+	return dynamic_cast<ThresholdAdjuster*>(this);
+}
+CanToggleObjects* NeuralNetworkDetector::toObjectToggler() {
+	return dynamic_cast<CanToggleObjects*>(this);
 }
 
 void NeuralNetworkDetector::loadClasses(const std::string& filePath) {

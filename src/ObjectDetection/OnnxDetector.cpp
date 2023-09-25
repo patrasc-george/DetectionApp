@@ -7,7 +7,7 @@ OnnxDetector::OnnxDetector(const std::string& modelFilePath, const std::string& 
 		net = cv::dnn::readNetFromONNX(modelFilePath);
 	}
 	catch (cv::Exception& e) {
-		throw std::runtime_error("Couldn't load neural network using \"" + modelFilePath + "\" and \"" + modelFilePath + "\":\n" + e.what());
+		throw std::runtime_error("Couldn't load neural network using \"" + modelFilePath + "\":\n" + e.what());
 	}
 	loadClasses(this->classesFilePath);
 }

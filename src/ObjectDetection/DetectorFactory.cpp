@@ -19,31 +19,28 @@ Detector* DetectorFactory::createDetectorFromFile(const std::string& filePath) {
 		fs["type"] >> detectorType;
 		fs["modelFilePath"] >> model;
 		fs.release();
+		Detector* d = nullptr;
 
 		if (detectorType == "CASCADE") {
-			CascadeClassifierDetector* d = new CascadeClassifierDetector();
-			d->deserialize(filePath);
-			return d;
+			d = new CascadeClassifierDetector();
 		}
 		else if (detectorType == "NETWORK") {
-			NeuralNetworkDetector* d;
 			if (model.substr(model.find_last_of(".") + 1) == "onnx")
 				d = new OnnxDetector();
 			else
 				d = new NeuralNetworkDetector();
-			d->deserialize(filePath);
-			return d;
 		}
-		else if (detectorType == "CASCADE_NETWORK") {
-			CascadeClassifierGroup* d = new CascadeClassifierGroup();
-			d->deserialize(filePath);
-			return d;
+		else if (detectorType == "CASCADE_GROUP") {
+			d = new CascadeClassifierGroup();
 		}
 		else {
 			throw std::runtime_error("Unknown detector type");
 		}
+		d->deserialize(filePath);
+		return d;
+
 	}
 	catch (const std::exception& e) {
-		return nullptr; // Return nullptr on failure
+		return nullptr;
 	}
 }

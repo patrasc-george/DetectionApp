@@ -3,13 +3,15 @@
 #include "DetectorFactory.h"
 #include "DetectionMat.h"
 #include "ThresholdAdjuster.h"
+#include "CanToggleObjects.h"
 #include "NeuralNetworkDetector.h"
 #include "CascadeClassifierDetector.h"
+#include "CascadeClassifierGroup.h"
 
 #include <iostream>
 
 void MainWindow::closeEvent(QCloseEvent* event) {
-	if (currDet != nullptr)
+	if (currDet != nullptr && !currDet->getSerializationFile().empty())
 		currDet->serialize(currDet->getSerializationFile());
 	// close the entire application
 	qApp->closeAllWindows();
@@ -35,6 +37,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 
 	// link the controls defined in our menu to the events of our window
 	// syntax: connect(widget that emits a signal, the type of the signal, the object that acts on the signal, the method (slot) that will be called)
+	connect(menu->confControl, &LabeledSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
 	connect(menu->toggleCamera, &QAbstractButton::toggled, this, &MainWindow::toggleCameraEvent);
 	connect(menu->uploadButton, &QPushButton::clicked, this, &MainWindow::uploadImageEvent);
 	connect(menu->detectorsList, &QComboBox::currentIndexChanged, this, &MainWindow::selectDetectorEvent);
@@ -171,7 +174,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 
 		Detector* detector = DetectorFactory::createDetectorFromFile(filePath.toStdString());
 		if (detector)
-			menu->detectorsList->addItem(filename);
+			menu->detectorsList->addItem(QFileInfo(filePath).baseName());
 	}
 }
 
@@ -179,8 +182,8 @@ void MainWindow::setOptions()
 {
 	menu->detectorsList->setEnabled(cameraIsOn || imageIsUpload);
 	menu->toggleCamera->setText("   Turn Camera " + QString(cameraIsOn ? "Off" : "On"));
-	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && dynamic_cast<NeuralNetworkDetector*>(currDet));
-	menu->confControl->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && dynamic_cast<NeuralNetworkDetector*>(currDet));
+	menu->showConfidence->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->toThresholdAdjuster());
+	menu->confControl->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->toThresholdAdjuster());
 	menu->flipHorizontal->setEnabled(cameraIsOn || imageIsUpload);
 	menu->flipVertical->setEnabled(cameraIsOn || imageIsUpload);
 	menu->screenshot->setVisible(cameraIsOn || imageIsUpload);
@@ -217,7 +220,10 @@ void MainWindow::setOptions()
 
 	menu->imageAlgorithms->setVisible(cameraIsOn || imageIsUpload);
 
-	menu->classButtons->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && dynamic_cast<NeuralNetworkDetector*>(currDet));
+	menu->classButtons->setVisible((cameraIsOn || imageIsUpload) && currDet != nullptr && currDet->toObjectToggler());
+
+	menu->detectedLabel->setVisible(!dynamic_cast<CascadeClassifierGroup*>(currDet));
+	menu->undetectedLabel->setVisible(!dynamic_cast<CascadeClassifierGroup*>(currDet));
 }
 
 void MainWindow::toggleCameraEvent() {
@@ -231,8 +237,7 @@ void MainWindow::toggleCameraEvent() {
 
 	if (cameraIsOn) {
 		// only update min confidence when slider is released
-		connect(menu->confControl, &LabeledSlider::sliderReleased, this, &MainWindow::changeMinConfEvent);
-		disconnect(menu->confControl, &LabeledSlider::valueChanged , this, &MainWindow::changeMinConfEvent);
+		menu->confControl->signalMode = LabeledSlider::OnRelease;
 
 		menu->flipHorizontal->setChecked(true);
 		history.get()->setFlipH(menu->flipHorizontal->isChecked());
@@ -251,8 +256,7 @@ void MainWindow::toggleCameraEvent() {
 	}
 }
 
-QString MainWindow::getImageFileName()
-{
+QString MainWindow::getImageFileName() {
 	return QFileDialog::getOpenFileName(this, tr("Open Image"), QStandardPaths::standardLocations(QStandardPaths::PicturesLocation).first(), tr("Image Files (*.png *.jpg *.jpeg *.bmp)"));
 }
 
@@ -281,9 +285,8 @@ void MainWindow::uploadImageEvent() {
 	history.get()->setFlipH(menu->flipHorizontal->isChecked());
 	history.get()->setFlipV(menu->flipVertical->isChecked());
 
-	// update min confidence whenever slider is updated, since it diesn't affect performance
-	disconnect(menu->confControl, &LabeledSlider::sliderReleased, this, &MainWindow::changeMinConfEvent);
-	connect(menu->confControl, &LabeledSlider::valueChanged, this, &MainWindow::changeMinConfEvent);
+	// update min confidence whenever slider is updated, since it doesn't affect performance
+	menu->confControl->signalMode = LabeledSlider::OnChange;
 
 	imageIsUpload = true;
 	imageContainer->zoomReset();
@@ -295,7 +298,7 @@ void MainWindow::uploadImageEvent() {
 
 void MainWindow::selectDetectorEvent() {
 	menu->classButtons->toggle(false);
-	if (currDet != nullptr) {
+	if (currDet != nullptr && !currDet->getSerializationFile().empty()) {
 		currDet->serialize(currDet->getSerializationFile());
 	}
 	delete currDet;
@@ -307,15 +310,15 @@ void MainWindow::selectDetectorEvent() {
 		return;
 	}
 
-	QString currText = menu->detectorsList->currentText();
-	int index = menu->detectorsList->findText(currText);
+	QString currText = menu->detectorsList->currentText() + QString(".yaml");
 
 	currDet = DetectorFactory::createDetectorFromFile("../detector_paths/" + currText.toStdString());
 
-	// TODO: add back errosr messages
-	
-	if (auto det = dynamic_cast<NeuralNetworkDetector*>(currDet)) {
+	// TODO: add back error messages
+
+	if (currDet->toThresholdAdjuster())
 		changeMinConfEvent();
+	if (auto det = currDet->toObjectToggler()) {
 		// Identify and remove non-label widgets (separators) from the layout
 		for (int i = menu->detectedClassesVbox->count() - 1; i >= 0; --i) {
 			if (!dynamic_cast<QLabel*>(menu->detectedClassesVbox->itemAt(i)->widget())) {
@@ -336,13 +339,26 @@ void MainWindow::selectDetectorEvent() {
 			}
 		}
 
-		auto classes = det->getClassNames();
+		auto classes = det->getObjectLabels();
+		bool primaryFound = false;
 		for (auto c : classes) {
 			QPushButton* b = new QPushButton(QString::fromStdString(c));
 			b->setCheckable(true);
 			b->setChecked(det->isObjectEnabled(c));
 			menu->undetectedClassesVbox->addWidget(b);
 			menu->buttonMap[c] = b;
+
+			if (primaryFound)
+				continue;
+
+			if (auto det = dynamic_cast<CascadeClassifierGroup*>(currDet)) {
+				if (c == det->getPrimary()) {
+					b->setChecked(true);
+					b->setEnabled(false);
+					b->setIcon(QIcon::fromTheme("noEntry"));
+					primaryFound = false;
+				}
+			}
 		}
 		for (QPushButton* button : menu->classButtons->findChildren<QPushButton*>()) {
 			connect(button, &QPushButton::clicked, this, &MainWindow::processImage);
@@ -355,8 +371,8 @@ void MainWindow::selectDetectorEvent() {
 }
 
 void MainWindow::changeMinConfEvent() {
-	if (NeuralNetworkDetector* nnDetector = dynamic_cast<NeuralNetworkDetector*>(currDet))
-		nnDetector->adjustThreshold(menu->confControl->value() / static_cast<float>(100));
+	if (auto* det = currDet->toThresholdAdjuster())
+		det->adjustThreshold(menu->confControl->value() / static_cast<float>(100));
 	if (imageIsUpload)
 		processImage();
 	sortButtons();
@@ -387,16 +403,15 @@ void MainWindow::setDetector() {
 	try {
 		cv::Mat mat;
 		ConvertQImage2Mat(frame, mat);
-		if (dynamic_cast<NeuralNetworkDetector*>(currDet)) {
-			if (mat.type() == CV_8UC1) {
-				QMessageBox::critical(this, "Error", "This detector does not work on 1-channel images");
-				menu->detectorsList->setCurrentIndex(0);
-				return;
-			}
-			if (auto det = dynamic_cast<NeuralNetworkDetector*>(currDet)) {
-				for (QPushButton* btn : menu->classButtons->findChildren<QPushButton*>()) {
-					det->enableObject(btn->text().toStdString(), btn->isChecked());
-				}
+		if (dynamic_cast<NeuralNetworkDetector*>(currDet) && mat.type() == CV_8UC1) {
+			QMessageBox::critical(this, "Error", "This detector does not work on 1-channel images");
+			menu->detectorsList->setCurrentIndex(0);
+			return;
+		}
+
+		if (auto det = currDet->toObjectToggler()) {
+			for (QPushButton* btn : menu->classButtons->findChildren<QPushButton*>()) {
+				det->enableObject(btn->text().toStdString(), btn->isChecked());
 			}
 		}
 
@@ -564,7 +579,7 @@ void MainWindow::sortButtons() {
 		return;
 
 	detMat.sortByConfidence();
-	std::vector<std::string> classNames = dynamic_cast<NeuralNetworkDetector*>(currDet)->getClassNames();
+	std::vector<std::string> classNames = currDet->toObjectToggler()->getObjectLabels();
 	std::sort(classNames.begin(), classNames.end());
 
 	// exclude detected classes from the classNames

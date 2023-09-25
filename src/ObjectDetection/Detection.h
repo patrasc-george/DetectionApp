@@ -11,6 +11,7 @@
 class OBJECTDETECTION_API Detection {
 public:
     Detection(const cv::Rect& rect, const std::string& label, double confidence);
+    Detection(const Detection& other);
 
     void render(cv::Mat& image) const;
     std::string getLabel() const;
@@ -19,7 +20,11 @@ public:
     bool shouldRender() const;
     void setConfidenceVisibility(bool visible);
     void setColor(const cv::Scalar& color);
-    cv::Rect getRect();
+    cv::Rect getRect() const;
+    void setRect(const cv::Rect& rect);
+
+    enum Shape {Rectangle, Circle};
+    Shape shape = Rectangle;
 
 private:
     cv::Rect rect;

@@ -3,12 +3,13 @@
 #include <opencv2/imgproc.hpp>
 
 CascadeClassifierDetector::CascadeClassifierDetector(const std::string& cascadeFilePath, const std::string& objectLabel)
-    : objectLabel(objectLabel), cascadeFilePath(cascadeFilePath), enabled(true) {
+    : objectLabel(objectLabel), cascadeFilePath(cascadeFilePath) {
     cascade.load(cascadeFilePath);
 }
 
 CascadeClassifierDetector::CascadeClassifierDetector()
-    : enabled(false) {}
+{
+}
 
 DetectionMat CascadeClassifierDetector::detect(const cv::Mat& image) {
     std::vector<cv::Rect> detections;
@@ -33,14 +34,6 @@ DetectionMat CascadeClassifierDetector::detect(const cv::Mat& image) {
         }
     }
     return detMat;
-}
-
-void CascadeClassifierDetector::setEnabled(bool enable) {
-    enabled = enable;
-}
-
-bool CascadeClassifierDetector::isEnabled() const {
-    return enabled;
 }
 
 std::string CascadeClassifierDetector::getObjectLabel() const {
@@ -84,7 +77,6 @@ std::string CascadeClassifierDetector::getCascadeFilePath() const {
     return cascadeFilePath;
 }
 
-std::string CascadeClassifierDetector::getSerializationFile() const
-{
+std::string CascadeClassifierDetector::getSerializationFile() const {
     return serializationFilePath;
 }

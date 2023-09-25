@@ -4,6 +4,12 @@ void DetectionMat::add(std::shared_ptr<Detection>& detection) {
     detections.push_back(detection);
 }
 
+void DetectionMat::add(const DetectionMat& other) {
+    for (auto& det : other.getAll()) {
+        detections.push_back(std::make_shared<Detection>(det));
+    }
+}
+
 void DetectionMat::sortByConfidence() {
     std::sort(detections.begin(), detections.end(),
         [](const std::shared_ptr<Detection>& a, const std::shared_ptr<Detection>& b) {
@@ -29,7 +35,7 @@ void DetectionMat::render(cv::Mat& image) {
         }
 }
 
-std::vector<Detection> DetectionMat::getAll()
+std::vector<Detection> DetectionMat::getAll() const
 {
     std::vector<Detection> vec;
 
