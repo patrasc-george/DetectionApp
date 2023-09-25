@@ -63,12 +63,12 @@ public:
 signals:
 	/**
 	* @brief Emits a signal when a detector is created (or edited).
-	* param[in] json The json string containing the detectors.
-	* param[in] name The name of the detector.
-	* param[in] type The type of the detector.
-	* param[in] paths The paths to the files of the detector.
-	* param[in] meanValues The mean values of the detector.
-	* param[in] swapRB Whether to swap the red and blue channels.
+	* @param[in] json The json string containing the detectors.
+	* @param[in] name The name of the detector.
+	* @param[in] type The type of the detector.
+	* @param[in] paths The paths to the files of the detector.
+	* @param[in] meanValues The mean values of the detector.
+	* @param[in] swapRB Whether to swap the red and blue channels.
 	* @return void
 	*/
 	void detectorCreated(QString json, QString name, QString type, QStringList paths, QVector<int> meanValues = { 0,0,0 }, bool swapRB = false);

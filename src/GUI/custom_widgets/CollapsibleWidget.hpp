@@ -73,6 +73,12 @@ public:
 		toggleButton->setText(std::move(title));
 	}
 
+	/**
+	* @brief Check if an object is expanded.
+	* @details This function checks if an object is in an expanded state and returns a boolean value accordingly.
+	The expansion state is determined by the `isExpanded` member variable.
+	* @return `true` if the object is in an expanded state, `false` otherwise.
+	*/
 	bool expanded() {
 		return isExpanded;
 	}

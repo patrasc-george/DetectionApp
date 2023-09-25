@@ -1,5 +1,14 @@
 #include <filesystem>
 
+/**
+ * @brief Retrieves the path to a test resource.
+ * @details This function constructs the path to a test resource file using a relative path.
+ If the input path starts with "../", it is treated as a relative path from the parent directory
+ of the current working directory. Otherwise, it is assumed to be a relative path within the "tests"
+ directory of the parent directory. The constructed path is returned as a string.
+ * @param[in] s The relative path to the test resource.
+ * @return The full path to the test resource as a string.
+ */
 static std::string test_resource(std::string s) {
 	std::filesystem::path path = std::filesystem::current_path().parent_path().parent_path();
 	if (s.substr(0, 3) == "../")
@@ -9,7 +18,18 @@ static std::string test_resource(std::string s) {
 	return std::string(path.string() + s);
 }
 
-// compare two image by computing the Root Mean Square error
+/**
+ * @brief Calculates the Root Mean Square (RMS) error between two images.
+ * @details This function computes the RMS error between two input images, img_1 and img_2.
+ It works for both grayscale and color images. For color images, it calculates the RMS error
+ separately for each color channel (B, G, and R) and then combines them. The result is a percentage
+ value representing the RMS error between the images.
+ * @param[in] img_1 The first input image.
+ * @param[in] img_2 The second input image for comparison.
+ * @return The RMS error as a double-precision floating-point value.
+ The RMS error is a measure of the dissimilarity between two images, with lower values indicating
+ greater similarity.
+ */
 static double RMS_error(cv::Mat& img_1, cv::Mat& img_2) {
 
 	double rms = 0; // result
