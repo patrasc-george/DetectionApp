@@ -26,6 +26,10 @@ public:
 
     ThresholdAdjuster* toThresholdAdjuster() override;
     CanToggleObjects* toObjectToggler() override;
+
+    std::string getModelFile() { return modelFilePath; }
+    std::string getClassesFile() { return classesFilePath; }
+    std::string getConfigFile() { return configFilePath; }
 protected:
     cv::dnn::Net net;
     std::vector<std::string> classNames;

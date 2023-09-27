@@ -11,37 +11,38 @@
 #include <QListWidget>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <qcombobox.h>
+#include <custom_widgets/LabeledSlider.hpp>
 
 class DetectorEditor : public QDialog {
 	Q_OBJECT
 
 private:
 	QLineEdit* name;
-	QPushButton* cascade;
-	QPushButton* network;
-	QPushButton* file_1;
-	QPushButton* file_2;
-	QPushButton* file_3;
-	QSpinBox* meanR;
-	QSpinBox* meanG;
-	QSpinBox* meanB;
-	QCheckBox* swapRB;
+	QPushButton* cascade_btn;
+	QPushButton* network_btn;
+
+	QWidget* cascadeActions;
+	QPushButton* new_cascade_btn;
+	QComboBox* primaryList;
+
+	QVBoxLayout* headerLayout;
+	QVBoxLayout* filesLayout;
+	QVBoxLayout* bottomLayout;
+
+	int cascadesCount = 0;
+	int currentPrimaryIndex = 0;
+
+	// { path, role } roles: cascade, model, config, classes file
+	QMap<QString, QString> paths;
+	QString serializationFile;
+
 	QPushButton* ok;
 	QPushButton* cancel;
-
-	QLabel* file_1_title;
-	QLabel* file_2_title;
-	QLabel* file_3_title;
-
-	QLabel* file_1_label;
-	QLabel* file_2_label;
-	QLabel* file_3_label;
-
-	QStringList paths = { 0,0,0 };
-	QWidget* meanValuesWidget;
-	QString jsonPath;
+	friend class DetectorFileWidget;
 
 public:
+
 	/**
 	* @brief Constructs a DetectorEditor object.
 	* 	 * @details This constructor initializes a DetectorEditor object with the provided parameters.
@@ -58,29 +59,9 @@ public:
 	* 	 * @param[in] parent The parent widget.
 	* 	 *
 	*/
-	DetectorEditor(QString json, QString detName = "", QWidget* parent = nullptr);
-
-signals:
-	/**
-	* @brief Emits a signal when a detector is created (or edited).
-	* @param[in] json The json string containing the detectors.
-	* @param[in] name The name of the detector.
-	* @param[in] type The type of the detector.
-	* @param[in] paths The paths to the files of the detector.
-	* @param[in] meanValues The mean values of the detector.
-	* @param[in] swapRB Whether to swap the red and blue channels.
-	* @return void
-	*/
-	void detectorCreated(QString json, QString name, QString type, QStringList paths, QVector<int> meanValues = { 0,0,0 }, bool swapRB = false);
+	DetectorEditor(const QString& path, QWidget* parent = nullptr);
 
 private slots:
-	/**
-	* @brief Opens a file dialog to select the file for the detector.
-	* The file is then saved in the paths vector.
-	* The label of the button is also updated to show the name of the file.
-	* @return void
-	*/
-	void openFile();
 
 	/**
 	* @brief Changes the type of the detector.
@@ -88,48 +69,44 @@ private slots:
 	* The labels of the buttons are also updated to account for the change in type.
 	* @return void
 	*/
-	void typeChanged();
+	void typeChanged(bool reset);
+
+	void submit();
 
 public:
 	// Getters
 	QString getName() { return name->text(); }
-	QString getType() { return cascade->isChecked() ? "cascade" : "network"; }
-	QVector<QString> getPaths() { return this->paths; };
-	QString getJsonPath() { return jsonPath; }
-	QVector<int> getMeanVals() {
-		QVector<int> meanVals;
-		meanVals.push_back(meanR->value());
-		meanVals.push_back(meanG->value());
-		meanVals.push_back(meanB->value());
-		return meanVals;
-	}
+	QString getType() { return cascade_btn->isChecked() ? "cascade" : "network"; }
+	QString getSerializationFile() { return serializationFile; }
+signals:
+	void setPrimary(int);
+	void editingFinished(const QString& new_file = QString());
 };
 
-class DetectorsList : public QDialog {
+class DetectorListWindow : public QDialog {
 	Q_OBJECT
 
 private:
-	QPushButton* add;
-	QPushButton* remove;
-	QPushButton* edit;
-	QString jsonPath;
-	QPushButton* addDet;
-	QPushButton* removeDet;
-	QPushButton* editDet;
-	QString selectedDetector;
+	QPushButton* add_btn;
+	QPushButton* remove_btn;
+	QPushButton* edit_btn;
+	QStringList originalPaths;
+	QStringList selectionPaths;
+	QListWidget* list;
 
+	void deselect(const QString& str);
 public:
 	/**
-	* @brief Constructs a DetectorsList object.
-	* * @details This constructor initializes a DetectorsList object with the provided parameters.
+	* @brief Constructs a DetectorListWindow object.
+	* * @details This constructor initializes a DetectorListWindow object with the provided parameters.
 	* * It initializes the widgets and layouts for the dialog box, includeing the following:
 	* * - A list widget to show the names of the detectors.
 	* * - Buttons to add, remove or edit a detector.
 	* * It also connects the buttons to their respective slots.
-	* * @param[in] json The path to the json file containing the detectors.
+	* * @param[in] a list of paths to the serialization files of each detector
 	* * @param[in] parent The parent widget.
 	*/
-	DetectorsList(QString json, QWidget* parent = nullptr);
+	DetectorListWindow(const QStringList& paths, QWidget* parent = nullptr);
 
 signals:
 	/**
@@ -152,28 +129,48 @@ signals:
 
 private slots:
 	/**
-	* @brief Opens a DetectorEditor to add a detector.
+	* @brief Opens a DetectorEditor to add a new detector.
 	* It also connects the dialog box to the detectorAdded() signal.
-	* When the addition is accepted, the deetector will be added to the json file and the list widget, and the detectorAdded() signal will be emitted.
+	* When the addition is accepted, the detector will be added in the list widget, a new serialization file will be stored, and the detectorAdded() signal will be emitted.
 	*/
-	void addDetector();
+	void addDetectorRequest();
 
 	/**
-	* @brief Opens a dialog box to remoeve a detector.
+	* @brief Opens a dialog box to remove detector(s).
 	* It also connects the dialog box to the detectorAdded() signal.
-	* When the dialog is accepted, the deetector will be removed from the json file and the list widget, and the detectorRemoved() signal will be emitted.
+	* When the dialog is accepted, the selected detectors will be removed from the list widget along with their serialization file, and the detectorRemoved() signal will be emitted.
 	*/
-	void removeDetector();
+	void removeDetectorsRequest();
 
 	/**
-	* @brief Opens a DetectorEditor to edit a detector.
+	* @brief Opens a DetectorEditor to edit an existing detector.
 	* It also connects the dialog box to the detectorAdded() signal.
-	* When the edit is accepted, the deetector will be edited in the json file and the list widget, and the detectorEdited() signal will be emitted.
+	* When the edit is accepted, the detector's serialization file will be edited, and the detectorEdited() signal will be emitted.
 	*/
-	void editDetector();
+	void editDetectorRequest(const QString& path);
 
 	/**
 	* @brief Updates the enabled state of the remove and edit buttons.
 	*/
 	void selectionChanged();
+};
+
+class DetectorFileWidget : public QWidget {
+	Q_OBJECT
+public:
+	QLabel* label;
+	QLabel* fileName;
+	QPushButton* uploadButton;
+	int shape = -1;
+	QString objectName;
+	DetectorFileWidget(const QString& role, DetectorEditor* editor, QWidget* parent = nullptr);
+
+	QPushButton* rect;
+	QPushButton* circle;
+	QLineEdit* changeLabel;
+	int index = 0;
+private:
+	DetectorEditor* editor;
+public slots:
+	void onLabelChanged();
 };

@@ -166,6 +166,7 @@ void CascadeClassifierGroup::deserialize(const std::string& filename) {
     if (primary.empty())
         primary = detectors.at(0)->getObjectLabel();
     setPrimary(primary);
+    setObjectShape(primary, Detection::Rectangle);
 
     serializationFilePath = filename;
 }

@@ -1,457 +1,546 @@
 #include "ModelLoader_window.h"
 
-DetectorEditor::DetectorEditor(QString json, QString detName, QWidget* parent) {
-	this->setModal(true);
-	this->jsonPath = json;
+#include "Detector.h"
+#include "NeuralNetworkDetector.h"
+#include "DetectorFactory.h"
+#include "CascadeClassifierDetector.h"
+#include "CascadeClassifierGroup.h"
+#include "OnnxDetector.h"
 
-	QVBoxLayout* mainLayout = new QVBoxLayout(this);
+DetectorEditor::DetectorEditor(const QString& path = "", QWidget* parent) : QDialog(parent) {
+	this->setModal(true);
+	this->serializationFile = path;
+	this->new_cascade_btn = new QPushButton("+");
+	setMinimumWidth(400);
+
+	headerLayout = new QVBoxLayout;
+	filesLayout = new QVBoxLayout;
+	bottomLayout = new QVBoxLayout;
+	cascadeActions = new QWidget;
+	cascadeActions->setVisible(false);
 
 	name = new QLineEdit(this);
-	meanR = new QSpinBox(this);
-	meanR->setRange(0, 255);
-	meanG = new QSpinBox(this);
-	meanG->setRange(0, 255);
-	meanB = new QSpinBox(this);
-	meanB->setRange(0, 255);
-	cascade = new QPushButton("Cascade Classifier", this);
-	cascade->setCheckable(true);
-	network = new QPushButton("Neural Network", this);
-	network->setCheckable(true);
-	file_1 = new QPushButton("Upload file", this);
-	file_2 = new QPushButton("Upload file", this);
-	file_3 = new QPushButton("Upload file", this);
-	swapRB = new QCheckBox("Swap Red and Blue channels", this);
-	file_1_title = new QLabel("File", this);
-	file_1_title->setWordWrap(true);
-	file_2_title = new QLabel("File", this);
-	file_2_title->setWordWrap(true);
-	file_3_title = new QLabel("File", this);
-	file_3_title->setWordWrap(true);
-	file_1_label = new QLabel("No file selected", this);
-	file_1_label->setWordWrap(true);
-	file_2_label = new QLabel("No file selected", this);
-	file_2_label->setWordWrap(true);
-	file_3_label = new QLabel("No file selected", this);
-	file_3_label->setWordWrap(true);
+
+	cascade_btn = new QPushButton("Cascade Classifier", this);
+	cascade_btn->setCheckable(true);
+	network_btn = new QPushButton("Neural Network", this);
+	network_btn->setCheckable(true);
+
+	primaryList = new QComboBox;
+	primaryList->setEnabled(false);
+	primaryList->setFixedWidth(200);
+
 	ok = new QPushButton("OK", this);
 	cancel = new QPushButton("Cancel", this);
 
-	// set style classes
-	cascade->setStyleSheet("QPushButton:checked { background-color: hsl(206, 77%, 46%); color: white; }");
-	network->setStyleSheet("QPushButton:checked { background-color: hsl(206, 77%, 46%); color: white; }");
+	cascade_btn->setStyleSheet("QPushButton:checked { background-color: hsl(206, 77%, 46%); color: white; }");
+	network_btn->setStyleSheet("QPushButton:checked { background-color: hsl(206, 77%, 46%); color: white; }");
 	name->setStyleSheet("QLineEdit { background-color: hsl(202, 90%, 90%); height: 30px; }");
 
-	file_1->setFixedWidth(100);
-	file_2->setFixedWidth(100);
-	file_3->setFixedWidth(100);
-
 	QButtonGroup* group = new QButtonGroup(this);
-	group->addButton(cascade);
-	group->addButton(network);
+	group->addButton(cascade_btn);
+	group->addButton(network_btn);
 
-	QHBoxLayout* typeButtons = new QHBoxLayout();
-	typeButtons->addWidget(cascade);
-	typeButtons->addWidget(network);
+	QHBoxLayout* typeButtons = new QHBoxLayout;
+	typeButtons->addWidget(cascade_btn);
+	typeButtons->addWidget(network_btn);
 
-	QHBoxLayout* buttons = new QHBoxLayout();
+	headerLayout->addWidget(new QLabel("Serialization File Name", name));
+	headerLayout->addWidget(name);
+	headerLayout->addWidget(new QLabel("Type", this));
+	headerLayout->addLayout(typeButtons);
 
+	QHBoxLayout* buttons = new QHBoxLayout;
 	buttons->addWidget(ok);
 	buttons->addWidget(cancel);
 
-	mainLayout->addWidget(new QLabel("Name", name));
-	mainLayout->addWidget(name);
-	mainLayout->addWidget(new QLabel("Type", this));
-	mainLayout->addLayout(typeButtons);
-	mainLayout->addWidget(file_1_title);
-	mainLayout->addWidget(file_1_label);
-	mainLayout->addWidget(file_1);
-	mainLayout->addWidget(file_2_title);
-	mainLayout->addWidget(file_2_label);
-	mainLayout->addWidget(file_2);
-	mainLayout->addWidget(file_3_title);
-	mainLayout->addWidget(file_3_label);
-	mainLayout->addWidget(file_3);
+	QHBoxLayout* cascadesLayout = new QHBoxLayout;
+	cascadesLayout->addWidget(new_cascade_btn);
+	cascadesLayout->addStretch();
+	cascadesLayout->addWidget(new QLabel("Primary classifier: "));
+	cascadesLayout->addWidget(primaryList);
+	new_cascade_btn->setFixedWidth(30);
+	cascadeActions->setLayout(cascadesLayout);
 
-	meanValuesWidget = new QWidget(this);
-	meanValuesWidget->setLayout(new QHBoxLayout(meanValuesWidget));
-	meanValuesWidget->layout()->addWidget(new QLabel("Mean Values (optional): ", this));
-	meanValuesWidget->layout()->addWidget(new QLabel("R=", this));
-	meanValuesWidget->layout()->addWidget(meanR);
-	meanValuesWidget->layout()->addWidget(new QLabel("G=", this));
-	meanValuesWidget->layout()->addWidget(meanG);
-	meanValuesWidget->layout()->addWidget(new QLabel("B=", this));
-	meanValuesWidget->layout()->addWidget(meanB);
-	meanValuesWidget->layout()->addWidget(swapRB);
+	bottomLayout->addStretch(1);
+	bottomLayout->addWidget(cascadeActions);
+	bottomLayout->addLayout(buttons);
 
-	mainLayout->addWidget(meanValuesWidget);
-	mainLayout->addWidget(swapRB);
-	mainLayout->addLayout(buttons);
-
-	connect(file_1, &QPushButton::clicked, this, &DetectorEditor::openFile);
-	connect(file_2, &QPushButton::clicked, this, &DetectorEditor::openFile);
-	connect(file_3, &QPushButton::clicked, this, &DetectorEditor::openFile);
-	connect(ok, &QPushButton::clicked, this, [&] {
-		if (name->text() == "") {
-			QMessageBox::warning(this, "Error", "Please enter a name for the detector");
-			return;
-		}
-		if (paths.at(0).isEmpty()) {
-			QMessageBox::warning(this, "Error", "Please select a file for the detector");
-			file_1_label->setStyleSheet(" QLabel { color: red; }");
-			return;
-		}
-		if (network->isChecked() && paths.at(1).isEmpty()) {
-			QMessageBox::warning(this, "Error", "Please select a file for the classes");
-			file_2_label->setStyleSheet(" QLabel { color: red; }");
-			return;
-		}
-		if (network->isChecked() && paths.at(2).isEmpty()) {
-			QMessageBox::warning(this, "Error", "Please select a file for the weights");
-			file_3_label->setStyleSheet(" QLabel { color: red; }");
-			return;
-		}
-
-		close();
-		emit detectorCreated(getJsonPath(), getName(), getType(), getPaths(), getMeanVals(), swapRB->isChecked());
-		});
 	connect(cancel, &QPushButton::clicked, this, &DetectorEditor::close);
-	connect(cascade, &QPushButton::toggled, this, &DetectorEditor::typeChanged);
-	connect(network, &QPushButton::toggled, this, &DetectorEditor::typeChanged);
+	connect(cascade_btn, &QPushButton::clicked, this, &DetectorEditor::typeChanged);
+	connect(network_btn, &QPushButton::clicked, this, &DetectorEditor::typeChanged);
+	connect(new_cascade_btn, &QPushButton::clicked, this, [&] {
+		DetectorFileWidget* w = new DetectorFileWidget("cascade", this);
+		filesLayout->addWidget(w);
+		primaryList->addItem(w->objectName);
+		primaryList->setEnabled(true);
+		});
+	connect(primaryList, &QComboBox::currentIndexChanged, this, [&] {
+		emit setPrimary(primaryList->currentIndex());
+	});
 
-	typeChanged();
+	connect(ok, &QPushButton::clicked, this, &DetectorEditor::submit);
 
+	QVBoxLayout* mainLayout = new QVBoxLayout(this);
+	mainLayout->addLayout(headerLayout);
+	mainLayout->addLayout(filesLayout);
+	mainLayout->addLayout(bottomLayout);
 	this->setLayout(mainLayout);
 
 	this->setWindowTitle("Add Detector");
 
 	this->show();
 
-	cascade->setChecked(true);
-	emit typeChanged();
+	cascade_btn->setChecked(true);
 
-	if (detName == "")
+	if (!QFile(serializationFile).exists() || serializationFile.isEmpty()) {
+		typeChanged(true);
 		return;
+	}
 
-	name->setText(detName);
+	name->setText(QFileInfo(serializationFile).baseName());
 	name->setReadOnly(true);
 	name->setStyleSheet("QLineEdit { background-color: hsl(0, 0, 90%); height: 30px; }");
 
-	//QJsonObject obj = ModelLoader::getObjectByName(detName, jsonPath);
-	//// find the detector by name
+	Detector* detector = DetectorFactory::createDetectorFromFile(serializationFile.toStdString());
+	if (!detector)
+		return;
 
-	//if (obj.isEmpty())
-	//	return;
+	if (NeuralNetworkDetector* nn = dynamic_cast<NeuralNetworkDetector*>(detector)) {
+		network_btn->setChecked(true);
+		DetectorFileWidget* model_w = new DetectorFileWidget("model", this);
+		model_w->fileName->setText(QString(nn->getModelFile().c_str()));
+		model_w->fileName->setVisible(true);
+		filesLayout->addWidget(model_w);
 
-	//if (obj["type"].toString() == "cascade") {
-	//	cascade->setChecked(true);
-	//	network->setChecked(false);
-	//}
-	//else {
-	//	cascade->setChecked(false);
-	//	network->setChecked(true);
-	//}
-	cascade->setEnabled(false);
-	network->setEnabled(false);
-	emit typeChanged();
-
-	//QJsonObject props = obj["properties"].toObject();
-	//if (props.contains("meanValues")) {
-	//	QJsonArray meanValues = props["meanValues"].toArray();
-	//	meanR->setValue(!meanValues.isEmpty() ? meanValues[0].toInt() : 0);
-	//	meanG->setValue(!meanValues.isEmpty() ? meanValues[1].toInt() : 0);
-	//	meanB->setValue(!meanValues.isEmpty() ? meanValues[2].toInt() : 0);
-	//}
-
-	//if (props.contains("swapRB"))
-	//	swapRB->setChecked(props["swapRB"].toBool());
-
-	//QJsonObject paths = obj["paths"].toObject();
-	//if (cascade->isChecked()) {
-	//	this->paths.emplace(0, paths["face"].toString());
-	//	if (paths["face"].toString() != "")
-	//		file_1_label->setText(paths["face"].toString());
-
-	//	this->paths.emplace(1, paths["eyes"].toString());
-	//	if (paths["eyes"].toString() != "")
-	//		file_2_label->setText(paths["eyes"].toString());
-
-	//	this->paths.emplace(2, paths["smile"].toString());
-	//	if (paths["smile"].toString() != "")
-	//		file_3_label->setText(paths["smile"].toString());
-	//}
-	//else {
-	//	this->paths.emplace(0, paths["inf"].toString());
-	//	if (paths["inf"].toString() != "")
-	//		file_1_label->setText(paths["inf"].toString());
-
-	//	this->paths.emplace(1, paths["classes"].toString());
-	//	if (paths["classes"].toString() != "")
-	//		file_2_label->setText(paths["classes"].toString());
-
-	//	this->paths.emplace(2, paths["model"].toString());
-	//	if (paths["model"].toString() != "")
-	//		file_3_label->setText(paths["model"].toString());
-	//}
-}
-
-
-void DetectorEditor::openFile() {
-	QPushButton* button = (QPushButton*)sender();
-	QString filename;
-
-	if (cascade->isChecked())
-		filename = QFileDialog::getOpenFileName(this, "Open File", "", "XML Files (*.xml);;All Files (*.*)");
-	else
-		filename = QFileDialog::getOpenFileName(this, "Open File", "", "All Files(*.*)");
-
-	if (filename != "") {
-		// set label text
-		if (button == file_1) {
-			file_1_label->setText(filename);
-			paths.replace(0, filename);
+		if (QFileInfo(model_w->fileName->text()).suffix() != "onnx") {
+			DetectorFileWidget* config_w = new DetectorFileWidget("config", this);
+			config_w->fileName->setText(QString(nn->getConfigFile().c_str()));
+			config_w->fileName->setVisible(true);
+			filesLayout->addWidget(config_w);
 		}
-		else if (button == file_2) {
-			file_2_label->setText(filename);
-			paths.replace(1, filename);
-		}
-		else if (button == file_3) {
-			file_3_label->setText(filename);
-			paths.replace(2, filename);
-		}
+
+		DetectorFileWidget* classes_w = new DetectorFileWidget("classes", this);
+		classes_w->fileName->setText(QString(nn->getClassesFile().c_str()));
+		classes_w->fileName->setVisible(true);
+		filesLayout->addWidget(classes_w);
 	}
-	// resize the window to accomodate the text
-	this->adjustSize();
+	else if (CascadeClassifierDetector* cc = dynamic_cast<CascadeClassifierDetector*>(detector)) {
+		cascade_btn->setChecked(true);
+		DetectorFileWidget* cascade_w = new DetectorFileWidget("cascade", this);
+		cascade_w->changeLabel->setText(QString(cc->getObjectLabel().c_str()));
+		cascade_w->fileName->setText(QString(cc->getCascadeFilePath().c_str()));
+		cascade_w->fileName->setVisible(true);
+		filesLayout->addWidget(cascade_w);
+		primaryList->setItemText(0, cascade_w->changeLabel->text());
+	}
+
+	else if (CascadeClassifierGroup* cg = dynamic_cast<CascadeClassifierGroup*>(detector)) {
+		cascade_btn->setChecked(true);
+		int index = 0;
+		auto objectLabels = cg->getObjectLabels();
+		auto cascades = cg->getCascades();
+		for (const auto& c : cascades) {
+			DetectorFileWidget* cascade_w = new DetectorFileWidget("cascade", this);
+			disconnect(cascade_w->changeLabel, &QLineEdit::textChanged, cascade_w, &DetectorFileWidget::onLabelChanged);
+			primaryList->addItem(objectLabels.at(index).c_str());
+			cascade_w->changeLabel->setText(objectLabels.at(index).c_str());
+			cascade_w->fileName->setText(c.c_str());
+			cascade_w->fileName->setVisible(true);
+			filesLayout->addWidget(cascade_w);
+			cascade_w->circle->setChecked(cg->objectShape(objectLabels.at(index)));
+			++index;
+			connect(cascade_w->changeLabel, &QLineEdit::textChanged, cascade_w, &DetectorFileWidget::onLabelChanged);
+		}
+		primaryList->setCurrentIndex(primaryList->findText(cg->getPrimary().c_str()));
+		if (cascadesCount > 1)
+			primaryList->setEnabled(true);
+		emit setPrimary(primaryList->currentIndex());
+	}
+
+	delete detector;
+
+	cascade_btn->setEnabled(false);
+	network_btn->setEnabled(false);
+	emit typeChanged(false);
 }
-void DetectorEditor::typeChanged() {
-	if (cascade->isChecked()) {
-		file_1_title->setText("Face Classifier");
-		file_2_title->setText("Eyes Classifier (optional)");
-		file_3_title->setText("Smile Classifier (optional)");
-		meanValuesWidget->setEnabled(false);
-		swapRB->setEnabled(false);
+
+void DetectorEditor::submit() {
+	Detector* detector = nullptr;
+
+	if (network_btn->isChecked()) {
+		std::string model, config, classes;
+		for (int i = 0; i < filesLayout->count(); ++i) {
+			QWidget* widget = filesLayout->itemAt(i)->widget();
+			if (widget) {
+				DetectorFileWidget* file_w = qobject_cast<DetectorFileWidget*>(widget);
+				if (file_w && file_w->label->text() == "Model file") {
+					if (file_w->fileName->text().isEmpty()) {
+						QMessageBox::warning(this, "Missing field", "Please select a model file");
+						file_w->uploadButton->setStyleSheet("QPushButton {color: red;}");
+						return;
+					}
+					model = file_w->fileName->text().toStdString();
+				}
+				else if (file_w && file_w->label->text() == "Configuration file") {
+					if (QFileInfo(file_w->fileName->text()).suffix() != "onnx" && file_w->fileName->text().isEmpty()) {
+						QMessageBox::warning(this, "Missing field", "Please select a configuration file");
+						file_w->uploadButton->setStyleSheet("QPushButton {color: red;}");
+						return;
+					}
+					config = file_w->fileName->text().toStdString();
+				}
+				else if (file_w && file_w->label->text() == "Object Labels file") {
+					if (file_w->fileName->text().isEmpty()) {
+						QMessageBox::warning(this, "Missing field", "Please select a text file containing all the labels for the model");
+						file_w->uploadButton->setStyleSheet("QPushButton {color: red;}");
+						return;
+					}
+					classes = file_w->fileName->text().toStdString();
+				}
+			}
+		}
+		if (QFileInfo(QString(model.c_str())).suffix() == "onnx")
+			detector = new OnnxDetector(model, classes);
+		else
+			detector = new NeuralNetworkDetector(model, config, classes);
 	}
 	else {
-		file_1_title->setText("Frozen Inference Graph");
-		file_2_title->setText("Classes File");
-		file_3_title->setText("Weights File");
-		meanValuesWidget->setEnabled(true);
-		swapRB->setEnabled(true);
+		std::map<std::string, std::pair<std::string, Detection::Shape>> map; // { label, {cascade, shape} }
+		std::string primary;
+
+		for (int i = 0; i < filesLayout->count(); ++i) {
+			QWidget* widget = filesLayout->itemAt(i)->widget();
+			if (widget) {
+				DetectorFileWidget* file_w = qobject_cast<DetectorFileWidget*>(widget);
+				if (file_w)
+					map[file_w->changeLabel->text().toStdString()] = { file_w->fileName->text().toStdString(), file_w->circle->isChecked() ? Detection::Circle : Detection::Rectangle};
+			}
+		}
+		auto it = map.begin();
+		while (it != map.end()) {
+			if (it->second.first.empty()) { // cascade
+				it = map.erase(it);
+			}
+			else ++it;
+		}
+		if (map.size() == 0) {
+			QMessageBox::warning(this, "Missing field", "Please add at least one cascade classifier");
+			return;
+		}
+		if (map.size() == 1) {
+			detector = new CascadeClassifierDetector(map.begin()->second.first, map.begin()->first);
+		}
+		else {
+			CascadeClassifierGroup* det = new CascadeClassifierGroup;
+			for (const auto& pair : map) {
+				det->addDetector(pair.second.first, pair.first);
+				det->setObjectShape(pair.first, pair.second.second);
+			}
+			det->setPrimary(primaryList->currentText().toStdString());
+			detector = det;
+		}
+	}
+
+	if (name->text().isEmpty()) {
+		QMessageBox::warning(this, "Missing field", "Please set a name for the serialization file. This name will be displayed in the detector list.");
+		name->setStyleSheet("QLineEdit {border-color: red;}");
+		name->setFocus();
+		delete detector;
+		return;
+	}
+	detector->serialize("../detector_paths/" + name->text().toStdString() + ".yaml");
+	delete detector;
+	close();
+
+	emit editingFinished(QString("../detector_paths/%1.yaml)").arg(name->text()));
+}
+
+void DetectorEditor::typeChanged(bool reset) {
+	cascadeActions->setVisible(cascade_btn->isChecked());
+	if (!reset)
+		return;
+
+	while (QLayoutItem* item = filesLayout->takeAt(0)) {
+		QWidget* widget = item->widget();
+		if (widget) {
+			delete widget;
+		}
+	}
+
+	if (cascade_btn->isChecked()) {
+		cascadesCount = 0;
+		filesLayout->addWidget(new DetectorFileWidget("cascade", this));
+		primaryList->clear();
+		primaryList->addItem("Cascade 1");
+	}
+	else {
+		filesLayout->addWidget(new DetectorFileWidget("model", this));
+		filesLayout->addWidget(new DetectorFileWidget("classes", this));
 	}
 }
 
-DetectorsList::DetectorsList(QString jsonPath, QWidget* parent) {
-	this->jsonPath = jsonPath;
+void DetectorListWindow::deselect(const QString& str) {
+	QListWidget* list = (QListWidget*)this->layout()->itemAt(0)->widget();
+	QModelIndexList selectedIndexes = list->selectionModel()->selectedIndexes();
 
+	foreach(const QModelIndex & index, selectedIndexes) {
+		QString itemText = list->model()->data(index, Qt::DisplayRole).toString();
+		if (itemText == str) {
+			list->selectionModel()->select(index, QItemSelectionModel::Deselect);
+			selectionChanged();
+		}
+	}
+}
+
+DetectorListWindow::DetectorListWindow(const QStringList& paths, QWidget* parent) : originalPaths(paths) {
 	this->setModal(true);
 	this->setWindowTitle("Detectors List");
 	this->setMinimumSize(400, 300);
 
-	//QVector <QString> names = ModelLoader::getNames(jsonPath);
 
-	//QListWidget* list = new QListWidget(this);
+	list = new QListWidget(this);
+	list->setSelectionMode(QAbstractItemView::SelectionMode::MultiSelection);
 
-	//for (int i = 0; i < names.size(); i++) {
-	//	QListWidgetItem* item = new QListWidgetItem(names[i], list);
-	//	item->setFlags(Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled);
-	//}
+	for (int i = 0; i < originalPaths.size(); i++) {
+		QListWidgetItem* item = new QListWidgetItem(QFileInfo(originalPaths.at(i)).baseName(), list);
+		item->setFlags(Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled);
+	}
 
-	//connect(list, SIGNAL(itemSelectionChanged()), this, SLOT(selectionChanged()));
+	connect(list, &QListWidget::itemSelectionChanged, this, &DetectorListWindow::selectionChanged);
 
-	addDet = new QPushButton("Add", this);
-	removeDet = new QPushButton("Remove", this);
-	editDet = new QPushButton("Edit", this);
+	add_btn = new QPushButton("Add New", this);
+	remove_btn = new QPushButton("Remove", this);
+	edit_btn = new QPushButton("Edit", this);
 
-	removeDet->setEnabled(false);
-	editDet->setEnabled(false);
+	remove_btn->setEnabled(false);
+	edit_btn->setEnabled(false);
 
 	QHBoxLayout* buttons = new QHBoxLayout();
-	buttons->addWidget(addDet);
-	buttons->addWidget(removeDet);
-	buttons->addWidget(editDet);
+	buttons->addWidget(add_btn);
+	buttons->addWidget(remove_btn);
+	buttons->addWidget(edit_btn);
 
 	QVBoxLayout* mainLayout = new QVBoxLayout();
-	//mainLayout->addWidget(list);
+	mainLayout->addWidget(list);
 	mainLayout->addLayout(buttons);
 
-	connect(addDet, SIGNAL(clicked()), this, SLOT(addDetector()));
-	connect(removeDet, SIGNAL(clicked()), this, SLOT(removeDetector()));
-	connect(editDet, SIGNAL(clicked()), this, SLOT(editDetector()));
+	connect(add_btn, SIGNAL(clicked()), this, SLOT(addDetectorRequest()));
+	connect(remove_btn, SIGNAL(clicked()), this, SLOT(removeDetectorsRequest()));
+	connect(edit_btn, &QPushButton::clicked, this, [&] { editDetectorRequest(selectionPaths.at(0)); });
 
 	this->setLayout(mainLayout);
-
-	this->setWindowTitle("Detectors");
-
 	this->show();
 }
 
-void DetectorsList::selectionChanged() {
-	if (sender() == nullptr)
-		return;
+void DetectorListWindow::addDetectorRequest() {
+	DetectorEditor* editor = new DetectorEditor();
+	editor->show();
 
-	QListWidget* list = (QListWidget*)sender();
+	connect(editor, &DetectorEditor::editingFinished, this, [&](const QString& new_file) {
+		list->clear();
+		if (!new_file.isEmpty())
+			originalPaths.append(new_file);
+		for (int i = 0; i < originalPaths.size(); i++) {
+			QListWidgetItem* item = new QListWidgetItem(QFileInfo(originalPaths.at(i)).baseName(), list);
+			item->setFlags(Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled);
+		}
+		emit detectorAdded();
+	});
+}
+
+void DetectorListWindow::removeDetectorsRequest() {
+	QListWidget* list = (QListWidget*)this->layout()->itemAt(0)->widget();
+
+	QMessageBox::StandardButton reply;
+	reply = QMessageBox::question(this, "Remove Detector", "Are you sure you want to remove this detector?", QMessageBox::Yes | QMessageBox::No);
+	if (reply == QMessageBox::No)
+		return;
+	else {
+		for (int i = 0; i < selectionPaths.size(); ++i) {
+			// remove serialization file(s)
+			QFile file(selectionPaths.at(i));
+
+			if (!file.exists()) {
+				QMessageBox::critical(this, "Error", QString("Tthe file \"%1 is missing or does not exist. Entry will be removed from list.").arg(QFileInfo(file).absolutePath()));
+				for (int i = 0; i < list->count(); i++) {
+					if (list->item(i)->text() == QFileInfo(file).baseName()) {
+						list->takeItem(i);
+					}
+				}
+				break;
+			}
+
+			if (!file.remove()) {
+				QMessageBox::warning(this, "Error", QString("Couldn't remove detector(s) because of an error. The file might be open in another program."));
+				deselect(QFileInfo(file).baseName());
+				break;
+			}
+
+			// remove from list
+			for (int i = 0; i < list->count(); i++) {
+				if (list->item(i)->text() == QFileInfo(file).baseName()) {
+					list->takeItem(i);
+				}
+			}
+			//emit detectorRemoved();
+		}
+	}
+}
+
+void DetectorListWindow::editDetectorRequest(const QString& path) {
+	DetectorEditor* editor = new DetectorEditor(path);
+	editor->show();
+}
+
+void DetectorListWindow::selectionChanged() {
+	QListWidget* list = (QListWidget*)this->layout()->itemAt(0)->widget();
+	QModelIndexList selectedIndexes = list->selectionModel()->selectedIndexes();
+
+	selectionPaths.clear();
+	for (auto& item : selectedIndexes) {
+		QString itemText = originalPaths.at(item.row());
+		selectionPaths.append(itemText);
+	}
 
 	if (list->selectedItems().size() == 0) {
-		removeDet->setEnabled(false);
-		editDet->setEnabled(false);
+		remove_btn->setEnabled(false);
+		edit_btn->setEnabled(false);
 	}
 	else if (list->selectedItems().size() == 1) {
-		removeDet->setEnabled(true);
-		editDet->setEnabled(true);
-		selectedDetector = list->selectedItems()[0]->text();
+		remove_btn->setEnabled(true);
+		edit_btn->setEnabled(true);
 	}
 	else {
-		removeDet->setEnabled(true);
-		editDet->setEnabled(false);
+		remove_btn->setEnabled(true);
+		edit_btn->setEnabled(false);
 	}
 }
 
-void DetectorsList::addDetector() {
-	DetectorEditor* editor = new DetectorEditor(jsonPath);
-	//connect(editor, &DetectorEditor::detectorCreated, this, [&](QString jsonPath, QString name, QString type, QStringList paths, QVector<int> meanValues, bool swapRB) {
-	//	// add to json
-	//	QFile file(jsonPath);
-	//	file.open(QIODevice::ReadOnly | QIODevice::Text);
-	//	QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
-	//	file.close();
+DetectorFileWidget::DetectorFileWidget(const QString& role, DetectorEditor* detEditor, QWidget* parent) : QWidget(parent), editor(detEditor) {
+	this->label = new QLabel;
+	this->rect = new QPushButton("R");
+	rect->setObjectName("shapeButton");
+	this->circle = new QPushButton("C");
+	circle->setObjectName("shapeButton");
+	this->uploadButton = new QPushButton("Upload file");
+	this->changeLabel = new QLineEdit;
+	changeLabel->setObjectName("labelEdit");
+	this->fileName = new QLabel;
+	this->changeLabel->setVisible(false);
+	uploadButton->setFixedWidth(100);
 
-	//	QJsonArray arr = doc.array();
-	//	QJsonObject obj;
-	//	obj["name"] = name;
-	//	obj["type"] = type;
+	if (role == "model") {
+		label->setText("Model file");
+	}
+	else if (role == "config") {
+		label->setText("Configuration file");
+	}
+	else if (role == "classes") {
+		label->setText("Object Labels file");
+	}
+	else if (role == "cascade") {
+		editor->cascadesCount++;
+		objectName = "Cascade " + QString::number(editor->cascadesCount);
+		index = editor->cascadesCount - 1;
+		changeLabel->setText(objectName);
+		label->setVisible(false);
+		changeLabel->setVisible(true);
+	}
 
-	//	if (obj["type"] == "cascade") {
-	//		obj["paths"] = QJsonObject({
-	//			{"face", paths.at(0)},
-	//			{"eyes", paths.size() > 1 ? paths.at(1) : ""},
-	//			{"smile", paths.size() > 2 ? paths.at(2) : ""}
-	//			});
-	//	}
-	//	else {
-	//		obj["paths"] = QJsonObject({
-	//			{"inf", paths.at(0)},
-	//			{"classes", paths.at(1)},
-	//			{"model", paths.at(2)}
-	//			});
-	//		QJsonObject propertiesObj = obj["properties"].toObject();
-	//		QJsonArray meanV = propertiesObj["meanValues"].toArray();
-	//		meanV.push_back(meanValues.at(0));
-	//		meanV.push_back(meanValues.at(1));
-	//		meanV.push_back(meanValues.at(2));
+	fileName->setVisible(false);
 
-	//		propertiesObj["meanValues"] = meanV;
-	//		propertiesObj["swapRB"] = swapRB;
+	connect(uploadButton, &QPushButton::clicked, this, [&, role] {
+		if (role == "model") {
+			QString file = QFileDialog::getOpenFileName(this, "Open Model File", "", "Model Files (*.pb *.onnx)");
+			if (file.isEmpty())
+				return;
+			fileName->setText(file);
 
-	//		obj["properties"] = propertiesObj;
-	//	}
+			if (QFileInfo(file).suffix() == "onnx") {
+				if (editor->filesLayout->count() > 2) {
+					QWidget* widgetToRemove = editor->filesLayout->itemAt(1)->widget();
+					editor->filesLayout->removeWidget(widgetToRemove);
+					delete widgetToRemove;
+				}
+			}
+			else {
+				if (editor->filesLayout->count() < 3)
+					editor->filesLayout->insertWidget(1, new DetectorFileWidget("config", editor));
+			}
+		}
+		else if (role == "config") {
+			QString file = QFileDialog::getOpenFileName(this, "Open Config File", "", "Text Files (*.txt);; All Files (*.*)");
+			if (file.isEmpty())
+				return;
+			fileName->setText(file);
+		}
+		else if (role == "classes") {
+			QString file = QFileDialog::getOpenFileName(this, "Open Classes File", "", "Text Files (*.txt);;All Files (*.*)");
+			if (file.isEmpty())
+				return;
+			fileName->setText(file);
+		}
+		else if (role == "cascade") {
+			QString file = QFileDialog::getOpenFileName(this, "Open Cascade File", "", "XML Files (*.xml);;All Files (*.*)");
+			if (file.isEmpty())
+				return;
+			fileName->setText(file);
+		}
+		fileName->setVisible(true);
+	});
+	
+	fileName->setStyleSheet("QLabel { color: gray;}");
+	fileName->setWordWrap(true);
 
-	//	arr.append(obj);
+	QVBoxLayout* vbox = new QVBoxLayout;
+	vbox->addWidget(label);
+	vbox->addWidget(changeLabel);
+	vbox->addWidget(fileName);
 
-	//	doc.setArray(arr);
+	QHBoxLayout* hbox = new QHBoxLayout;
+	hbox->addWidget(uploadButton);
+	hbox->addStretch();
 
-	//	file.open(QIODevice::WriteOnly | QIODevice::Text);
-	//	file.write(doc.toJson());
-	//	file.close();
+	vbox->addLayout(hbox);
+	setLayout(vbox);
 
-	emit detectorAdded();
+	if (role == "cascade") {
+		QLabel* shapeLabel = new QLabel("Choose shape");
+		hbox->addWidget(shapeLabel);
+		hbox->addWidget(rect);
+		hbox->addWidget(circle);
 
-	// add to list
-	QListWidget* list = (QListWidget*)this->layout()->itemAt(0)->widget();
-	//list->addItem(name);
-	//});
+		rect->setCheckable(true);
+		circle->setCheckable(true);
+
+		rect->setStyleSheet("QPushButton:checked { background-color: hsl(206, 77%, 46%); color: white; }");
+		circle->setStyleSheet("QPushButton:checked { background-color: hsl(206, 77%, 46%); color: white; }");
+
+		rect->setFixedWidth(30);
+		circle->setFixedWidth(30);
+
+		rect->setChecked(true);
+
+		QButtonGroup* group = new QButtonGroup;
+		group->addButton(rect);
+		group->addButton(circle);
+
+		connect(group, &QButtonGroup::buttonClicked, this, [&] {
+			if (rect->isChecked())
+				shape = 0;
+			else
+				shape = 1;
+		});
+		connect(editor, &DetectorEditor::setPrimary, this, [&, shapeLabel](int index) {
+			rect->setVisible(index != this->index);
+			circle->setVisible(index != this->index);
+			shapeLabel->setVisible(index != this->index);
+		});
+		connect(changeLabel, &QLineEdit::textChanged, this, &DetectorFileWidget::onLabelChanged);
+	}
 }
 
-void DetectorsList::removeDetector() {
-	// ask if sure
-	//QMessageBox::StandardButton reply;
-	//reply = QMessageBox::question(this, "Remove Detector", "Are you sure you want to remove this detector?", QMessageBox::Yes | QMessageBox::No);
-	//if (reply == QMessageBox::No)
-	//	return;
-	//else {
-	//	// remove from json
-	//	QFile file(jsonPath);
-	//	file.open(QIODevice::ReadOnly | QIODevice::Text);
-	//	QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
-	//	file.close();
-
-	//	QJsonArray arr = doc.array();
-	//	QJsonArray newArr;
-	//	for (int i = 0; i < arr.size(); i++) {
-	//		if (arr[i].toObject()["name"].toString() != selectedDetector)
-	//			newArr.append(arr[i]);
-	//	}
-
-	//	doc.setArray(newArr);
-
-	//	file.open(QIODevice::WriteOnly | QIODevice::Text);
-	//	file.write(doc.toJson());
-	//	file.close();
-
-	//	// remove from list
-	//	QListWidget* list = (QListWidget*)this->layout()->itemAt(0)->widget();
-	//	for (int i = 0; i < list->count(); i++) {
-	//		if (list->item(i)->text() == selectedDetector) {
-	//			list->takeItem(i);
-	//			break;
-	//		}
-	//	}
-
-	//}
-	emit detectorRemoved();
-}
-
-void DetectorsList::editDetector() {
-	DetectorEditor* editor = new DetectorEditor(jsonPath, selectedDetector);
-	//connect(editor, &DetectorEditor::detectorCreated, this, [&](QString jsonPath, QString name, QString type, QStringList paths, QVector<int> meanValues, bool swapRB) {
-	//	// add to json
-	//	QJsonObject obj = ModelLoader::getObjectByName(selectedDetector, jsonPath);
-
-	//	QJsonObject pathsObj = obj["paths"].toObject();
-	//	QJsonObject propertiesObj = obj["properties"].toObject();
-
-	//	if (obj["type"] == "cascade") {
-	//		pathsObj["face"] = paths.at(0);
-	//		pathsObj["eyes"] = paths.size() > 1 ? paths.at(1) : "";
-	//		pathsObj["smile"] = paths.size() > 2 ? paths.at(2) : "";
-	//	}
-	//	else {
-	//		pathsObj["inf"] = paths.at(0);
-	//		pathsObj["classes"] = paths.at(1);
-	//		pathsObj["model"] = paths.at(2);
-
-	//		QJsonArray meanV = propertiesObj["meanValues"].toArray();
-	//		meanV.replace(0, meanValues.at(0));
-	//		meanV.replace(1, meanValues.at(1));
-	//		meanV.replace(2, meanValues.at(2));
-
-	//		propertiesObj["meanValues"] = meanV;
-	//		propertiesObj["swapRB"] = swapRB;
-
-	//		obj["properties"] = propertiesObj;
-	//	}
-
-	//	obj["paths"] = pathsObj;
-
-	//	QFile file(jsonPath);
-	//	file.open(QIODevice::ReadOnly | QIODevice::Text);
-	//	QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
-	//	file.close();
-
-	//	QJsonArray arr = doc.array();
-	//	for (int i = 0; i < arr.size(); i++) {
-	//		if (arr[i].toObject()["name"].toString() == selectedDetector) {
-	//			arr[i] = obj;
-	//			break;
-	//		}
-		//}
-
-		//doc.setArray(arr);
-
-		//file.open(QIODevice::WriteOnly | QIODevice::Text);
-		//file.write(doc.toJson());
-		//file.close();
-
-		//emit detectorEdited();
-
-		//this->close();
-		//});
+void DetectorFileWidget::onLabelChanged() {
+	editor->primaryList->setItemText(index, changeLabel->text());
 }

@@ -133,11 +133,14 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 		});
 	connect(menu->editDetectorsBtn, &QPushButton::clicked, [&] {
 		// open the detectors editor
-		//DetectorsList* editor = new DetectorsList(modelsJSON);
-		//editor->show();
-		//connect(editor, &DetectorsList::detectorRemoved, this, &MainWindow::detectorEditEvent);
-		//connect(editor, &DetectorsList::detectorAdded, this, &MainWindow::detectorEditEvent);
-		//connect(editor, &DetectorsList::detectorEdited, this, &MainWindow::detectorEditEvent);
+		QStringList list;
+		for (int i = 1; i < menu->detectorsList->count(); ++i) {
+			list.append("../detector_paths/" + menu->detectorsList->itemText(i) + ".yaml");
+		}
+		DetectorListWindow* editor = new DetectorListWindow(list);
+		menu->toggleCamera->setChecked(false);
+		editor->show();
+		connect(editor, &DetectorListWindow::detectorAdded, this, &MainWindow::detectorEditEvent);
 		});
 
 	connect(menu->classButtons->toggleButton, &QToolButton::toggled, this, &MainWindow::sortButtons);
@@ -269,7 +272,7 @@ void MainWindow::uploadImageEvent() {
 	QImage backup_frame = frame;
 	frame = QImage(temp);
 	if (frame.isNull()) {
-		QMessageBox::critical(this, "Error", QString("Couldnt't read image from %1. The file may be corrupted or not a valid image file.").arg(fileName));
+		QMessageBox::critical(this, "Error", QString("Couldn't read image from %1. The file may be corrupted or not a valid image file.").arg(fileName));
 		frame = backup_frame;
 		return;
 	}
@@ -310,11 +313,14 @@ void MainWindow::selectDetectorEvent() {
 		return;
 	}
 
-	QString currText = menu->detectorsList->currentText() + QString(".yaml");
+	QString currText = QString("../detector_paths/%1") + menu->detectorsList->currentText() + QString(".yaml");
 
-	currDet = DetectorFactory::createDetectorFromFile("../detector_paths/" + currText.toStdString());
-
-	// TODO: add back error messages
+	if (QFileInfo(currText).exists())
+		currDet = DetectorFactory::createDetectorFromFile(currText.toStdString());
+	else {
+		QMessageBox::critical(this, "Error", QString("The file \"%1\" was deleted.").arg(currText));
+		return;
+	}
 
 	if (currDet->toThresholdAdjuster())
 		changeMinConfEvent();
@@ -545,20 +551,20 @@ void MainWindow::selectAlgorithmsEvent() {
 }
 
 void MainWindow::detectorEditEvent() {
-	// refresh the detector list
-
-	// delete every detector except the first one (None)
 	menu->detectorsList->setCurrentIndex(0);
 	for (int i = menu->detectorsList->count() - 1; i > 0; i--)
 		menu->detectorsList->removeItem(i);
-	//QStringList names = ModelLoader::getNames(modelsJSON);
 
-	//for (auto&& name : names)
-	//	menu->detectorsList->addItem(name);
+	QDir folder("../detector_paths");
+	QStringList files = folder.entryList({ "*.yaml" }, QDir::Files);
 
-	//// if the current detector is not in the list, set it to None
-	//if (names.contains(menu->detectorsList->currentText()) == false)
-	//	menu->detectorsList->setCurrentIndex(0);
+	for (const QString& filename : files) {
+		QString filePath = folder.absoluteFilePath(filename);
+
+		Detector* detector = DetectorFactory::createDetectorFromFile(filePath.toStdString());
+		if (detector)
+			menu->detectorsList->addItem(QFileInfo(filePath).baseName());
+	}
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event) {

@@ -32,6 +32,15 @@ public:
 
     CanToggleObjects* toObjectToggler() override;
 
+    std::vector<std::string> getCascades() {
+        std::vector<std::string> v;
+        v.push_back(primaryDetector->getCascadeFilePath());
+        for (auto& det : detectors) {
+            v.push_back(det->getCascadeFilePath());
+        }
+        return v;
+    }
+
 private:
     std::vector<std::unique_ptr<CascadeClassifierDetector>> detectors;
 
