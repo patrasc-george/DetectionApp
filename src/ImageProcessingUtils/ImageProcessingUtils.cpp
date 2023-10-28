@@ -97,7 +97,106 @@ void ProcessingAlgorithms::truncate(cv::Mat src, cv::Mat& dst, short threshold) 
 	}
 }
 
-std::vector<int> getHistogram(Mat src)
+void BGR2HSV(const cv::Mat& src, cv::Mat& dst)
+{
+	dst = cv::Mat(src.size(), src.type());
+
+	for (int y = 0; y < src.rows; y++)
+		for (int x = 0; x < src.cols; x++)
+		{
+			double r = src.ptr<uchar>(y, x)[2] / 255.0;
+			double g = src.ptr<uchar>(y, x)[1] / 255.0;
+			double b = src.ptr<uchar>(y, x)[0] / 255.0;
+
+			double cmax = std::max(r, std::max(g, b));
+			double cmin = std::min(r, std::min(g, b));
+			double diff = cmax - cmin;
+			double h = -1;
+			double s = -1;
+
+			if (cmax == cmin)
+				h = 0;
+			else if (cmax == r)
+				h = fmod(60 * ((g - b) / diff) + 360, 360);
+			else if (cmax == g)
+				h = fmod(60 * ((b - r) / diff) + 120, 360);
+			else if (cmax == b)
+				h = fmod(60 * ((r - g) / diff) + 240, 360);
+
+			if (cmax == 0)
+				s = 0;
+			else
+				s = (diff / cmax) * 100;
+
+			double v = cmax * 100;
+
+			dst.ptr<uchar>(y, x)[0] = static_cast<uchar>(h / 2);
+			dst.ptr<uchar>(y, x)[1] = static_cast<uchar>(s * 2.55);
+			dst.ptr<uchar>(y, x)[2] = static_cast<uchar>(v * 2.55);
+		}
+}
+
+void HSV2BGR(cv::Mat src, cv::Mat& dst)
+{
+	dst = cv::Mat(src.size(), CV_8UC3);
+
+	for (int y = 0; y < src.rows; y++)
+		for (int x = 0; x < src.cols; x++)
+		{
+			cv::Vec3b pixel = src.at<cv::Vec3b>(y, x);
+
+			double h = pixel[0];
+			double s = pixel[1] / 255.0;
+			double v = pixel[2] / 255.0;
+
+			double saturationValue = s * v;
+			double hueNormalized = h / 30.0;
+			double chromaX = saturationValue * (1 - std::abs(fmod(hueNormalized, 2) - 1));
+			double brightnessDifference = v - saturationValue;
+
+			double r, g, b;
+
+			switch (int(hueNormalized))
+			{
+			case 0:
+				r = saturationValue;
+				g = chromaX;
+				b = 0;
+				break;
+			case 1:
+				r = chromaX;
+				g = saturationValue;
+				b = 0;
+				break;
+			case 2:
+				r = 0;
+				g = saturationValue;
+				b = chromaX;
+				break;
+			case 3:
+				r = 0;
+				g = chromaX;
+				b = saturationValue;
+				break;
+			case 4:
+				r = chromaX;
+				g = 0;
+				b = saturationValue;
+				break;
+			default:
+				r = saturationValue;
+				g = 0;
+				b = chromaX;
+				break;
+			}
+
+			dst.ptr<uchar>(y, x)[2] = static_cast<uchar>((r + brightnessDifference) * 255);
+			dst.ptr<uchar>(y, x)[1] = static_cast<uchar>((g + brightnessDifference) * 255);
+			dst.ptr<uchar>(y, x)[0] = static_cast<uchar>((b + brightnessDifference) * 255);
+		}
+}
+
+std::vector<int> Histogram(cv::Mat src)
 {
 	std::vector<int> histogram(256, 0);
 	for (int i = 0; i < src.rows; i++)
@@ -110,35 +209,48 @@ std::vector<int> CDF(const std::vector<int>& histogram)
 {
 	std::vector<int> cdf(256, 0);
 	cdf[0] = histogram[0];
-	for (int i = 1; i < histogram.size(); i++)
+	for (int i = 1; i < 256; i++)
 		cdf[i] = cdf[i - 1] + histogram[i];
 	return cdf;
 }
 
-std::vector<int> Normalize(std::vector<int> cdf)
+std::vector<int> Normalize(const std::vector<int>& cdf)
 {
 	int cdf_min = *std::min_element(cdf.begin(), cdf.end());
 	int cdf_max = *std::max_element(cdf.begin(), cdf.end());
-	for (int i = 0; i < cdf.size(); i++)
-		cdf[i] = round(255.0 * (cdf[i] - cdf_min) / (cdf_max - cdf_min));
-	return cdf;
+	std::vector<int> normalized(256, 0);
+	for (int i = 0; i < normalized.size(); i++)
+		normalized[i] = round(255.0 * (cdf[i] - cdf_min) / (cdf_max - cdf_min));
+	return normalized;
 }
 
-void ProcessingAlgorithms::histogramEqualization(Mat src, Mat& dst)
+void ProcessingAlgorithms::histogramEqualization(cv::Mat src, cv::Mat& dst)
 {
-	if (src.type() != CV_8UC1)
-		cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
+	if (src.type() == CV_8UC1)
+		cv::cvtColor(src, src, cv::COLOR_GRAY2BGR);
+	if (src.type() == CV_8UC4)
+		cv::cvtColor(src, src, cv::COLOR_BGRA2BGR);
 
-	std::vector<int> histogram = getHistogram(src);
+	dst = cv::Mat(src.size(), src.type());
+
+	BGR2HSV(src, dst);
+
+	cv::Mat channelV;
+	cv::extractChannel(dst, channelV, 2);
+
+	std::vector<int> histogram = Histogram(channelV);
+
 	std::vector<int> cdf = CDF(histogram);
-	cdf = Normalize(cdf);
 
-	dst = src.clone();
-	for (int i = 0; i < dst.rows; i++)
-		for (int j = 0; j < dst.cols; j++)
-			dst.at<uchar>(i, j) = cdf[dst.at<uchar>(i, j)];
+	std::vector<int> normalized = Normalize(cdf);
 
-	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
+	for (int i = 0; i < channelV.rows; i++)
+		for (int j = 0; j < channelV.cols; j++)
+			channelV.at<uchar>(i, j) = static_cast<uchar>(normalized[channelV.at<uchar>(i, j)]);
+
+	cv::insertChannel(channelV, dst, 2);
+
+	HSV2BGR(dst, dst);
 }
 
 void ProcessingAlgorithms::detectEdges(Mat src, Mat& dst)
