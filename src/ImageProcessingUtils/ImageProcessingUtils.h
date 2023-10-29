@@ -73,6 +73,8 @@ public:
 	 */
 	static void detectEdges(cv::Mat src, cv::Mat& dst);
 
+	static void triangleThresholding(cv::Mat src, cv::Mat& dst);
+
 	/**
 	* @brief Applies various image processing algorithms based on the provided options.
 	* @details This function applies a series of image processing algorithms to the input image

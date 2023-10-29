@@ -95,3 +95,13 @@ void FrameOptions::setDetectEdges(const bool& val) {
 bool FrameOptions::getDetectEdges() const {
 	return detectEdges;
 }
+
+void FrameOptions::setTriangleThresholding(const bool& val)
+{
+	triangleThresholding = val;
+}
+
+bool FrameOptions::getTriangleThresholding() const
+{
+	return triangleThresholding;
+}

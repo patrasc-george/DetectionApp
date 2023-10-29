@@ -1,30 +1,25 @@
-#include "ImageProcessingUtils.h"
+﻿#include "ImageProcessingUtils.h"
 #include <qmessagebox.h>
+#include <map>
 
 using cv::Mat;
 
-// if the average value of a pixel is lower than the treshold it becomes zero, otherwise it gets the max value
-void ProcessingAlgorithms::binaryThresholding(Mat src, Mat& dst, short threshold) {
-	if (src.type() == CV_8UC4)
-		cv::cvtColor(src, src, cv::COLOR_BGRA2BGR);
-	if (src.type() == CV_8UC1)
-		cv::cvtColor(src, src, cv::COLOR_GRAY2BGR);
-	dst = cv::Mat(src.rows, src.cols, CV_8UC3);
+void ProcessingAlgorithms::binaryThresholding(Mat src, Mat& dst, short threshold)
+{
+	//cv::threshold(src, dst, threshold, 256, cv::THRESH_BINARY);
+	if (src.type() != CV_8UC1)
+		cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
 
-	for (int i = 0; i < src.rows; i++) {
-		cv::Vec3b* in = src.ptr<cv::Vec3b>(i);
-		for (int j = 0; j < src.cols; j++) {
-			uchar* out = dst.ptr<uchar>(i, j);
-			// compute the luminance of red, green and blue channels
-			float luminance = 0.2126 * in[j][2] + 0.7152 * in[j][1] + 0.0722 * in[j][0];
-			if (luminance >= threshold) {
-				out[0] = 255; out[1] = 255; out[2] = 255;
-			}
-			else {
-				out[0] = 0; out[1] = 0; out[2] = 0;
-			}
-		}
-	}
+	dst = cv::Mat(src);
+
+	for (int y = 0; y < src.rows; y++)
+		for (int x = 0; x < src.cols; x++)
+			if (src.at<uchar>(y, x) < threshold)
+				dst.at<uchar>(y, x) = 0;
+			else
+				dst.at<uchar>(y, x) = 255;
+
+	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
 }
 
 // if the value is lower than the threshold it becomes zero, otherwise it stays unchanged
@@ -196,31 +191,60 @@ void HSV2BGR(cv::Mat src, cv::Mat& dst)
 		}
 }
 
-std::vector<int> Histogram(cv::Mat src)
+std::map<float, float> histogram(cv::Mat src)
 {
-	std::vector<int> histogram(256, 0);
+	std::map<float, float> histogram;
+
+	for (int i = 0; i < 256; i++)
+		histogram[i] = 0;
+
 	for (int i = 0; i < src.rows; i++)
 		for (int j = 0; j < src.cols; j++)
 			histogram[src.at<uchar>(i, j)]++;
+
 	return histogram;
 }
 
-std::vector<int> CDF(const std::vector<int>& histogram)
+std::map<float, float> CDF(const std::map<float, float>& histogram)
 {
-	std::vector<int> cdf(256, 0);
-	cdf[0] = histogram[0];
-	for (int i = 1; i < 256; i++)
-		cdf[i] = cdf[i - 1] + histogram[i];
+	std::map<float, float> cdf;
+	float cumulativeSum = 0.0f;
+
+	for (int i = 0; i < 256; i++)
+		cdf[i] = 0.0f;
+
+	for (const auto& pair : histogram)
+	{
+		cumulativeSum += pair.second;
+		cdf[pair.first] = cumulativeSum;
+	}
+
 	return cdf;
 }
 
-std::vector<int> Normalize(const std::vector<int>& cdf)
+std::map<float, float> normalizeX(const std::map<float, float>& histogram)
 {
-	int cdf_min = *std::min_element(cdf.begin(), cdf.end());
-	int cdf_max = *std::max_element(cdf.begin(), cdf.end());
-	std::vector<int> normalized(256, 0);
-	for (int i = 0; i < normalized.size(); i++)
-		normalized[i] = round(255.0 * (cdf[i] - cdf_min) / (cdf_max - cdf_min));
+	std::map<float, float> normalized;
+	std::pair<float, float> pair;
+
+	int min = std::numeric_limits<int>::max();
+	int max = std::numeric_limits<int>::min();
+
+	for (const auto& pair : histogram)
+	{
+		if (pair.second < min)
+			min = pair.second;
+		if (pair.second > max)
+			max = pair.second;
+	}
+
+	for (const auto& it : histogram)
+	{
+		pair.first = it.first;
+		pair.second = (it.second - min) / (max - min);
+		normalized.insert(pair);
+	}
+
 	return normalized;
 }
 
@@ -238,11 +262,14 @@ void ProcessingAlgorithms::histogramEqualization(cv::Mat src, cv::Mat& dst)
 	cv::Mat channelV;
 	cv::extractChannel(dst, channelV, 2);
 
-	std::vector<int> histogram = Histogram(channelV);
+	std::map<float, float> hist = histogram(channelV);
 
-	std::vector<int> cdf = CDF(histogram);
+	std::map<float, float> cdf = CDF(hist);
 
-	std::vector<int> normalized = Normalize(cdf);
+	std::map<float, float> normalized = normalizeX(cdf);
+
+	for (auto& it : normalized)
+		it.second = round(255.0f * it.second);
 
 	for (int i = 0; i < channelV.rows; i++)
 		for (int j = 0; j < channelV.cols; j++)
@@ -279,6 +306,97 @@ void ProcessingAlgorithms::detectEdges(Mat src, Mat& dst)
 	cv::cvtColor(dst, dst, cv::COLOR_BGRA2BGR);
 }
 
+std::map<float, float> normalizeY(const std::map<float, float>& histogram)
+{
+	float maxFrequency = 0;
+	for (const auto& pair : histogram)
+		if (pair.second > maxFrequency)
+			maxFrequency = pair.second;
+
+
+	std::map<float, float> normalized;
+	std::pair<float, float> aux;
+
+	float min = histogram.begin()->first;
+	float max = histogram.rbegin()->first;
+
+	for (const auto& pair : histogram)
+	{
+		aux.first = (pair.first - min) / (max - min);
+		aux.second = pair.second;
+		normalized.insert(aux);
+	}
+
+	return normalized;
+}
+
+void ProcessingAlgorithms::triangleThresholding(cv::Mat src, cv::Mat& dst)
+{
+	if (src.type() != CV_8UC1)
+		cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
+
+	dst = cv::Mat(src);
+
+	std::map<float, float> hist = histogram(src);
+
+	std::map<float, float> normalized = normalizeX(hist);
+
+	normalized = normalizeY(normalized);
+
+	float max;
+	for (const auto& pair : normalized)
+		if (pair.second == 1)
+		{
+			max = pair.first;
+			break;
+		}
+
+	std::map<float, float> normalizedCopy = normalized;
+	float maxDistance = 0;
+	float distance;
+	int threshold;
+	int k = 0;
+
+	if (max < (128.0 / 255.0))
+	{
+		std::map<float, float>::iterator it = normalized.lower_bound(max);
+		normalized.erase(normalized.begin(), it);
+		normalized = normalizeY(normalized);
+
+		for (const auto& pair : normalized)
+		{
+			distance = (1 - pair.first) - pair.second;
+			if (distance > maxDistance)
+			{
+				maxDistance = distance;
+				threshold = k;
+			}
+			k++;
+		}
+	}
+	else
+	{
+		std::map<float, float>::iterator it = normalized.upper_bound(max);
+		normalized.erase(it, normalized.end());
+		normalized = normalizeY(normalized);
+
+		for (const auto& pair : normalized)
+		{
+			distance = pair.first - pair.second;
+			if (distance > maxDistance)
+			{
+				maxDistance = distance;
+				threshold = k;
+			}
+			k++;
+		}
+	}
+
+	threshold = hist.size() - normalized.size() + threshold;
+	std::cout << threshold << std::endl;
+	binaryThresholding(src, dst, threshold);
+}
+
 void ProcessingAlgorithms::applyingAlgorithms(Mat& image, FrameOptions* options, const short& value)
 {
 	if (options->getHistogramEqualization())
@@ -293,6 +411,8 @@ void ProcessingAlgorithms::applyingAlgorithms(Mat& image, FrameOptions* options,
 		detectEdges(image, image);
 	if (options->getTruncThresholdingValue())
 		truncate(image, image, value);
+	if (options->getTriangleThresholding())
+		triangleThresholding(image, image);
 }
 
 bool ConvertMat2QImage(const Mat& src, QImage& dest) {

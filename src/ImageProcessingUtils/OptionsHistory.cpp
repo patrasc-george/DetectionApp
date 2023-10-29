@@ -43,6 +43,9 @@ void OptionsHistory::add(revertable_options prop, short value) {
 	case DETECT_EDGES:
 		currentStatus.setDetectEdges(value);
 		break;
+	case TRIANGLE_THRESHOLDING:
+		currentStatus.setTriangleThresholding(value);
+		break;
 	default:
 		return;
 	}

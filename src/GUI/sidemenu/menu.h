@@ -42,6 +42,7 @@ public:
 	QPushButton* adaptiveThresholdingButton;
 	QPushButton* histogramEqualizationButton;
 	QPushButton* detectEdgesButton;
+	QPushButton* triangleThresholdingButton;
 
 	QPushButton* editDetectorsBtn;
 

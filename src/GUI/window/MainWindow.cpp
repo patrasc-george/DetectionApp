@@ -93,6 +93,12 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 		processImage();
 		});
 
+	connect(menu->triangleThresholdingButton, &QPushButton::clicked, this, [&] {
+		history.add(TRIANGLE_THRESHOLDING, menu->triangleThresholdingButton->isChecked());
+		processImage();
+		}
+	);
+
 	connect(menu->flipHorizontal, &QCheckBox::clicked, this, [&] {
 		history.add(FLIP_HORIZONTAL, menu->flipHorizontal->isChecked());
 		statusBar->showMessage("Flipped horizontally");
@@ -207,6 +213,7 @@ void MainWindow::setOptions()
 	menu->adaptiveThresholdingButton->setChecked(history.get()->getAdaptiveThresholdingValue());
 	menu->histogramEqualizationButton->setChecked(history.get()->getHistogramEqualization());
 	menu->detectEdgesButton->setChecked(history.get()->getDetectEdges());
+	menu->triangleThresholdingButton->setChecked(history.get()->getTriangleThresholding());
 
 	menu->binaryThresholdingButton->setEnabled(
 		!menu->zeroThresholdingButton->isChecked() &&
@@ -370,7 +377,7 @@ void MainWindow::selectDetectorEvent() {
 			connect(button, &QPushButton::clicked, this, &MainWindow::processImage);
 		}
 	}
-	
+
 	if (imageIsUpload)
 		processImage();
 	setOptions();

@@ -33,6 +33,8 @@ Menu::Menu(QWidget* parent)
 	histogramEqualizationButton->setCheckable(true);
 	detectEdgesButton = new QPushButton("Detect Edges", imageAlgorithms);
 	detectEdgesButton->setCheckable(true);
+	triangleThresholdingButton = new QPushButton("Triangle Thresholding", imageAlgorithms);
+	triangleThresholdingButton->setCheckable(true);
 
 	editDetectorsBtn = new QPushButton("Edit detectors");
 
@@ -43,6 +45,7 @@ Menu::Menu(QWidget* parent)
 	algVbox->addWidget(adaptiveThresholdingButton);
 	algVbox->addWidget(histogramEqualizationButton);
 	algVbox->addWidget(detectEdgesButton);
+	algVbox->addWidget(triangleThresholdingButton);
 	imageAlgorithms->setContentLayout(*algVbox);
 
 	detectedClassesVbox = new QVBoxLayout;

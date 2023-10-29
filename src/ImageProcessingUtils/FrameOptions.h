@@ -12,6 +12,7 @@ private:
 	short adaptiveThresholdingValue = 0;
 	bool histogramEqualization = false;
 	bool detectEdges = false;
+	bool triangleThresholding = false;
 	bool showFeatures = false;
 	bool flipH = true; // on camera, it's true by default
 	bool flipV = false;
@@ -151,4 +152,8 @@ public:
 	 * @return Returns true if edges are to be detected in an image, otherwise returns false.
 	 */
 	bool getDetectEdges() const;
+
+	void setTriangleThresholding(const bool& val);
+
+	bool getTriangleThresholding() const;
 };
