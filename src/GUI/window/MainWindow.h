@@ -118,6 +118,8 @@ private slots:
 	 */
 	void changeThresholdEvent();
 
+	void changeKernelSizeEvent();
+
 	/**
 	 * @brief Applies selected image processing algorithms to the current frame.
 	 * @details This function is called when an image processing algorithm is selected from the list of available algorithms.

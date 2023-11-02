@@ -22,10 +22,28 @@ void ProcessingAlgorithms::binaryThresholding(Mat src, Mat& dst, short threshold
 	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
 }
 
-// if the value is lower than the threshold it becomes zero, otherwise it stays unchanged
-void ProcessingAlgorithms::zeroThresholding(Mat src, Mat& dst, short threshold) {
+void ProcessingAlgorithms::zeroThresholding(Mat src, Mat& dst, short threshold)
+{
+	if (src.type() != CV_8UC1)
+		cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
+
+	dst = cv::Mat(src);
+
+	for (int y = 0; y < src.rows; y++)
+		for (int x = 0; x < src.cols; x++)
+			if (src.at<uchar>(y, x) < threshold)
+				dst.at<uchar>(y, x) = 0;
+
+	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
+}
+
+void ProcessingAlgorithms::truncate(cv::Mat src, cv::Mat& dst, short threshold) {
+
+	if (src.type() == CV_8UC1)
+		cv::cvtColor(src, src, cv::COLOR_GRAY2BGR);
 	if (src.type() == CV_8UC4)
 		cv::cvtColor(src, src, cv::COLOR_BGRA2BGR);
+
 	dst = cv::Mat(src);
 
 	for (int i = 0; i < src.rows; i++) {
@@ -33,9 +51,10 @@ void ProcessingAlgorithms::zeroThresholding(Mat src, Mat& dst, short threshold) 
 		for (int j = 0; j < src.cols; j++) {
 			uchar* out = dst.ptr<uchar>(i, j);
 			// threshold each channel individually
-			for (int k = 0; k < src.channels(); k++)
-				if (in[j][k] < threshold)
-					out[k] = 0;
+			float luminance = 0.2126 * in[j][2] + 0.7152 * in[j][1] + 0.0722 * in[j][0];
+			if (luminance >= threshold) {
+				out[0] = threshold; out[1] = threshold; out[2] = threshold;
+			}
 		}
 	}
 }
@@ -72,24 +91,6 @@ void ProcessingAlgorithms::adaptiveThresholding(Mat src, Mat& dst, short maxValu
 		}
 
 	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
-}
-
-void ProcessingAlgorithms::truncate(cv::Mat src, cv::Mat& dst, short threshold) {
-	if (src.type() == CV_8UC4)
-		cv::cvtColor(src, src, cv::COLOR_BGRA2BGR);
-	dst = cv::Mat(src);
-
-	for (int i = 0; i < src.rows; i++) {
-		cv::Vec3b* in = src.ptr<cv::Vec3b>(i);
-		for (int j = 0; j < src.cols; j++) {
-			uchar* out = dst.ptr<uchar>(i, j);
-			// threshold each channel individually
-			float luminance = 0.2126 * in[j][2] + 0.7152 * in[j][1] + 0.0722 * in[j][0];
-			if (luminance >= threshold) {
-				out[0] = threshold; out[1] = threshold; out[2] = threshold;
-			}
-		}
-	}
 }
 
 void BGR2HSV(const cv::Mat& src, cv::Mat& dst)
@@ -222,11 +223,8 @@ std::map<float, float> CDF(const std::map<float, float>& histogram)
 	return cdf;
 }
 
-std::map<float, float> normalizeX(const std::map<float, float>& histogram)
+std::map<float, float> normalizeY(const std::map<float, float>& histogram)
 {
-	std::map<float, float> normalized;
-	std::pair<float, float> pair;
-
 	int min = std::numeric_limits<int>::max();
 	int max = std::numeric_limits<int>::min();
 
@@ -238,11 +236,14 @@ std::map<float, float> normalizeX(const std::map<float, float>& histogram)
 			max = pair.second;
 	}
 
-	for (const auto& it : histogram)
+	std::map<float, float> normalized;
+	std::pair<float, float> aux;
+
+	for (const auto& pair : histogram)
 	{
-		pair.first = it.first;
-		pair.second = (it.second - min) / (max - min);
-		normalized.insert(pair);
+		aux.first = pair.first;
+		aux.second = (pair.second - min) / (max - min);
+		normalized.insert(aux);
 	}
 
 	return normalized;
@@ -266,7 +267,7 @@ void ProcessingAlgorithms::histogramEqualization(cv::Mat src, cv::Mat& dst)
 
 	std::map<float, float> cdf = CDF(hist);
 
-	std::map<float, float> normalized = normalizeX(cdf);
+	std::map<float, float> normalized = normalizeY(cdf);
 
 	for (auto& it : normalized)
 		it.second = round(255.0f * it.second);
@@ -306,14 +307,8 @@ void ProcessingAlgorithms::detectEdges(Mat src, Mat& dst)
 	cv::cvtColor(dst, dst, cv::COLOR_BGRA2BGR);
 }
 
-std::map<float, float> normalizeY(const std::map<float, float>& histogram)
+std::map<float, float> normalizeX(const std::map<float, float>& histogram)
 {
-	float maxFrequency = 0;
-	for (const auto& pair : histogram)
-		if (pair.second > maxFrequency)
-			maxFrequency = pair.second;
-
-
 	std::map<float, float> normalized;
 	std::pair<float, float> aux;
 
@@ -339,11 +334,9 @@ void ProcessingAlgorithms::triangleThresholding(cv::Mat src, cv::Mat& dst)
 
 	std::map<float, float> hist = histogram(src);
 
-	std::map<float, float> normalized = normalizeX(hist);
+	std::map<float, float> normalized = normalizeY(hist);
 
-	normalized = normalizeY(normalized);
-
-	float max;
+	int max;
 	for (const auto& pair : normalized)
 		if (pair.second == 1)
 		{
@@ -357,39 +350,31 @@ void ProcessingAlgorithms::triangleThresholding(cv::Mat src, cv::Mat& dst)
 	int threshold;
 	int k = 0;
 
-	if (max < (128.0 / 255.0))
+	if (max < 128)
 	{
 		std::map<float, float>::iterator it = normalized.lower_bound(max);
 		normalized.erase(normalized.begin(), it);
-		normalized = normalizeY(normalized);
-
-		for (const auto& pair : normalized)
-		{
-			distance = (1 - pair.first) - pair.second;
-			if (distance > maxDistance)
-			{
-				maxDistance = distance;
-				threshold = k;
-			}
-			k++;
-		}
 	}
 	else
 	{
 		std::map<float, float>::iterator it = normalized.upper_bound(max);
 		normalized.erase(it, normalized.end());
-		normalized = normalizeY(normalized);
+	}
 
-		for (const auto& pair : normalized)
-		{
+	normalized = normalizeX(normalized);
+
+	for (const auto& pair : normalized)
+	{
+		if (max < 128)
+			distance = (1 - pair.first) - pair.second;
+		else
 			distance = pair.first - pair.second;
-			if (distance > maxDistance)
-			{
-				maxDistance = distance;
-				threshold = k;
-			}
-			k++;
+		if (distance > maxDistance)
+		{
+			maxDistance = distance;
+			threshold = k;
 		}
+		k++;
 	}
 
 	threshold = hist.size() - normalized.size() + threshold;
@@ -397,7 +382,82 @@ void ProcessingAlgorithms::triangleThresholding(cv::Mat src, cv::Mat& dst)
 	binaryThresholding(src, dst, threshold);
 }
 
-void ProcessingAlgorithms::applyingAlgorithms(Mat& image, FrameOptions* options, const short& value)
+std::vector<int> getPascalTriangle(const int& n)
+{
+	std::vector<int> pascalTriangle;
+
+	std::vector<int> result;
+
+	pascalTriangle.push_back(1);
+
+	for (int i = 0; i < n - 1; i++)
+	{
+		for (int j = 0; j <= pascalTriangle.size(); j++)
+		{
+			if (j - 1 == -1 || j == pascalTriangle.size())
+				result.push_back(1);
+			else
+				result.push_back(pascalTriangle[j - 1] + pascalTriangle[j]);
+		}
+
+		pascalTriangle = result;
+		result.clear();
+	}
+	return pascalTriangle;
+}
+
+std::vector<std::vector<int>> matrixMultiplication(const std::vector<int>& pascalTriangle)
+{
+	std::vector<std::vector<int>> kernel;
+
+	for (int i = 0; i < pascalTriangle.size(); i++)
+	{
+		std::vector<int> row;
+		for (int j = 0; j < pascalTriangle.size(); j++)
+			row.push_back(pascalTriangle[i] * pascalTriangle[j]);
+		kernel.push_back(row);
+	}
+
+	return kernel;
+}
+
+void ProcessingAlgorithms::binomial(cv::Mat src, cv::Mat& dst, short kernelSize)
+{
+	if (kernelSize % 2 == 0)
+		kernelSize--;
+
+	dst = cv::Mat(src.rows, src.cols, src.type());
+
+	std::vector<int> pascalTriangle = getPascalTriangle(kernelSize);
+	std::vector<std::vector<int>> kernel = matrixMultiplication(pascalTriangle);
+
+	int channels = src.channels();
+	int sum = 0;
+	int scaling = std::pow(2, (kernelSize - 1) * 2);
+
+	for (int y = 0; y < src.rows - (kernelSize - 1); y++)
+		for (int x = 0; x < src.cols - (kernelSize - 1); x++)
+			for (int c = 0; c < channels; c++)
+			{
+				sum = 0;
+				for (int i = y; i < y + kernelSize; i++)
+					for (int j = x; j < x + kernelSize; j++)
+					{
+						uchar srcPixel = src.at<uchar>(i, j * channels + c);
+						sum = sum + srcPixel * kernel[i - y][j - x];
+					}
+
+				uchar* dstPixel = dst.ptr<uchar>(y + kernelSize / 2) + (x + kernelSize / 2) * channels;
+				dstPixel[c] = sum / scaling;
+			}
+
+	if (src.type() == CV_8UC1)
+		cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
+	if (src.type() == CV_8UC4)
+		cv::cvtColor(dst, dst, cv::COLOR_BGRA2BGR);
+}
+
+void ProcessingAlgorithms::applyingAlgorithms(Mat& image, FrameOptions* options, const short& value, const short& kernel)
 {
 	if (options->getHistogramEqualization())
 		histogramEqualization(image, image);
@@ -413,6 +473,8 @@ void ProcessingAlgorithms::applyingAlgorithms(Mat& image, FrameOptions* options,
 		truncate(image, image, value);
 	if (options->getTriangleThresholding())
 		triangleThresholding(image, image);
+	if (options->getBinomial())
+		binomial(image, image, kernel);
 }
 
 bool ConvertMat2QImage(const Mat& src, QImage& dest) {

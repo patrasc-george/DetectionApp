@@ -105,3 +105,13 @@ bool FrameOptions::getTriangleThresholding() const
 {
 	return triangleThresholding;
 }
+
+void FrameOptions::setBinomial(const short& val)
+{
+	binomial = val;
+}
+
+short FrameOptions::getBinomial() const
+{
+	return binomial;
+}

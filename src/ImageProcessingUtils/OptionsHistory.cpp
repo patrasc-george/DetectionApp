@@ -46,6 +46,9 @@ void OptionsHistory::add(revertable_options prop, short value) {
 	case TRIANGLE_THRESHOLDING:
 		currentStatus.setTriangleThresholding(value);
 		break;
+	case BINOMIAL:
+		currentStatus.setBinomial(value);
+		break;
 	default:
 		return;
 	}
@@ -116,6 +119,8 @@ std::string OptionsHistory::lastChange() {
 		return "histogram equalization";
 	case DETECT_EDGES:
 		return "edges detection";
+	case BINOMIAL:
+		return "binomial";
 	default:
 		return "last action";
 	}

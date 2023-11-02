@@ -75,6 +75,8 @@ public:
 
 	static void triangleThresholding(cv::Mat src, cv::Mat& dst);
 
+	static void binomial(cv::Mat src, cv::Mat& dst, short kernelSize);
+
 	/**
 	* @brief Applies various image processing algorithms based on the provided options.
 	* @details This function applies a series of image processing algorithms to the input image
@@ -84,7 +86,7 @@ public:
 	* @param[in] options A pointer to a FrameOptions object containing the algorithm activation flags.
 	* @param[in] value The threshold value used in some of the algorithms (e.g., binary thresholding).
 	*/
-	static void applyingAlgorithms(cv::Mat& image, FrameOptions* options, const short& value);
+	static void applyingAlgorithms(cv::Mat& image, FrameOptions* options, const short& value, const short& kernel);
 };
 
 

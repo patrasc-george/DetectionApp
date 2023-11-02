@@ -16,6 +16,7 @@ public:
 	QPushButton* screenshot;
 	LabeledSlider* confControl;
 	LabeledSlider* thresholdControl;
+	LabeledSlider* kernelSizeControl;
 	QPushButton* uploadButton;
 
 	QPushButton* zoomIn;
@@ -43,6 +44,7 @@ public:
 	QPushButton* histogramEqualizationButton;
 	QPushButton* detectEdgesButton;
 	QPushButton* triangleThresholdingButton;
+	QPushButton* binomialButton;
 
 	QPushButton* editDetectorsBtn;
 

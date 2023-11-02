@@ -45,6 +45,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 
 	//connect(menu->confControl, &LabeledSlider::sliderReleased, this, &MainWindow::changeMinConfEvent);
 	connect(menu->thresholdControl, &LabeledSlider::valueChanged, this, &MainWindow::changeThresholdEvent);
+	connect(menu->kernelSizeControl, &LabeledSlider::valueChanged, this, &MainWindow::changeKernelSizeEvent);
 	connect(menu->showConfidence, &QCheckBox::clicked, this, [&] {
 		history.add(SHOW_CONFIDENCE, menu->showConfidence->isChecked());
 		statusBar->showMessage(QString("Toggled show confidences %1").arg(menu->showConfidence->isChecked() ? "on" : "off"));
@@ -96,8 +97,15 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 	connect(menu->triangleThresholdingButton, &QPushButton::clicked, this, [&] {
 		history.add(TRIANGLE_THRESHOLDING, menu->triangleThresholdingButton->isChecked());
 		processImage();
-		}
-	);
+		});
+
+	connect(menu->binomialButton, &QPushButton::clicked, this, [&] {
+		if (menu->binomialButton->isChecked())
+			history.add(BINOMIAL, menu->kernelSizeControl->value());
+		else
+			history.add(BINOMIAL, 0);
+		processImage();
+		});
 
 	connect(menu->flipHorizontal, &QCheckBox::clicked, this, [&] {
 		history.add(FLIP_HORIZONTAL, menu->flipHorizontal->isChecked());
@@ -197,6 +205,7 @@ void MainWindow::setOptions()
 	menu->flipVertical->setEnabled(cameraIsOn || imageIsUpload);
 	menu->screenshot->setVisible(cameraIsOn || imageIsUpload);
 	menu->thresholdControl->setVisible((cameraIsOn || imageIsUpload) && thresholdActive());
+	menu->kernelSizeControl->setVisible((cameraIsOn || imageIsUpload) && menu->binomialButton->isChecked());
 	menu->zoomIn->setEnabled(imageIsUpload);
 	menu->zoomOut->setEnabled(imageIsUpload && (imageContainer->getZoomCount() > 0));
 	menu->zoomReset->setEnabled(menu->zoomOut->isEnabled());
@@ -214,6 +223,7 @@ void MainWindow::setOptions()
 	menu->histogramEqualizationButton->setChecked(history.get()->getHistogramEqualization());
 	menu->detectEdgesButton->setChecked(history.get()->getDetectEdges());
 	menu->triangleThresholdingButton->setChecked(history.get()->getTriangleThresholding());
+	menu->binomialButton->setChecked(history.get()->getBinomial());
 
 	menu->binaryThresholdingButton->setEnabled(
 		!menu->zeroThresholdingButton->isChecked() &&
@@ -227,6 +237,7 @@ void MainWindow::setOptions()
 		!menu->binaryThresholdingButton->isChecked() &&
 		!menu->zeroThresholdingButton->isChecked()
 	);
+
 
 	menu->imageAlgorithms->setVisible(cameraIsOn || imageIsUpload);
 
@@ -529,6 +540,13 @@ void MainWindow::changeThresholdEvent() {
 	statusBar->showMessage(QString("Applied binary thresholding: %1").arg(menu->thresholdControl->value()));
 }
 
+void MainWindow::changeKernelSizeEvent()
+{
+	if (imageIsUpload)
+		processImage();
+	statusBar->showMessage(QString("Applied kernel size: %1").arg(menu->kernelSizeControl->value()));
+}
+
 void MainWindow::preventReset() {
 	// prevent the container from losing the zoom applying other actions on the image (e.g. flip) or on resize
 	imageContainer->fitInView(&pixmap, Qt::KeepAspectRatio);
@@ -553,7 +571,7 @@ void MainWindow::selectAlgorithmsEvent() {
 
 	cv::Mat mat;
 	ConvertQImage2Mat(frame, mat);
-	ProcessingAlgorithms::applyingAlgorithms(mat, history.get(), menu->thresholdControl->value());
+	ProcessingAlgorithms::applyingAlgorithms(mat, history.get(), menu->thresholdControl->value(), menu->kernelSizeControl->value());
 	ConvertMat2QImage(mat, frame);
 }
 

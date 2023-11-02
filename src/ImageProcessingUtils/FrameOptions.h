@@ -10,6 +10,7 @@ private:
 	short zeroThresholdingValue = 0;
 	short truncThresholdingValue = 0;
 	short adaptiveThresholdingValue = 0;
+	short binomial = 0;
 	bool histogramEqualization = false;
 	bool detectEdges = false;
 	bool triangleThresholding = false;
@@ -156,4 +157,8 @@ public:
 	void setTriangleThresholding(const bool& val);
 
 	bool getTriangleThresholding() const;
+
+	void setBinomial(const short& val);
+
+	short getBinomial() const;
 };
