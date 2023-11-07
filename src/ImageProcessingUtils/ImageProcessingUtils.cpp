@@ -377,7 +377,14 @@ void ProcessingAlgorithms::triangleThresholding(cv::Mat src, cv::Mat& dst)
 		k++;
 	}
 
-	threshold = hist.size() - normalized.size() + threshold;
+	if (max < 128)
+	{
+		threshold = threshold + normalized.size() * 0.2;
+		threshold = hist.size() - normalized.size() + threshold;
+	}
+	else 
+		threshold = threshold - normalized.size() * 0.2;
+
 	std::cout << threshold << std::endl;
 	binaryThresholding(src, dst, threshold);
 }
