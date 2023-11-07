@@ -1,18 +1,21 @@
 #pragma once
-
 #include "sidemenu/menu.h"
 #include "ModelLoader_window.h"
 #include "ImageProcessingUtils.h"
 #include "custom_widgets/SceneImageViewer.hpp"
-#include <QGraphicsPixmapItem>
 
+#include <DetectorFactory.h>
+#include <QGraphicsPixmapItem>
+#include <QHeaderView>
 #include <QApplication>
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QCoreApplication>
 #include <QStatusBar>
 #include <QStandardPaths>
-#include <DetectorFactory.h>
+#include <QMouseEvent>
+#include <QTableWidget>
+
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -25,6 +28,8 @@ public:
 	QLabel* resLabel;
 	QLabel* fpsLabel;
 	DetectionMat detMat;
+	QMainWindow* magnifierWindow;
+	QTableWidget* magnifierTable;
 
 protected:
 	void closeEvent(QCloseEvent* event) override;
@@ -218,4 +223,8 @@ public:
 	* @note This function assumes the existence of specific UI elements and their interactions.
 	*/
 	void sortButtons();
+
+	void showMagnifierWindow(QPoint imagePoint);
+
+	bool eventFilter(QObject* watched, QEvent* event);
 };

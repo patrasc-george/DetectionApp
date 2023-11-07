@@ -107,6 +107,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 		processImage();
 		});
 
+	connect(menu->magnifier, &QCheckBox::clicked, this, [&] {
+		statusBar->showMessage("Magnifier");
+		imageContainer->installEventFilter(this);
+		return;
+		});
 	connect(menu->flipHorizontal, &QCheckBox::clicked, this, [&] {
 		history.add(FLIP_HORIZONTAL, menu->flipHorizontal->isChecked());
 		statusBar->showMessage("Flipped horizontally");
@@ -206,6 +211,7 @@ void MainWindow::setOptions()
 	menu->screenshot->setVisible(cameraIsOn || imageIsUpload);
 	menu->thresholdControl->setVisible((cameraIsOn || imageIsUpload) && thresholdActive());
 	menu->kernelSizeControl->setVisible((cameraIsOn || imageIsUpload) && menu->binomialButton->isChecked());
+	menu->magnifier->setVisible(cameraIsOn || imageIsUpload);
 	menu->zoomIn->setEnabled(imageIsUpload);
 	menu->zoomOut->setEnabled(imageIsUpload && (imageContainer->getZoomCount() > 0));
 	menu->zoomReset->setEnabled(menu->zoomOut->isEnabled());
@@ -655,4 +661,93 @@ void MainWindow::sortButtons() {
 		menu->undetectedLabel->setText("Undetected");
 	}
 
+}
+
+void MainWindow::showMagnifierWindow(QPoint imagePoint)
+{
+	magnifierWindow = new QMainWindow(this);
+	magnifierTable = new QTableWidget(9, 9, magnifierWindow);
+
+	int cellSize = 60;
+	int tableWidth = 9 * cellSize + 2;
+	int tableHeight = 9 * cellSize + 2;
+
+	magnifierTable->setFixedSize(tableWidth, tableHeight);
+	magnifierTable->horizontalHeader()->setVisible(false);
+	magnifierTable->verticalHeader()->setVisible(false);
+	magnifierTable->setShowGrid(false);
+
+	for (int i = 0; i < 9; i++)
+	{
+		magnifierTable->setRowHeight(i, cellSize);
+		magnifierTable->setColumnWidth(i, cellSize);
+	}
+
+	magnifierWindow->setWindowFlag(Qt::WindowMinMaxButtonsHint, false);
+	magnifierWindow->setWindowTitle("Magnifier");
+	magnifierWindow->setCentralWidget(magnifierTable);
+	magnifierWindow->show();
+
+	int center = 4;
+
+	for (int i = 0; i < 9; i++)
+	{
+		for (int j = 0; j < 9; j++)
+		{
+			int offsetY = i - center;
+			int offsetX = j - center;
+
+			int y = imagePoint.y() + offsetY;
+			int x = imagePoint.x() + offsetX;
+
+			if (x >= 0 && x < frame.width() && y >= 0 && y < frame.height())
+			{
+				QRgb pixel = frame.pixel(x, y);
+
+				int red = qRed(pixel);
+				int green = qGreen(pixel);
+				int blue = qBlue(pixel);
+
+				QColor cellColor = QColor(red, green, blue);
+				QTableWidgetItem* item = new QTableWidgetItem();
+				item->setBackground(QBrush(cellColor));
+
+				QString pixelText = QString("%1\n%2\n%3").arg(red).arg(green).arg(blue);
+				item->setText(pixelText);
+
+				if (red <= 128 & green <= 128 & blue <= 128)
+					item->setForeground(QBrush(Qt::white));
+
+				magnifierTable->setItem(i, j, item);
+			}
+			else
+			{
+				QTableWidgetItem* item = new QTableWidgetItem();
+				item->setBackground(QBrush(Qt::gray));
+				magnifierTable->setItem(i, j, item);
+			}
+		}
+	}
+}
+
+bool MainWindow::eventFilter(QObject* watched, QEvent* event)
+{
+	if (watched == imageContainer)
+	{
+		if (event->type() == QEvent::MouseButtonPress)
+		{
+			QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
+			QPoint clickPoint = mouseEvent->localPos().toPoint();
+
+			QPoint imagePoint = imageContainer->mapToScene(clickPoint).toPoint();
+
+			if (imagePoint.x() >= 0 && imagePoint.x() < frame.width() && imagePoint.y() >= 0 && imagePoint.y() < frame.height())
+			{
+				showMagnifierWindow(imagePoint);
+				imageContainer->removeEventFilter(this);
+			}
+		}
+	}
+
+	return QMainWindow::eventFilter(watched, event);
 }

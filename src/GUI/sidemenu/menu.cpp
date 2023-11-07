@@ -67,6 +67,10 @@ Menu::Menu(QWidget* parent)
 
 	classButtons->setContentLayout(*classesVbox);
 
+	magnifier = new QPushButton();
+	magnifier->setIcon(QIcon(":/assets/magnifier.png"));
+	magnifier->setToolTip("Magnifier");
+
 	zoomIn = new QPushButton();
 	zoomIn->setIcon(QIcon(":/assets/zoom-in_dark.png"));
 	zoomIn->setToolTip("Zoom in");
@@ -105,13 +109,14 @@ Menu::Menu(QWidget* parent)
 
 	// we add the controls in our vertical box
 	QGridLayout* miniButtons = new QGridLayout;
-	miniButtons->addWidget(zoomIn, 0, 0);
-	miniButtons->addWidget(zoomOut, 0, 1);
-	miniButtons->addWidget(zoomReset, 0, 2);
-	miniButtons->addWidget(flipHorizontal, 0, 3);
-	miniButtons->addWidget(flipVertical, 0, 4);
-	miniButtons->addWidget(undoBtn, 0, 5);
-	miniButtons->addWidget(redoBtn, 0, 6);
+	miniButtons->addWidget(magnifier, 0, 0);
+	miniButtons->addWidget(zoomIn, 0, 1);
+	miniButtons->addWidget(zoomOut, 0, 2);
+	miniButtons->addWidget(zoomReset, 0, 3);
+	miniButtons->addWidget(flipHorizontal, 0, 4);
+	miniButtons->addWidget(flipVertical, 0, 5);
+	miniButtons->addWidget(undoBtn, 0, 6);
+	miniButtons->addWidget(redoBtn, 0, 7);
 
 	vbox->addWidget(toggleCamera);
 	vbox->addLayout(miniButtons);

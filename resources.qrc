@@ -14,6 +14,7 @@
 	    <file>assets/maximize_dark.png</file>
         <file>assets/tracker.png</file>
         <file>assets/tracker-hover.png</file>
-	  <file>assets/stylesheet.qss</file>
+		<file>assets/magnifier.png</file>
+		<file>assets/stylesheet.qss</file>
     </qresource>
 </RCC>

@@ -19,6 +19,7 @@ public:
 	LabeledSlider* kernelSizeControl;
 	QPushButton* uploadButton;
 
+	QPushButton* magnifier;
 	QPushButton* zoomIn;
 	QPushButton* zoomOut;
 	QPushButton* zoomReset;

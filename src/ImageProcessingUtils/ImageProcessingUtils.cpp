@@ -385,7 +385,6 @@ void ProcessingAlgorithms::triangleThresholding(cv::Mat src, cv::Mat& dst)
 	else 
 		threshold = threshold - normalized.size() * 0.2;
 
-	std::cout << threshold << std::endl;
 	binaryThresholding(src, dst, threshold);
 }
 
