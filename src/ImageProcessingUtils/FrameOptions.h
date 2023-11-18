@@ -11,8 +11,10 @@ private:
 	short truncThresholdingValue = 0;
 	short adaptiveThresholdingValue = 0;
 	short binomial = 0;
-	bool histogramEqualization = false;
-	bool detectEdges = false;
+	short canny = 0;
+	bool colorHistogramEqualization = false;
+	bool grayscaleHistogramEqualization = false;
+	bool sobel = false;
 	bool triangleThresholding = false;
 	bool showFeatures = false;
 	bool flipH = true; // on camera, it's true by default
@@ -136,29 +138,25 @@ public:
 	 * @brief Sets whether to equalize the histogram of an image or not.
 	 * @param[in] val The boolean value to be set.
 	 */
-	void setHistogramEqualization(const bool& val);
+	void setGrayscaleHistogramEqualization(const bool& val);
 	/**
 	 * @brief Gets whether to equalize the histogram of an image or not.
 	 * @return Returns true if the histogram of an image is to be equalized, otherwise returns false.
 	 */
-	bool getHistogramEqualization() const;
+	bool getGrayscaleHistogramEqualization() const;
 
-	/**
-	 * @brief Sets whether to detect edges in an image or not.
-	 * @param[in] val The boolean value to be set.
-	 */
-	void setDetectEdges(const bool& val);
-	/**
-	 * @brief Gets whether to detect edges in an image or not.
-	 * @return Returns true if edges are to be detected in an image, otherwise returns false.
-	 */
-	bool getDetectEdges() const;
+	void setColorHistogramEqualization(const bool& val);
+	bool getColorHistogramEqualization() const;
+
+	void setSobel(const bool& val);
+	bool getSobel() const;
 
 	void setTriangleThresholding(const bool& val);
-
 	bool getTriangleThresholding() const;
 
 	void setBinomial(const short& val);
-
 	short getBinomial() const;
+
+	void setCanny(const short& val);
+	short getCanny() const;
 };

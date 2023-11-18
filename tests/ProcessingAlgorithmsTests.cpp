@@ -24,7 +24,7 @@ public:
 		cv::Mat input = cv::imread(test_resource("test_image.jpg"));
 		cv::Mat output;
 
-		ProcessingAlgorithms::histogramEqualization(input, output);
+		ProcessingAlgorithms::colorHistogramEqualization(input, output);
 		Assert::IsTrue(RMS_error(output, reference) <= 0.05);
 	}
 

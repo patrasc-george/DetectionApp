@@ -46,14 +46,20 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 	//connect(menu->confControl, &LabeledSlider::sliderReleased, this, &MainWindow::changeMinConfEvent);
 	connect(menu->thresholdControl, &LabeledSlider::valueChanged, this, &MainWindow::changeThresholdEvent);
 	connect(menu->kernelSizeControl, &LabeledSlider::valueChanged, this, &MainWindow::changeKernelSizeEvent);
+	connect(menu->cannyThresholdControl, &LabeledSlider::valueChanged, this, &MainWindow::changeThresholdEvent);
 	connect(menu->showConfidence, &QCheckBox::clicked, this, [&] {
 		history.add(SHOW_CONFIDENCE, menu->showConfidence->isChecked());
 		statusBar->showMessage(QString("Toggled show confidences %1").arg(menu->showConfidence->isChecked() ? "on" : "off"));
 		processImage();
 		});
 
-	connect(menu->histogramEqualizationButton, &QPushButton::clicked, this, [&] {
-		history.add(HISTOGRAM_EQUALIZATION, menu->histogramEqualizationButton->isChecked());
+	connect(menu->grayscaleHistogramEqualizationButton, &QPushButton::clicked, this, [&] {
+		history.add(GRAYSCALE_HISTOGRAM_EQUALIZATION, menu->grayscaleHistogramEqualizationButton->isChecked());
+		processImage();
+		});
+
+	connect(menu->colorHistogramEqualizationButton, &QPushButton::clicked, this, [&] {
+		history.add(COLOR_HISTOGRAM_EQUALIZATION, menu->colorHistogramEqualizationButton->isChecked());
 		processImage();
 		});
 
@@ -89,8 +95,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 		processImage();
 		});
 
-	connect(menu->detectEdgesButton, &QPushButton::clicked, this, [&] {
-		history.add(DETECT_EDGES, menu->detectEdgesButton->isChecked());
+	connect(menu->sobelButton, &QPushButton::clicked, this, [&] {
+		history.add(SOBEL, menu->sobelButton->isChecked());
 		processImage();
 		});
 
@@ -107,7 +113,16 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 		processImage();
 		});
 
+	connect(menu->cannyButton, &QPushButton::clicked, this, [&] {
+		if (menu->cannyButton->isChecked())
+			history.add(CANNY, menu->cannyThresholdControl->value());
+		else
+			history.add(CANNY, 0);
+		processImage();
+		});
+
 	connect(menu->magnifier, &QCheckBox::clicked, this, [&] {
+		zoomReset();
 		statusBar->showMessage("Magnifier");
 		imageContainer->installEventFilter(this);
 		return;
@@ -145,11 +160,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 			imageContainer->fitInView(&pixmap, Qt::KeepAspectRatio);
 		setOptions();
 		});
-	connect(menu->zoomReset, &QPushButton::clicked, [&] {
-		imageContainer->zoomReset();
-		imageContainer->fitInView(&pixmap, Qt::KeepAspectRatio);
-		setOptions();
-		});
+	connect(menu->zoomReset, &QPushButton::clicked, this, &MainWindow::zoomReset);
 	connect(menu->editDetectorsBtn, &QPushButton::clicked, [&] {
 		// open the detectors editor
 		QStringList list;
@@ -211,6 +222,7 @@ void MainWindow::setOptions()
 	menu->screenshot->setVisible(cameraIsOn || imageIsUpload);
 	menu->thresholdControl->setVisible((cameraIsOn || imageIsUpload) && thresholdActive());
 	menu->kernelSizeControl->setVisible((cameraIsOn || imageIsUpload) && menu->binomialButton->isChecked());
+	menu->cannyThresholdControl->setVisible((cameraIsOn || imageIsUpload) && menu->cannyButton->isChecked());
 	menu->magnifier->setVisible(cameraIsOn || imageIsUpload);
 	menu->zoomIn->setEnabled(imageIsUpload);
 	menu->zoomOut->setEnabled(imageIsUpload && (imageContainer->getZoomCount() > 0));
@@ -226,8 +238,9 @@ void MainWindow::setOptions()
 	menu->zeroThresholdingButton->setChecked(history.get()->getZeroThresholdingValue());
 	menu->truncThresholdingButton->setChecked(history.get()->getTruncThresholdingValue());
 	menu->adaptiveThresholdingButton->setChecked(history.get()->getAdaptiveThresholdingValue());
-	menu->histogramEqualizationButton->setChecked(history.get()->getHistogramEqualization());
-	menu->detectEdgesButton->setChecked(history.get()->getDetectEdges());
+	menu->grayscaleHistogramEqualizationButton->setChecked(history.get()->getGrayscaleHistogramEqualization());
+	menu->colorHistogramEqualizationButton->setChecked(history.get()->getColorHistogramEqualization());
+	menu->sobelButton->setChecked(history.get()->getSobel());
 	menu->triangleThresholdingButton->setChecked(history.get()->getTriangleThresholding());
 	menu->binomialButton->setChecked(history.get()->getBinomial());
 
@@ -577,7 +590,7 @@ void MainWindow::selectAlgorithmsEvent() {
 
 	cv::Mat mat;
 	ConvertQImage2Mat(frame, mat);
-	ProcessingAlgorithms::applyingAlgorithms(mat, history.get(), menu->thresholdControl->value(), menu->kernelSizeControl->value());
+	ProcessingAlgorithms::applyingAlgorithms(mat, history.get(), menu->thresholdControl->value(), menu->cannyThresholdControl->value(), menu->kernelSizeControl->value());
 	ConvertMat2QImage(mat, frame);
 }
 
@@ -607,7 +620,8 @@ bool MainWindow::thresholdActive() {
 		menu->binaryThresholdingButton->isChecked() ||
 		menu->zeroThresholdingButton->isChecked() ||
 		menu->adaptiveThresholdingButton->isChecked() ||
-		menu->truncThresholdingButton->isChecked()
+		menu->truncThresholdingButton->isChecked() ||
+		menu->cannyButton->isChecked()
 		);
 }
 
@@ -750,4 +764,11 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
 	}
 
 	return QMainWindow::eventFilter(watched, event);
+}
+
+void MainWindow::zoomReset()
+{
+	imageContainer->zoomReset();
+	imageContainer->fitInView(&pixmap, Qt::KeepAspectRatio);
+	setOptions();
 }

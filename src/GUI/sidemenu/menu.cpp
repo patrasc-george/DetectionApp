@@ -17,6 +17,7 @@ Menu::Menu(QWidget* parent)
 	showConfidence = new QCheckBox("Show confidences");
 	confControl = new LabeledSlider("Min confidence", 1, 99, 5, true);
 	thresholdControl = new LabeledSlider("Threshold", 1, 250, 10);
+	cannyThresholdControl = new LabeledSlider("Threshold", 1, 250, 10);
 	kernelSizeControl = new LabeledSlider("Kernel", 1, 10, 2);
 	uploadButton = new QPushButton("Upload image");
 
@@ -30,14 +31,18 @@ Menu::Menu(QWidget* parent)
 	truncThresholdingButton->setCheckable(true);
 	adaptiveThresholdingButton = new QPushButton("Adaptive Thresholding", imageAlgorithms);
 	adaptiveThresholdingButton->setCheckable(true);
-	histogramEqualizationButton = new QPushButton("Histogram Equalization", imageAlgorithms);
-	histogramEqualizationButton->setCheckable(true);
-	detectEdgesButton = new QPushButton("Detect Edges", imageAlgorithms);
-	detectEdgesButton->setCheckable(true);
+	grayscaleHistogramEqualizationButton = new QPushButton("Grayscale Histogram Equalization", imageAlgorithms);
+	grayscaleHistogramEqualizationButton->setCheckable(true);
+	colorHistogramEqualizationButton = new QPushButton("Color Histogram Equalization", imageAlgorithms);
+	colorHistogramEqualizationButton->setCheckable(true);
+	sobelButton = new QPushButton("Sobel", imageAlgorithms);
+	sobelButton->setCheckable(true);
 	triangleThresholdingButton = new QPushButton("Triangle Thresholding", imageAlgorithms);
 	triangleThresholdingButton->setCheckable(true);
 	binomialButton = new QPushButton("Binomial", imageAlgorithms);
 	binomialButton->setCheckable(true);
+	cannyButton = new QPushButton("Canny", imageAlgorithms);
+	cannyButton->setCheckable(true);
 
 	editDetectorsBtn = new QPushButton("Edit detectors");
 
@@ -46,10 +51,12 @@ Menu::Menu(QWidget* parent)
 	algVbox->addWidget(zeroThresholdingButton);
 	algVbox->addWidget(truncThresholdingButton);
 	algVbox->addWidget(adaptiveThresholdingButton);
-	algVbox->addWidget(histogramEqualizationButton);
-	algVbox->addWidget(detectEdgesButton);
+	algVbox->addWidget(grayscaleHistogramEqualizationButton);
+	algVbox->addWidget(colorHistogramEqualizationButton);
+	algVbox->addWidget(sobelButton);
 	algVbox->addWidget(triangleThresholdingButton);
 	algVbox->addWidget(binomialButton);
+	algVbox->addWidget(cannyButton);
 	imageAlgorithms->setContentLayout(*algVbox);
 
 	detectedClassesVbox = new QVBoxLayout;
@@ -142,6 +149,7 @@ Menu::Menu(QWidget* parent)
 	vbox->addWidget(showConfidence);
 	vbox->addWidget(confControl);
 	vbox->addWidget(thresholdControl);
+	vbox->addWidget(cannyThresholdControl);
 	vbox->addWidget(kernelSizeControl);
 
 	vbox->addStretch(1); // add spacing so the next controls will appear at the bottom of the menu

@@ -80,20 +80,28 @@ short FrameOptions::getAdaptiveThresholdingValue() const {
 	return adaptiveThresholdingValue;
 }
 
-void FrameOptions::setHistogramEqualization(const bool& val) {
-	histogramEqualization = val;
+void FrameOptions::setGrayscaleHistogramEqualization(const bool& val) {
+	grayscaleHistogramEqualization = val;
 }
 
-bool FrameOptions::getHistogramEqualization() const {
-	return histogramEqualization;
+bool FrameOptions::getGrayscaleHistogramEqualization() const {
+	return grayscaleHistogramEqualization;
 }
 
-void FrameOptions::setDetectEdges(const bool& val) {
-	detectEdges = val;
+void FrameOptions::setColorHistogramEqualization(const bool& val) {
+	colorHistogramEqualization = val;
 }
 
-bool FrameOptions::getDetectEdges() const {
-	return detectEdges;
+bool FrameOptions::getColorHistogramEqualization() const {
+	return colorHistogramEqualization;
+}
+
+void FrameOptions::setSobel(const bool& val) {
+	sobel = val;
+}
+
+bool FrameOptions::getSobel() const {
+	return sobel;
 }
 
 void FrameOptions::setTriangleThresholding(const bool& val)
@@ -114,4 +122,13 @@ void FrameOptions::setBinomial(const short& val)
 short FrameOptions::getBinomial() const
 {
 	return binomial;
+}
+
+void FrameOptions::setCanny(const short& val)
+{
+	canny = val;
+}
+short FrameOptions::getCanny() const
+{
+	return canny;
 }

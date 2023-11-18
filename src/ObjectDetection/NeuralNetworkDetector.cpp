@@ -17,7 +17,7 @@ NeuralNetworkDetector::NeuralNetworkDetector(const std::string& modelFilePath, c
 	loadClasses(this->classesFilePath);
 }
 
-NeuralNetworkDetector::NeuralNetworkDetector() : confidenceThreshold(0.5) 
+NeuralNetworkDetector::NeuralNetworkDetector() : confidenceThreshold(0.5)
 {
 }
 

@@ -31,9 +31,9 @@ void Detection::render(cv::Mat& image) const {
 				, cv::FONT_HERSHEY_SIMPLEX, 0.7, shapeColor, 2);
 			break;
 		case Circle:
-			circle(image, 
-				cv::Point(rect.x + rect.width / 2, rect.y + rect.height / 2), 
-				cvRound((rect.width + rect.height) * 0.25), 
+			circle(image,
+				cv::Point(rect.x + rect.width / 2, rect.y + rect.height / 2),
+				cvRound((rect.width + rect.height) * 0.25),
 				cv::Scalar(239, 190, 98), 2);
 			break;
 		}

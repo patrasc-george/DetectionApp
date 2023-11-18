@@ -61,32 +61,27 @@ public:
 	 The resulting image is a grayscale image with improved contrast.
 	 * @param[in,out] image The image to be processed.
 	 */
-	static void histogramEqualization(cv::Mat src, cv::Mat& dst);
+	static void grayscaleHistogramEqualization(cv::Mat src, cv::Mat& dst);
 
-	/**
-	 * @brief Detects edges in an image using the Laplacian operator.
-	 * @details This function detects edges in an image using OpenCV's Laplacian function.
-	 It applies the Laplacian operator to the image, which calculates the second derivative of its intensity values.
-	 This highlights regions of rapid intensity change, which correspond to edges in the original image.
-	 The resulting edge map is then normalized and scaled to fit within the 0-255 range so that it can be displayed as a grayscale image.
-	 * @param[in,out] image The image to be processed.
-	 */
-	static void detectEdges(cv::Mat src, cv::Mat& dst);
+
+	static void colorHistogramEqualization(cv::Mat src, cv::Mat& dst);
+
+	static void sobel(cv::Mat src, cv::Mat& dst, cv::Mat* Gx = nullptr, cv::Mat* Gy = nullptr);
 
 	static void triangleThresholding(cv::Mat src, cv::Mat& dst);
 
 	static void binomial(cv::Mat src, cv::Mat& dst, short kernelSize);
 
+	static void canny(cv::Mat src, cv::Mat& dst, short threshold1, short threshold2);
 	/**
 	* @brief Applies various image processing algorithms based on the provided options.
 	* @details This function applies a series of image processing algorithms to the input image
-	based on the specified options. The algorithms include histogram equalization, binary thresholding,
-	adaptive thresholding, zero thresholding, edge detection, and truncation.
+	based on the specified options.
 	* @param[in,out] image The input and output cv::Mat image to be processed.
 	* @param[in] options A pointer to a FrameOptions object containing the algorithm activation flags.
 	* @param[in] value The threshold value used in some of the algorithms (e.g., binary thresholding).
 	*/
-	static void applyingAlgorithms(cv::Mat& image, FrameOptions* options, const short& value, const short& kernel);
+	static void applyingAlgorithms(cv::Mat& image, FrameOptions* options, const short& value1, const short& value2, const short& kernel);
 };
 
 

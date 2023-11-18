@@ -13,13 +13,13 @@
 
 class OBJECTDETECTION_API Detector : public Serializable {
 public:
-    virtual ~Detector() = default;
-    virtual DetectionMat detect(const cv::Mat& image) = 0;
+	virtual ~Detector() = default;
+	virtual DetectionMat detect(const cv::Mat& image) = 0;
 
-    virtual ThresholdAdjuster* toThresholdAdjuster() {
-        return nullptr;
-    }
-    virtual CanToggleObjects* toObjectToggler() {
-        return nullptr;
-    }
+	virtual ThresholdAdjuster* toThresholdAdjuster() {
+		return nullptr;
+	}
+	virtual CanToggleObjects* toObjectToggler() {
+		return nullptr;
+	}
 };

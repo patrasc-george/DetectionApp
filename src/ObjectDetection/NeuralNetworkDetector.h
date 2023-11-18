@@ -7,40 +7,40 @@
 
 class OBJECTDETECTION_API NeuralNetworkDetector : public Detector, ThresholdAdjuster, CanToggleObjects {
 public:
-    NeuralNetworkDetector(const std::string& modelFilePath, const std::string& configFilePath, const std::string& classesFilePath);
-    NeuralNetworkDetector();
-    DetectionMat detect(const cv::Mat& image) override;
-    void adjustThreshold(float newThreshold) override;
-    float getCurrentThreshold() override;
+	NeuralNetworkDetector(const std::string& modelFilePath, const std::string& configFilePath, const std::string& classesFilePath);
+	NeuralNetworkDetector();
+	DetectionMat detect(const cv::Mat& image) override;
+	void adjustThreshold(float newThreshold) override;
+	float getCurrentThreshold() override;
 
-    void loadClasses(const std::string& classesFilePath);
+	void loadClasses(const std::string& classesFilePath);
 
-    void enableObject(const std::string& label, bool enable) override;
-    bool isObjectEnabled(const std::string& label) const override;
+	void enableObject(const std::string& label, bool enable) override;
+	bool isObjectEnabled(const std::string& label) const override;
 
-    void serialize(const std::string& filename) const override;
-    void deserialize(const std::string& filename) override;
-    std::string getSerializationFile() const override;
+	void serialize(const std::string& filename) const override;
+	void deserialize(const std::string& filename) override;
+	std::string getSerializationFile() const override;
 
-    std::vector<std::string> getObjectLabels() const override;
+	std::vector<std::string> getObjectLabels() const override;
 
-    ThresholdAdjuster* toThresholdAdjuster() override;
-    CanToggleObjects* toObjectToggler() override;
+	ThresholdAdjuster* toThresholdAdjuster() override;
+	CanToggleObjects* toObjectToggler() override;
 
-    std::string getModelFile() { return modelFilePath; }
-    std::string getClassesFile() { return classesFilePath; }
-    std::string getConfigFile() { return configFilePath; }
+	std::string getModelFile() { return modelFilePath; }
+	std::string getClassesFile() { return classesFilePath; }
+	std::string getConfigFile() { return configFilePath; }
 protected:
-    cv::dnn::Net net;
-    std::vector<std::string> classNames;
-    float confidenceThreshold;
-    std::unordered_map<std::string, bool> objectEnabledMap;
+	cv::dnn::Net net;
+	std::vector<std::string> classNames;
+	float confidenceThreshold;
+	std::unordered_map<std::string, bool> objectEnabledMap;
 
-    std::string modelFilePath;
-    std::string classesFilePath;
+	std::string modelFilePath;
+	std::string classesFilePath;
 
-    std::string serializationFile;
+	std::string serializationFile;
 
 private:
-    std::string configFilePath;
+	std::string configFilePath;
 };

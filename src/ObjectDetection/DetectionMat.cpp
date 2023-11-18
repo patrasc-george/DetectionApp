@@ -5,9 +5,9 @@ void DetectionMat::add(std::shared_ptr<Detection>& detection) {
 }
 
 void DetectionMat::add(const DetectionMat& other) {
-    for (auto& det : other.getAll()) {
-        detections.push_back(std::make_shared<Detection>(det));
-    }
+	for (auto& det : other.getAll()) {
+		detections.push_back(std::make_shared<Detection>(det));
+	}
 }
 
 void DetectionMat::sortByConfidence() {

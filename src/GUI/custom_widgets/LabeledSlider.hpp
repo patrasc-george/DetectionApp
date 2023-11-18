@@ -69,7 +69,7 @@ public:
 				}
 				break;
 			}
-		});
+			});
 
 		slider->setValue((int)(min + max) / 2);
 	}

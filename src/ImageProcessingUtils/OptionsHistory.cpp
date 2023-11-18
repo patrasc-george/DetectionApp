@@ -37,17 +37,23 @@ void OptionsHistory::add(revertable_options prop, short value) {
 	case ADAPTIVE_THRESHOLDING:
 		currentStatus.setAdaptiveThresholdingValue(value);
 		break;
-	case HISTOGRAM_EQUALIZATION:
-		currentStatus.setHistogramEqualization(value);
+	case GRAYSCALE_HISTOGRAM_EQUALIZATION:
+		currentStatus.setGrayscaleHistogramEqualization(value);
 		break;
-	case DETECT_EDGES:
-		currentStatus.setDetectEdges(value);
+	case COLOR_HISTOGRAM_EQUALIZATION:
+		currentStatus.setColorHistogramEqualization(value);
+		break;
+	case SOBEL:
+		currentStatus.setSobel(value);
 		break;
 	case TRIANGLE_THRESHOLDING:
 		currentStatus.setTriangleThresholding(value);
 		break;
 	case BINOMIAL:
 		currentStatus.setBinomial(value);
+		break;
+	case CANNY:
+		currentStatus.setCanny(value);
 		break;
 	default:
 		return;
@@ -115,12 +121,18 @@ std::string OptionsHistory::lastChange() {
 		return "Truncate Thresholding";
 	case ADAPTIVE_THRESHOLDING:
 		return "adaptive thresholding";
-	case HISTOGRAM_EQUALIZATION:
+	case GRAYSCALE_HISTOGRAM_EQUALIZATION:
+		return "grayscale histogram equalization";
+	case COLOR_HISTOGRAM_EQUALIZATION:
 		return "histogram equalization";
-	case DETECT_EDGES:
-		return "edges detection";
+	case SOBEL:
+		return "sobel";
+	case TRIANGLE_THRESHOLDING:
+		return "triangle thresholding";
 	case BINOMIAL:
 		return "binomial";
+	case CANNY:
+		return "canny";
 	default:
 		return "last action";
 	}

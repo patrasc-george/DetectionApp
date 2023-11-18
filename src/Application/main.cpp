@@ -14,6 +14,7 @@ int main(int argc, char* argv[]) {
 	QString styleSheet = QLatin1String(file.readAll());
 	qApp->setStyleSheet(styleSheet);
 
+	window.move(0, 0);
 	window.setWindowTitle("Detection App");
 	window.show();
 	window.setWindowIcon(QIcon(":/assets/camera_dark.png"));

@@ -17,6 +17,7 @@ public:
 	LabeledSlider* confControl;
 	LabeledSlider* thresholdControl;
 	LabeledSlider* kernelSizeControl;
+	LabeledSlider* cannyThresholdControl;
 	QPushButton* uploadButton;
 
 	QPushButton* magnifier;
@@ -42,11 +43,12 @@ public:
 	QPushButton* zeroThresholdingButton;
 	QPushButton* truncThresholdingButton;
 	QPushButton* adaptiveThresholdingButton;
-	QPushButton* histogramEqualizationButton;
-	QPushButton* detectEdgesButton;
+	QPushButton* grayscaleHistogramEqualizationButton;
+	QPushButton* colorHistogramEqualizationButton;
+	QPushButton* sobelButton;
 	QPushButton* triangleThresholdingButton;
 	QPushButton* binomialButton;
-
+	QPushButton* cannyButton;
 	QPushButton* editDetectorsBtn;
 
 public:

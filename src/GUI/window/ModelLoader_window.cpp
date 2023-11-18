@@ -77,7 +77,7 @@ DetectorEditor::DetectorEditor(const QString& path = "", QWidget* parent) : QDia
 		});
 	connect(primaryList, &QComboBox::currentIndexChanged, this, [&] {
 		emit setPrimary(primaryList->currentIndex());
-	});
+		});
 
 	connect(ok, &QPushButton::clicked, this, &DetectorEditor::submit);
 
@@ -214,7 +214,7 @@ void DetectorEditor::submit() {
 			if (widget) {
 				DetectorFileWidget* file_w = qobject_cast<DetectorFileWidget*>(widget);
 				if (file_w)
-					map[file_w->changeLabel->text().toStdString()] = { file_w->fileName->text().toStdString(), file_w->circle->isChecked() ? Detection::Circle : Detection::Rectangle};
+					map[file_w->changeLabel->text().toStdString()] = { file_w->fileName->text().toStdString(), file_w->circle->isChecked() ? Detection::Circle : Detection::Rectangle };
 			}
 		}
 		auto it = map.begin();
@@ -346,7 +346,7 @@ void DetectorListWindow::addDetectorRequest() {
 			item->setFlags(Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled);
 		}
 		emit detectorAdded();
-	});
+		});
 }
 
 void DetectorListWindow::removeDetectorsRequest() {
@@ -488,8 +488,8 @@ DetectorFileWidget::DetectorFileWidget(const QString& role, DetectorEditor* detE
 			fileName->setText(file);
 		}
 		fileName->setVisible(true);
-	});
-	
+		});
+
 	fileName->setStyleSheet("QLabel { color: gray;}");
 	fileName->setWordWrap(true);
 
@@ -531,12 +531,12 @@ DetectorFileWidget::DetectorFileWidget(const QString& role, DetectorEditor* detE
 				shape = 0;
 			else
 				shape = 1;
-		});
+			});
 		connect(editor, &DetectorEditor::setPrimary, this, [&, shapeLabel](int index) {
 			rect->setVisible(index != this->index);
 			circle->setVisible(index != this->index);
 			shapeLabel->setVisible(index != this->index);
-		});
+			});
 		connect(changeLabel, &QLineEdit::textChanged, this, &DetectorFileWidget::onLabelChanged);
 	}
 }

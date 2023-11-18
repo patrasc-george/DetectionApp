@@ -227,4 +227,6 @@ public:
 	void showMagnifierWindow(QPoint imagePoint);
 
 	bool eventFilter(QObject* watched, QEvent* event);
+
+	void zoomReset();
 };
