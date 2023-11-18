@@ -215,6 +215,8 @@ public:
 	*/
 	bool thresholdActive();
 
+	bool kernelActive();
+
 	/**
 	* @brief Sorts and updates buttons in the user interface based on detection results.
 	* @details This function sorts the buttons in the user interface based on detection results

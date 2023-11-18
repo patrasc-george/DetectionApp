@@ -100,7 +100,7 @@ void FrameOptions::setSobel(const bool& val) {
 	sobel = val;
 }
 
-bool FrameOptions::getSobel() const {
+short FrameOptions::getSobel() const {
 	return sobel;
 }
 

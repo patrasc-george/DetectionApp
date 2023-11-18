@@ -422,12 +422,12 @@ std::vector<std::vector<int>> matrixMultiplication(const std::vector<int>& pasca
 	return kernel;
 }
 
-template<typename T>
-void applyKernel(cv::Mat src, cv::Mat& dst, std::vector<std::vector<int>> kernel, int scaling = 1)
+template<typename T1, typename T2>
+void applyKernel(cv::Mat src, cv::Mat& dst, std::vector<std::vector<T2>> kernel, int scaling = 1)
 {
 	int kernelSize = kernel.size() / 2;
 	int channels = src.channels();
-	int sum = 0;
+	T2 sum = 0;
 	for (int y = kernelSize; y < src.rows - kernelSize; y++)
 		for (int x = kernelSize; x < src.cols - kernelSize; x++)
 			for (int c = 0; c < channels; c++)
@@ -439,7 +439,7 @@ void applyKernel(cv::Mat src, cv::Mat& dst, std::vector<std::vector<int>> kernel
 						uchar srcPixel = src.at<uchar>(y + i, (x + j) * channels + c);
 						sum = sum + srcPixel * kernel[i + kernelSize][j + kernelSize];
 					}
-				T* dstPixel = dst.ptr<T>(y) + x * channels + c;
+				T1* dstPixel = dst.ptr<T1>(y) + x * channels + c;
 				dstPixel[0] = sum / scaling;
 			}
 }
@@ -463,21 +463,46 @@ void ProcessingAlgorithms::binomial(cv::Mat src, cv::Mat& dst, short kernelSize)
 		cv::cvtColor(dst, dst, cv::COLOR_BGRA2BGR);
 }
 
-void ProcessingAlgorithms::sobel(cv::Mat src, cv::Mat& dst, cv::Mat* Gx, cv::Mat* Gy)
+void sobelKernel(short kernelSize, std::vector<std::vector<float>>& kernelX, std::vector<std::vector<float>>& kernelY)
+{
+	kernelSize = kernelSize / 2;
+	for (int i = -kernelSize; i <= kernelSize; i++)
+	{
+		std::vector<float> rowX, rowY;
+		for (int j = -kernelSize; j <= kernelSize; j++)
+		{
+			if (i == 0 && j == 0)
+			{
+				rowX.push_back(0);
+				rowY.push_back(0);
+				continue;
+			}
+			rowX.push_back((j / (std::pow(i, 2) + std::pow(j, 2))) * 2);
+			rowY.push_back((i / (std::pow(i, 2) + std::pow(j, 2))) * 2);
+		}
+		kernelX.push_back(rowX);
+		kernelY.push_back(rowY);
+	}
+}
+
+void ProcessingAlgorithms::sobel(cv::Mat src, cv::Mat& dst, short kernelSize, cv::Mat* Gx, cv::Mat* Gy)
 {
 	if (src.type() != CV_8UC1)
 		cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
 
-	cv::GaussianBlur(src, src, cv::Size(3, 3), 1, 1);
+	if (kernelSize % 2 == 0)
+		kernelSize--;
+
+	cv::GaussianBlur(src, src, cv::Size(kernelSize, kernelSize), 1, 1);
 
 	cv::Mat auxMagnitude(src.size(), CV_32FC1);
 	cv::Mat auxGx(src.size(), CV_32FC1);
 	cv::Mat auxGy(src.size(), CV_32FC1);
 
+	std::vector<std::vector<float>> kernelX, kernelY;
+	sobelKernel(kernelSize, kernelX, kernelY);
 
-	std::vector<std::vector<int>> kernelX = { {-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1} };
-	std::vector<std::vector<int>> kernelY = { {-1, -2, -1}, {0, 0, 0}, {1, 2, 1} };
-	int kernelSize = 1;
+	kernelSize = kernelSize / 2;
 
 	applyKernel<float>(src, auxGx, kernelX);
 
@@ -537,11 +562,11 @@ void nonMaximumSuppression(cv::Mat& dst, cv::Mat magnitude, cv::Mat directions)
 		}
 }
 
-void ProcessingAlgorithms::canny(cv::Mat src, cv::Mat& dst, short threshold1, short threshold2)
+void ProcessingAlgorithms::canny(cv::Mat src, cv::Mat& dst, short threshold1, short threshold2, short kernelSize)
 {
 	cv::Mat Gx, Gy, GxGy, magnitude, directions;
 
-	sobel(src, magnitude, &Gx, &Gy);
+	sobel(src, magnitude, kernelSize, &Gx, &Gy);
 
 	cv::phase(Gx, Gy, directions, true);
 
@@ -585,7 +610,7 @@ void ProcessingAlgorithms::applyingAlgorithms(Mat& image, FrameOptions* options,
 	if (options->getZeroThresholdingValue())
 		zeroThresholding(image, image, value1);
 	if (options->getSobel())
-		sobel(image, image);
+		sobel(image, image, kernel);
 	if (options->getTruncThresholdingValue())
 		truncate(image, image, value1);
 	if (options->getTriangleThresholding())
@@ -593,7 +618,7 @@ void ProcessingAlgorithms::applyingAlgorithms(Mat& image, FrameOptions* options,
 	if (options->getBinomial())
 		binomial(image, image, kernel);
 	if (options->getCanny())
-		canny(image, image, value1, value2);
+		canny(image, image, value1, value2, kernel);
 }
 
 bool ConvertMat2QImage(const Mat& src, QImage& dest) {

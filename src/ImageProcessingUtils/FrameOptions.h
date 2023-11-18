@@ -11,10 +11,10 @@ private:
 	short truncThresholdingValue = 0;
 	short adaptiveThresholdingValue = 0;
 	short binomial = 0;
+	short sobel = 0;
 	short canny = 0;
 	bool colorHistogramEqualization = false;
 	bool grayscaleHistogramEqualization = false;
-	bool sobel = false;
 	bool triangleThresholding = false;
 	bool showFeatures = false;
 	bool flipH = true; // on camera, it's true by default
@@ -149,7 +149,7 @@ public:
 	bool getColorHistogramEqualization() const;
 
 	void setSobel(const bool& val);
-	bool getSobel() const;
+	short getSobel() const;
 
 	void setTriangleThresholding(const bool& val);
 	bool getTriangleThresholding() const;

@@ -96,7 +96,10 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 		});
 
 	connect(menu->sobelButton, &QPushButton::clicked, this, [&] {
-		history.add(SOBEL, menu->sobelButton->isChecked());
+		if (menu->sobelButton->isChecked())
+			history.add(SOBEL, menu->kernelSizeControl->value());
+		else
+			history.add(SOBEL, 0);
 		processImage();
 		});
 
@@ -221,7 +224,7 @@ void MainWindow::setOptions()
 	menu->flipVertical->setEnabled(cameraIsOn || imageIsUpload);
 	menu->screenshot->setVisible(cameraIsOn || imageIsUpload);
 	menu->thresholdControl->setVisible((cameraIsOn || imageIsUpload) && thresholdActive());
-	menu->kernelSizeControl->setVisible((cameraIsOn || imageIsUpload) && menu->binomialButton->isChecked());
+	menu->kernelSizeControl->setVisible((cameraIsOn || imageIsUpload) && kernelActive());
 	menu->cannyThresholdControl->setVisible((cameraIsOn || imageIsUpload) && menu->cannyButton->isChecked());
 	menu->magnifier->setVisible(cameraIsOn || imageIsUpload);
 	menu->zoomIn->setEnabled(imageIsUpload);
@@ -243,6 +246,7 @@ void MainWindow::setOptions()
 	menu->sobelButton->setChecked(history.get()->getSobel());
 	menu->triangleThresholdingButton->setChecked(history.get()->getTriangleThresholding());
 	menu->binomialButton->setChecked(history.get()->getBinomial());
+	menu->cannyButton->setChecked(history.get()->getCanny());
 
 	menu->binaryThresholdingButton->setEnabled(
 		!menu->zeroThresholdingButton->isChecked() &&
@@ -623,6 +627,13 @@ bool MainWindow::thresholdActive() {
 		menu->truncThresholdingButton->isChecked() ||
 		menu->cannyButton->isChecked()
 		);
+}
+
+bool MainWindow::kernelActive() {
+	return(
+		menu->binomialButton->isChecked() ||
+		menu->sobelButton->isChecked() ||
+		menu->cannyButton->isChecked());
 }
 
 void MainWindow::sortButtons() {

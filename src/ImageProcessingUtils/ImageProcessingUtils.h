@@ -66,13 +66,13 @@ public:
 
 	static void colorHistogramEqualization(cv::Mat src, cv::Mat& dst);
 
-	static void sobel(cv::Mat src, cv::Mat& dst, cv::Mat* Gx = nullptr, cv::Mat* Gy = nullptr);
+	static void sobel(cv::Mat src, cv::Mat& dst, short kernelSize = 3, cv::Mat* Gx = nullptr, cv::Mat* Gy = nullptr);
 
 	static void triangleThresholding(cv::Mat src, cv::Mat& dst);
 
 	static void binomial(cv::Mat src, cv::Mat& dst, short kernelSize);
 
-	static void canny(cv::Mat src, cv::Mat& dst, short threshold1, short threshold2);
+	static void canny(cv::Mat src, cv::Mat& dst, short threshold1, short threshold2, short kernelSize);
 	/**
 	* @brief Applies various image processing algorithms based on the provided options.
 	* @details This function applies a series of image processing algorithms to the input image
