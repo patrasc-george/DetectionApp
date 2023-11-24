@@ -66,7 +66,7 @@ public:
 
 	static void colorHistogramEqualization(cv::Mat src, cv::Mat& dst);
 
-	static void sobel(cv::Mat src, cv::Mat& dst, short kernelSize = 3, cv::Mat* Gx = nullptr, cv::Mat* Gy = nullptr);
+	static void sobel(cv::Mat src, cv::Mat& dst, short kernelSize = 3, cv::Mat* Gx = nullptr, cv::Mat* Gy = nullptr, cv::Mat* magnitude = nullptr);
 
 	static void triangleThresholding(cv::Mat src, cv::Mat& dst);
 

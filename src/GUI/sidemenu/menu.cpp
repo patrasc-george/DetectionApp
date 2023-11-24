@@ -17,7 +17,7 @@ Menu::Menu(QWidget* parent)
 	showConfidence = new QCheckBox("Show confidences");
 	confControl = new LabeledSlider("Min confidence", 1, 99, 5, true);
 	thresholdControl = new LabeledSlider("Threshold", 1, 250, 10);
-	cannyThresholdControl = new LabeledSlider("Threshold", 1, 250, 10);
+	cannyThresholdControl = new LabeledSlider("Threshold", 1, 250, 5);
 	kernelSizeControl = new LabeledSlider("Kernel", 1, 10, 2);
 	uploadButton = new QPushButton("Upload image");
 

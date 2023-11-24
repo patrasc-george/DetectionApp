@@ -485,7 +485,7 @@ void sobelKernel(short kernelSize, std::vector<std::vector<float>>& kernelX, std
 	}
 }
 
-void ProcessingAlgorithms::sobel(cv::Mat src, cv::Mat& dst, short kernelSize, cv::Mat* Gx, cv::Mat* Gy)
+void ProcessingAlgorithms::sobel(cv::Mat src, cv::Mat& dst, short kernelSize, cv::Mat* Gx, cv::Mat* Gy, cv::Mat* magnitude)
 {
 	if (src.type() != CV_8UC1)
 		cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
@@ -516,6 +516,8 @@ void ProcessingAlgorithms::sobel(cv::Mat src, cv::Mat& dst, short kernelSize, cv
 		*Gx = auxGx;
 	if (Gy != nullptr)
 		*Gy = auxGy;
+	if (magnitude != nullptr)
+		*magnitude = auxMagnitude;
 
 	cv::convertScaleAbs(auxMagnitude, dst);
 	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
@@ -523,8 +525,6 @@ void ProcessingAlgorithms::sobel(cv::Mat src, cv::Mat& dst, short kernelSize, cv
 
 void nonMaximumSuppression(cv::Mat& dst, cv::Mat magnitude, cv::Mat directions)
 {
-	cv::cvtColor(magnitude, magnitude, cv::COLOR_BGR2GRAY);
-
 	dst = cv::Mat(magnitude.size(), CV_8UC1);
 
 	for (int y = 1; y < magnitude.rows - 1; y++)
@@ -532,33 +532,33 @@ void nonMaximumSuppression(cv::Mat& dst, cv::Mat magnitude, cv::Mat directions)
 		{
 			float direction = fmod(directions.at<float>(y, x), 180.0f);
 
-			uchar pixel = magnitude.at<uchar>(y, x);
-			uchar pixel1, pixel2;
+			float pixel = magnitude.at<float>(y, x);
+			float pixel1, pixel2;
 
 			if ((direction >= 0 && direction < 22.5) || (direction >= 157.5 && direction <= 180))
 			{
-				pixel1 = magnitude.at<uchar>(y, x - 1);
-				pixel2 = magnitude.at<uchar>(y, x + 1);
+				pixel1 = magnitude.at<float>(y, x - 1);
+				pixel2 = magnitude.at<float>(y, x + 1);
 			}
 			else if (direction >= 22.5 && direction < 67.5)
 			{
-				pixel1 = magnitude.at<uchar>(y - 1, x + 1);
-				pixel2 = magnitude.at<uchar>(y + 1, x - 1);
+				pixel1 = magnitude.at<float>(y - 1, x - 1);
+				pixel2 = magnitude.at<float>(y + 1, x + 1);
 			}
 			else if (direction >= 67.5 && direction < 112.5)
 			{
-				pixel1 = magnitude.at<uchar>(y - 1, x);
-				pixel2 = magnitude.at<uchar>(y + 1, x);
+				pixel1 = magnitude.at<float>(y - 1, x);
+				pixel2 = magnitude.at<float>(y + 1, x);
 			}
 			else if (direction >= 112.5 && direction <= 157.5)
 			{
-				pixel1 = magnitude.at<uchar>(y - 1, x - 1);
-				pixel2 = magnitude.at<uchar>(y + 1, x + 1);
+				pixel1 = magnitude.at<float>(y - 1, x + 1);
+				pixel2 = magnitude.at<float>(y + 1, x - 1);
 			}
-			if (pixel <= pixel1 || pixel <= pixel2)
+			if (pixel <= pixel1 || pixel < pixel2)
 				dst.at<uchar>(y, x) = 0;
 			else
-				dst.at<uchar>(y, x) = pixel;
+				dst.at<uchar>(y, x) = static_cast<int>(pixel);
 		}
 }
 
@@ -566,7 +566,7 @@ void ProcessingAlgorithms::canny(cv::Mat src, cv::Mat& dst, short threshold1, sh
 {
 	cv::Mat Gx, Gy, GxGy, magnitude, directions;
 
-	sobel(src, magnitude, kernelSize, &Gx, &Gy);
+	sobel(src, dst, kernelSize, &Gx, &Gy, &magnitude);
 
 	cv::phase(Gx, Gy, directions, true);
 
@@ -594,6 +594,7 @@ void ProcessingAlgorithms::canny(cv::Mat src, cv::Mat& dst, short threshold1, sh
 
 			}
 		}
+
 	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
 }
 
