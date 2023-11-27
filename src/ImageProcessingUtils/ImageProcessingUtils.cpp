@@ -527,35 +527,43 @@ void nonMaximumSuppression(cv::Mat& dst, cv::Mat magnitude, cv::Mat directions)
 {
 	dst = cv::Mat(magnitude.size(), CV_8UC1);
 
-	for (int y = 1; y < magnitude.rows - 1; y++)
-		for (int x = 1; x < magnitude.cols - 1; x++)
+	for (int y = 2; y < magnitude.rows - 2; y++)
+		for (int x = 2; x < magnitude.cols - 2; x++)
 		{
 			float direction = fmod(directions.at<float>(y, x), 180.0f);
 
 			float pixel = magnitude.at<float>(y, x);
-			float pixel1, pixel2;
+			float pixel1, pixel2, pixel3, pixel4;
 
 			if ((direction >= 0 && direction < 22.5) || (direction >= 157.5 && direction <= 180))
 			{
 				pixel1 = magnitude.at<float>(y, x - 1);
-				pixel2 = magnitude.at<float>(y, x + 1);
+				pixel2 = magnitude.at<float>(y, x - 2);
+				pixel3 = magnitude.at<float>(y, x + 1);
+				pixel4 = magnitude.at<float>(y, x + 2);
 			}
 			else if (direction >= 22.5 && direction < 67.5)
 			{
 				pixel1 = magnitude.at<float>(y - 1, x - 1);
-				pixel2 = magnitude.at<float>(y + 1, x + 1);
+				pixel2 = magnitude.at<float>(y - 2, x - 2);
+				pixel3 = magnitude.at<float>(y + 1, x + 1);
+				pixel4 = magnitude.at<float>(y + 2, x + 2);
 			}
 			else if (direction >= 67.5 && direction < 112.5)
 			{
 				pixel1 = magnitude.at<float>(y - 1, x);
-				pixel2 = magnitude.at<float>(y + 1, x);
+				pixel2 = magnitude.at<float>(y - 2, x);
+				pixel3 = magnitude.at<float>(y + 1, x);
+				pixel4 = magnitude.at<float>(y + 2, x);
 			}
 			else if (direction >= 112.5 && direction <= 157.5)
 			{
 				pixel1 = magnitude.at<float>(y - 1, x + 1);
-				pixel2 = magnitude.at<float>(y + 1, x - 1);
+				pixel2 = magnitude.at<float>(y - 2, x + 2);
+				pixel3 = magnitude.at<float>(y + 1, x - 1);
+				pixel4 = magnitude.at<float>(y + 2, x - 2);
 			}
-			if (pixel <= pixel1 || pixel < pixel2)
+			if (pixel < pixel1 || pixel <= pixel2 || pixel <= pixel3 || pixel <= pixel4)
 				dst.at<uchar>(y, x) = 0;
 			else
 				dst.at<uchar>(y, x) = static_cast<int>(pixel);
