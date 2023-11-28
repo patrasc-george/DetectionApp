@@ -73,6 +73,8 @@ public:
 	static void binomial(cv::Mat src, cv::Mat& dst, short kernelSize);
 
 	static void canny(cv::Mat src, cv::Mat& dst, short threshold1, short threshold2, short kernelSize);
+
+	static void opening(cv::Mat src, cv::Mat& dst, short kernelSize);
 	/**
 	* @brief Applies various image processing algorithms based on the provided options.
 	* @details This function applies a series of image processing algorithms to the input image

@@ -49,6 +49,7 @@ public:
 	QPushButton* triangleThresholdingButton;
 	QPushButton* binomialButton;
 	QPushButton* cannyButton;
+	QPushButton* openingButton;
 	QPushButton* editDetectorsBtn;
 
 public:

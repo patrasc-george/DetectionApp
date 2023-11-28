@@ -43,6 +43,8 @@ Menu::Menu(QWidget* parent)
 	binomialButton->setCheckable(true);
 	cannyButton = new QPushButton("Canny", imageAlgorithms);
 	cannyButton->setCheckable(true);
+	openingButton = new QPushButton("Opening", imageAlgorithms);
+	openingButton->setCheckable(true);
 
 	editDetectorsBtn = new QPushButton("Edit detectors");
 
@@ -57,6 +59,7 @@ Menu::Menu(QWidget* parent)
 	algVbox->addWidget(triangleThresholdingButton);
 	algVbox->addWidget(binomialButton);
 	algVbox->addWidget(cannyButton);
+	algVbox->addWidget(openingButton);
 	imageAlgorithms->setContentLayout(*algVbox);
 
 	detectedClassesVbox = new QVBoxLayout;

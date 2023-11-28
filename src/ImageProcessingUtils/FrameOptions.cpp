@@ -132,3 +132,12 @@ short FrameOptions::getCanny() const
 {
 	return canny;
 }
+
+void FrameOptions::setOpening(const short& val)
+{
+	opening = val;
+}
+short FrameOptions::getOpening() const
+{
+	return opening;
+}

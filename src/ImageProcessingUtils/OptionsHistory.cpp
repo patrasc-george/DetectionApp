@@ -55,6 +55,9 @@ void OptionsHistory::add(revertable_options prop, short value) {
 	case CANNY:
 		currentStatus.setCanny(value);
 		break;
+	case OPENING:
+		currentStatus.setOpening(value);
+		break;
 	default:
 		return;
 	}
@@ -133,6 +136,8 @@ std::string OptionsHistory::lastChange() {
 		return "binomial";
 	case CANNY:
 		return "canny";
+	case OPENING:
+		return "opening";
 	default:
 		return "last action";
 	}

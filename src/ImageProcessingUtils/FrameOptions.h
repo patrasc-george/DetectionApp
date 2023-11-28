@@ -13,6 +13,7 @@ private:
 	short binomial = 0;
 	short sobel = 0;
 	short canny = 0;
+	short opening = 0;
 	bool colorHistogramEqualization = false;
 	bool grayscaleHistogramEqualization = false;
 	bool triangleThresholding = false;
@@ -159,4 +160,7 @@ public:
 
 	void setCanny(const short& val);
 	short getCanny() const;
+
+	void setOpening(const short& val);
+	short getOpening() const;
 };

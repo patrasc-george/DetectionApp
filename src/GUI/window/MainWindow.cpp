@@ -124,6 +124,14 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 		processImage();
 		});
 
+	connect(menu->openingButton, &QPushButton::clicked, this, [&] {
+		if (menu->openingButton->isChecked())
+			history.add(OPENING, menu->thresholdControl->value());
+		else
+			history.add(OPENING, 0);
+		processImage();
+		});
+
 	connect(menu->magnifier, &QCheckBox::clicked, this, [&] {
 		zoomReset();
 		statusBar->showMessage("Magnifier");
@@ -247,6 +255,7 @@ void MainWindow::setOptions()
 	menu->triangleThresholdingButton->setChecked(history.get()->getTriangleThresholding());
 	menu->binomialButton->setChecked(history.get()->getBinomial());
 	menu->cannyButton->setChecked(history.get()->getCanny());
+	menu->openingButton->setChecked(history.get()->getOpening());
 
 	menu->binaryThresholdingButton->setEnabled(
 		!menu->zeroThresholdingButton->isChecked() &&
@@ -633,7 +642,8 @@ bool MainWindow::kernelActive() {
 	return(
 		menu->binomialButton->isChecked() ||
 		menu->sobelButton->isChecked() ||
-		menu->cannyButton->isChecked());
+		menu->cannyButton->isChecked()) ||
+		menu->openingButton->isChecked();
 }
 
 void MainWindow::sortButtons() {

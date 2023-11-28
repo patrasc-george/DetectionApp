@@ -95,7 +95,7 @@ void ProcessingAlgorithms::adaptiveThresholding(Mat src, Mat& dst, short maxValu
 
 void BGR2HSV(const cv::Mat& src, cv::Mat& dst)
 {
-	dst = cv::Mat(src.size(), src.type());
+	dst = cv::Mat(src.size(), CV_8UC3);
 
 	for (int y = 0; y < src.rows; y++)
 		for (int x = 0; x < src.cols; x++)
@@ -292,10 +292,8 @@ void ProcessingAlgorithms::colorHistogramEqualization(cv::Mat src, cv::Mat& dst)
 {
 	if (src.type() == CV_8UC1)
 		cv::cvtColor(src, src, cv::COLOR_GRAY2BGR);
-	if (src.type() == CV_8UC4)
-		cv::cvtColor(src, src, cv::COLOR_BGRA2BGR);
 
-	dst = cv::Mat(src.size(), src.type());
+	dst = cv::Mat(src.size(), CV_8UC3);
 
 	BGR2HSV(src, dst);
 
@@ -606,6 +604,68 @@ void ProcessingAlgorithms::canny(cv::Mat src, cv::Mat& dst, short threshold1, sh
 	cv::cvtColor(dst, dst, cv::COLOR_GRAY2BGR);
 }
 
+void erosion(cv::Mat src, cv::Mat& dst, short kernelSize)
+{
+	dst = src.clone();
+
+	cv::Mat srcValue;
+	cv::extractChannel(src, srcValue, 2);
+
+	cv::Mat dstValue = cv::Mat(src.size(), CV_8UC1);
+
+	kernelSize = kernelSize / 2;
+	uchar min;
+	for (int y = kernelSize; y < src.rows - kernelSize; y++)
+		for (int x = kernelSize; x < src.cols - kernelSize; x++)
+		{
+			min = 255;
+			for (int i = -kernelSize; i <= kernelSize; i++)
+				for (int j = -kernelSize; j <= kernelSize; j++)
+				{
+					if (srcValue.at<uchar>(y + i, x + j) < min)
+						min = srcValue.at<uchar>(y + i, x + j);
+				}
+			dstValue.at<uchar>(y, x) = min;
+		}
+
+	cv::insertChannel(dstValue, dst, 2);
+}
+
+void dilation(cv::Mat src, cv::Mat& dst, short kernelSize)
+{
+	dst = src.clone();
+
+	cv::Mat srcValue;
+	cv::extractChannel(src, srcValue, 2);
+
+	cv::Mat dstValue = cv::Mat(src.size(), CV_8UC1);
+
+	kernelSize = kernelSize / 2;
+	uchar max;
+	for (int y = kernelSize; y < src.rows - kernelSize; y++)
+		for (int x = kernelSize; x < src.cols - kernelSize; x++)
+		{
+			max = 0;
+			for (int i = -kernelSize; i <= kernelSize; i++)
+				for (int j = -kernelSize; j <= kernelSize; j++)
+					if (srcValue.at<uchar>(y + i, x + j) > max)
+						max = srcValue.at<uchar>(y + i, x + j);
+			dstValue.at<uchar>(y, x) = max;
+		}
+
+	cv::insertChannel(dstValue, dst, 2);
+}
+
+void ProcessingAlgorithms::opening(cv::Mat src, cv::Mat& dst, short kernelSize)
+{
+	BGR2HSV(src, dst);
+
+	erosion(dst, dst, kernelSize);
+	dilation(dst, dst, kernelSize);
+
+	HSV2BGR(dst, dst);
+}
+
 void ProcessingAlgorithms::applyingAlgorithms(Mat& image, FrameOptions* options, const short& value1, const short& value2, const short& kernel)
 {
 	if (options->getGrayscaleHistogramEqualization())
@@ -628,6 +688,8 @@ void ProcessingAlgorithms::applyingAlgorithms(Mat& image, FrameOptions* options,
 		binomial(image, image, kernel);
 	if (options->getCanny())
 		canny(image, image, value1, value2, kernel);
+	if (options->getOpening())
+		opening(image, image, kernel);
 }
 
 bool ConvertMat2QImage(const Mat& src, QImage& dest) {
