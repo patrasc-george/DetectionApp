@@ -363,7 +363,7 @@ void MainWindow::selectDetectorEvent() {
 		return;
 	}
 
-	QString currText = QString("../detector_paths/%1") + menu->detectorsList->currentText() + QString(".yaml");
+	QString currText = QString("../detector_paths/") + menu->detectorsList->currentText() + QString(".yaml");
 
 	if (QFileInfo(currText).exists())
 		currDet = DetectorFactory::createDetectorFromFile(currText.toStdString());
