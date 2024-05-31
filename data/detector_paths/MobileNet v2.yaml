@@ -1,0 +1,6 @@
+%YAML:1.0
+---
+type: NETWORK
+modelFilePath: "../default_detectors/models/mobilenet_v2/ssd_mobilenet_v2_coco_2018_03_29.pbtxt.txt"
+configFilePath: "../default_detectors/models/mobilenet_v2/frozen_inference_graph.pb"
+labelsFilePath: "../default_detectors/models/mobilenet_v2/object_detection_classes_coco.txt"

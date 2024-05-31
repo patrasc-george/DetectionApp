@@ -1,0 +1,15 @@
+%YAML:1.0
+---
+type: CASCADE_GROUP
+classifiers:
+   -
+      objectLabel: Face
+      enabled: 1
+      shape: 0
+      cascadeFilePath: "../default_detectors/haarcascades/haarcascade_frontalface_default.xml"
+   -
+      objectLabel: Eye
+      enabled: 1
+      shape: 1
+      cascadeFilePath: "../default_detectors/haarcascades/haarcascade_eye.xml"
+primary: Face

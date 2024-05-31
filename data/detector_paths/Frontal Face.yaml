@@ -1,0 +1,5 @@
+%YAML:1.0
+---
+type: CASCADE
+objectLabel: "Frontal Face"
+cascadeFilePath: "../default_detectors/haarcascades/haarcascade_frontalface_default.xml"
