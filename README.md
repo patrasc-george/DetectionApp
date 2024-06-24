@@ -2,26 +2,32 @@
 
 ## About
 
-This is a C++ application that mainly detects objects either from your camera or from an uploaded image, using some detection models provided.
+A C++ application that detects objects either from your camera or from an uploaded image, using some detection models provided.
 
 ## Features
 
 * Choose a detector to use on your image/video
 * Save a screenshot of the detected image/video
 * Adjust the confidence threshold of the detector (if applicable)
-* You can use the following detectors:
-    * Face detector (Haar Cascade Classifier or LBP Cascade Classifier)
-    * MobileNet SSD (Single Shot MultiBox Detector)
-    * custom models (untested, but should work)
-* Apply a filter to the image/video before applying the detector
-* Available filters:
-    * Grayscale
-    * Binary Thresholding
-    * Thresholding to Zero
-    * Adaptive Thresholding (Gaussian)
-    * Laplacian Edge Detection
+* The following detectors are included by default:
+  * **Frontal Face** (Haarcascade)
+  * **Face with Features** (a group of cascades, detecting faces and eyes on those faces)
+  * **MobileNet SSD v2** (Single Shot MultiBox Detector)
+  * **Traffic Detector** (custom-made, detects `persons` and `vehicles`)
+* Apply and adjust some filters to the image/video before applying the detector:
+  * Binary Thresholding
+  * Thresholding to Zero
+  * Truncate Thresholding
+  * Adaptive Thresholding (Gaussian)
+  * Triangle Thresholding
+  * Grayscale Histogram Equalization
+  * Color Histogram Equalization
+  * Sobel
+  * Binomial
+  * Canny
+  * Opening
 
-## Requirements
+## Build Requirements
 
 * OpenCV 4.5.0
 * CMake 3.16.0
@@ -44,7 +50,7 @@ We don't have an official release yet, but if for some reason you want a setup p
 
 1. Follow the previous instructions from Installation
 2. Right-Click on the project called `PACKAGE` and click **build**
-3. After the build is complete, you can fin your installer in `[build_folder]\_CPack_Packages\win64\NSIS`
+3. After the build is complete, you can find your installer in `[build_folder]\_CPack_Packages\win64\NSIS`
 
 ## Usage
 
@@ -55,71 +61,75 @@ We don't have an official release yet, but if for some reason you want a setup p
 5. Adjust the minimum confidence for whoch detection to show (optional)
 6. You can save a screenshot of the detected image/video
 
-If you want to use your own model, you can click the 'Edit Detectors' buton **or** put the files in the `data` folder and add edit
-the `detectors.json` file.
+If you want to use your own model, you can click the 'Edit Detectors' button **or** create a new `.yaml` file int the `/data/detector_paths` folder. The name of the file will be showed in the dropdown list.
 
-You will need to provide a name (this name will be displayed in the dropdown list with detectors), a type for the model, and the paths to the files needed for the model.
-The type can be either `cascade` (for Haar/Lbp Cascade Classifiers) or `network` (for Neural Networks, e.g. MobileNet SSD).
+The are 3 possible detector types:
 
-If `cascade` is chosen, then `paths` should contain the following:
+1. `CASCADE` - a haarcascade/lbpcascade, a simple image classifer that detects a single object type, annotated by the `objectLabel` property
 
-```json
-{
-    "name": "model_name",
-    "type": "cascade",
-    "paths": {
-        "face": "path_to_cascade_file_for_face_detection",
-        "eyes": "path_to_cascade_file_for_eye_detection",
-        "smile": "path_to_cascade_file_for_mouth_detection"
-    }
-}
-```
+    ```yaml
+    %YAML:1.0
+    ---
+    type: CASCADE
+    objectLabel: "Object Name"
+    cascadeFilePath: "path/to/cascade.xml"
+    ```
 
-Only the `face` path is required, the others are optional.
+    > `obectLabel` represents the label shown in the bounding box drawn on the image after detection
 
-If `network` is chosen, then the object should contain the following:
+2. `CASCADE_GROUP` - a group made up of multiple cascades, each with their own `objectLabel` that can be disabled individually
 
-```json
-{
-    "name": "model_name",
-    "type": "network",
-    "properties": {
-        "framework": "framework_name",
-        "swapRB": false,
-        "meanValues": [0, 0, 0]
-    },
-    "paths": {
-        "inf": "path_to_frozen_inference_file",
-        "classes": "path_to_classes_file",
-        "model": "path_to_model_or_config_file"
-    }
-}
-```
+    ```yaml
+    %YAML:1.0
+    ---
+    type: CASCADE_GROUP
+    classifiers:
+    -
+        objectLabel: Face
+        enabled: 1
+        shape: 0
+        cascadeFilePath: "path/to/face/cascade.xml"
+    -
+        objectLabel: Eye
+        enabled: 1
+        shape: 1
+        cascadeFilePath: "path/to/eye/cascade.xml"
+    primary: Face
+    ```
 
-The `properties` object is optional, and can contain the following:
-* `framework` - the framework used to train the model (e.g. `caffe`, `tensorflow`, `torch`, `darknet`, `onnx`)
-* `swapRB` - whether to swap the red and blue channels (default is `false`)
-* `meanValues` - the mean values for the model (default is `[0, 0, 0]`)
+    > `shape` can be `1` for rectangle or `0` for circle
+    >
+    > Cascade Groups contain a primary cascade and 1 or more secondary cascades. The secondary cascades will only perform inside the primary cascade's bounding box (if any).
 
-The `paths` object contains the paths to the files needed for the model:
-* `inf` - the frozen inference graph file
-* `classes` - the classes file
-* `model` - the model or config file
+3. `NETWORK` - a Neural Network containing a model file, a config (weights) file and a text file containing the labels
+
+    ```yaml
+    %YAML:1.0
+    ---
+    type: NETWORK
+    modelFilePath: "path/to/model.pbtxt.txt"
+    configFilePath: "path/to/frozen_inference_graph.pb"
+    labelsFilePath: "path/to/classes.txt"
+    ```
+
+    > Some models do not require a config (frozen interference) file, so this property is optional. However you do need to include it if the model needs it, otherwise the app will show an error.
+    >
+    > We tested using `TensorFlow`'s `protobuff` files (with the `.pbtxt` extension) and `ONNX` models
+    >
+    > `labelsFilePath` should be a `.txt` file where each line represents an object's name. If missing, the app will show them as `Object 1`, `Object 2`, etc.  
 
 ## Screenshots
 
-MobileNet SSD simple object detection
-
-<img src="screenshots/screenshot_1.png" width=800>
-
-MobileNet SSD with Binary Thresholding and GrayScale filters
-
-<img src="screenshots/screenshot_2.png" width=800>
-
-Face detector with Thresholding to Zero and GrayScale filters
-
-<img src="screenshots/screenshot_3.png" width=800>
-
-Interface for adding a new detector
-
-<img src="screenshots/screenshot_4.png">
+> MobileNet SSD simple object detection
+![MobileNet SSD simple object detection](screenshots/screenshot_1.png)
+---
+> Edge Detection (Canny) filter
+![> Edge Detection filter](screenshots/screenshot_2.png)
+---
+> Face detector (Cascade Group) with Thresholding to Zero and GrayScale filters
+>
+> **Note:** UI is slightly outdated
+![Face detector with Thresholding to Zero and GrayScale filters](screenshots/screenshot_3.png)
+---
+> UI for adding a new Detector
+![UI for adding a new detector](screenshots/screenshot_4.png)
